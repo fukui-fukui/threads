@@ -24,6 +24,7 @@ import os
 import re
 import random
 import string
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -102,7 +103,8 @@ SLOTS = [
     (15, "楽天トラベルの紹介（PR）", "F（紹介型）", "3アカウント共通の枠。同じ日は同じ内容を出し、アカウントごとの効き方を比べる。5と0のつく日はクーポン1本の短文、それ以外は宿のまとめ"),
     (17, "福井の話題紹介", "F（紹介型）", "仕事終わりに読まれる想定"),
     (19, "先の予定の紹介", "F（紹介型）", "夜のはじめ。2週間以上先の催しを知らせる枠"),
-    (21, "先の予定のおすすめ", "G（まとめ型）", "夜、この先の予定を決める人に読まれる。4日後以降の催しを2〜3件並べる。プロフィールで毎日21時と約束している枠"),
+    # 2026-09-29 代表了承：21時の「N選まとめ」はほぼ読まれない（32〜100）。1件紹介に変える。
+    (21, "近い予定の紹介", "F（紹介型）", "夜、この先の予定を決める人に読まれる。4日後〜13日後の催しを1件紹介する。プロフィールで毎日21時と約束している枠"),
     (23, "福井の話題紹介", "F（紹介型）", "寝る前。明日・週末に行けるところ"),
 ]
 
@@ -353,7 +355,7 @@ def describe_filled(filled: dict[int, dict]) -> str:
     return "\n".join(parts)
 
 
-def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, target_date, needed, filled, hotel=None, hotel_hour=None, mugi=None, kifu=None) -> str:
+def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, target_date, needed, filled, hotel=None, hotel_hour=None, mugi=None, kifu=None, 使えない: str = "", stay=None, 予備の数: int = 0) -> str:
     def _枠の行(hour, pillar, form, aim):
         行 = f"- {hour}:00 ｜ 深さ: {DEPTH.get(hour, 'B')} ｜ 柱: {pillar} ｜ 型: {form} ｜ ねらい: {aim}"
         # PR の枠は、9枠ぶんの指示に埋もれて読み飛ばされることがある。
@@ -414,7 +416,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "### 12:00 と 19:00 は「先の予定」の枠（2026-09-21 代表指示）",
         "",
         "**この2枠は、2週間以上先の催しを扱います。** 今日・今週末のことは書きません。",
-        "10本のうち2本を、先の予定にあてる枠です（21:00 のおすすめまとめも先の予定を扱います）。",
+        "10本のうち2本を、先の予定にあてる枠です（21:00 は 4日後〜13日後の近い予定を1件扱います）。",
         "",
         "理由：今日の催しは、知った時点でもう動けないことがあります。",
         "先の予定は、読んだ人が予定を空けられる。保存やフォローにつながるのはこちらです。",
@@ -427,11 +429,11 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "**日付が先のものを探してください。** 見つからないときは、常設の展示や",
         "「〜まで開催中」の会期が先まで続くものでもかまいません。",
         "",
-        "#### 先の予定は、何度出してもよい（2026-09-21 代表指示）",
+        "#### 同じ催しは2回まで（2026-09-29 代表了承。9/21 の「何度でも」を改める）",
         "",
-        "**同じ催しを、日をまたいで繰り返し出してかまいません。** むしろ何度も",
-        "見かけることで、予定を立てるきっかけになります。",
-        "「2日続けて同じ出来事を出さない」は**この2枠には当てはめません。**",
+        "**同じ催し（同じ出典元URL）は、直近14日で2回までです。** 3回目は機械で止めます。",
+        "2回目は**前回から3日以上あけ**、前回と違うところ（何ができるか・行き方など）を見せます。",
+        "繰り返すと読まれなくなりました（天一祭 1,097→27、夏障子 964→386）。",
         "",
         "ただし **同じ日に 2 回は出せません。** 12:00 と 19:00 では違う催しを選ぶこと",
         "（2026-09-23 代表指示。判定は「出典元：」の URL）。",
@@ -446,7 +448,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "- **材料が複数あるなら回す。** 1つしか無い日は、同じ催しでかまいません",
         "",
         "開催まで2週間を切ったものは、この枠からは外してください。",
-        "そこからは 21:00 のおすすめまとめと、他の紹介枠が拾います。",
+        "そこからは 21:00 の近い予定の枠と、他の紹介枠が拾います。",
         "",
         "### 本文に地名と固有名詞を入れる（2026-09-18 代表指示）",
         "",
@@ -471,7 +473,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "",
         "理由：表示数が伸びても、いいね・返信の実数が 0 のままだと露出の天井が早く来ます。",
         "どちらが効くかを実測で決めるため、日によって出し分けています。**指示どおりに揃えてください。**",
-        "（21:00 のまとめ枠は、この A/B の対象外です。毎日かならず問いで締めます）",
+        "（21:00 の近い予定の枠も、ほかの紹介枠と同じく A/B に従います）",
         "",
         "### 6:00 の「今日で終わるもの」（2026-09-23 代表指示・新設）",
         "",
@@ -480,7 +482,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "",
         "ねらいは、**間に合ううちに知らせる**ことです。同じ知らせでも、夕方に出したら",
         "その日はもう動けません。朝いちばんなら、今日の予定に入れられます。",
-        "21:00 のおすすめまとめが「これから」を扱うので、6:00 は「今日まで」を受け持ちます。",
+        "21:00 の近い予定の枠が「これから」を扱うので、6:00 は「今日まで」を受け持ちます。",
         "",
         "**すでに紹介した催しでも、今日が最終日なら入れてかまいません。**",
         "最後に知らせる意味があるので、使い回しの制限はこの枠にはかけません。",
@@ -516,47 +518,22 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "「今日まで」と書くのがいちばんまずい。**間違った締切を出すくらいなら、やめる。**",
         "1〜2件しか無い日も、まとめにせず1件紹介にしてかまいません。",
         "",
-        "### 21:00 の「先の予定のおすすめ」（2026-09-23 代表指示で 19:00 から移動・毎日）",
+        "### 21:00 の「近い予定の紹介」（2026-09-29 代表了承・まとめ型から1件紹介へ）",
         "",
-        "**この枠だけは1件紹介ではなく、2〜3件を並べたまとめです。**",
-        "**4日後以降の催しだけを扱います。** 今日・明日のことは書きません。",
-        "プロフィールでも毎日21時と約束している枠です。**毎日必ず作ってください。**",
+        "**4日後〜13日後に開かれる催しを、1件だけ紹介します。** まとめ（◯選）にはしません。",
+        "「福井で行けるところN選」は 32〜100 回しか読まれませんでした。1件紹介の先の予定は 1,000〜5,800 回です。",
+        "12:00・19:00（2週間以上先）と、今日・明日の紹介枠のあいだを受け持ちます。",
         "",
-        "ねらいは、読んだ人が**予定を空けられる**ことです。今日の催しは、知った時点で",
-        "もう動けないことがあります。先の予定なら、手帳を開いてもらえます。",
-        "保存やフォローにつながるのはこちらです。",
-        "月・火に出せば今週末が入り、水〜金に出せば来週の話になります。どちらでもかまいません。",
+        "形はほかの紹介枠と同じです（本文で何の話か分かる／地名・催し名・日付を本文に／THREAD に一言と出典元）。",
         "",
-        "形：",
+        "  ○ 10月3日、大野市で閉校した小学校の備品販売会が開かれるそうです。教室や理科室の備品を部屋ごとに並べるとのこと。",
+        "  × 【福井】今週末に行けるところ3選",
         "",
-        "  本文 … 見出し1行＋**催しの一覧をそのまま並べる**（リンクは入れない）",
-        "  THREAD 1件目以降 … 1件につき1つ。地名／名前／いつ／一言（→ 誰にどう効くか）／出典元：URL",
-        "",
-        "  例（本文）:",
-        "    【福井】来週末に行けるところ3選",
-        "",
-        "    ① 👓 めがねフェス2026（鯖江市・9/26-27）",
-        "    ② 🐟 若狭おばま食のまつり（小浜市・10/4）",
-        "    ③ 🖌 越前秋季陶芸祭（越前町・10/3-4）",
-        "",
-        "  例（THREAD の1件）:",
-        "    鯖江｜めがねフェス2026（9/26-27）",
-        "    めがねミュージアム周辺。産地の工場が開く2日間です。",
-        "    出典元：https://example.com/...",
-        "",
-        "決めごと：",
-        "",
-        "- **4日後以降に開催されるものだけ。** 今日・明日・3日以内のものは入れない（それは他の枠の仕事）",
-        "- **日付の近い順に並べる**",
-        "- **同じ催しを2日続けて筆頭に置かない。** 12:00・19:00 で扱った催しと重なるのはかまいません（見せ方が違うため）",
-        "- 2件に満たない日は、会期の長い展示・常設の施設で埋めてよい（4日後以降も開いているもの）",
-        "- **市町をばらけさせる。** 同じ市から2件以上並べない（材料が無いときは可）",
-        "- 1件ずつに**出典元のURL**を付ける。URLを作らない・推測しない",
-        "- 商品の話はしない。この枠は深さ A（出来事の共有）で止める",
-        "- 末尾に1行、問いを置く。例：「どれか予定に入れそうですか。」",
+        "- **開催日（初日）が4日後〜13日後のものだけ。** 会期の長い展示なら、その間に最終日が来るものでもよい",
+        "- 同じ日のほかの枠と同じ催しは選ばない（出典元URLで判定）",
         "",
         "",
-        "### まとめ枠（6:00 と 21:00）の本文の作り方（2026-09-25 代表指示）",
+        "### まとめ枠（6:00）の本文の作り方（2026-09-25 代表指示）",
         "",
         "**本文に一覧をそのまま出してください。予告だけにしないこと。**",
         "",
@@ -640,22 +617,21 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "  **同じかどうかは「出典元：」の URL で見ます。**",
         "  同じ URL を 1 日に 2 本以上使わないこと。時間を空ければよい、ではありません",
         "  （これまでの「1 日 2 本まで・4 時間以上あける」は廃止しました）",
-        "- **2 日続けて同じ出来事を出さない。** 1 日あける。",
-        "  **これは機械で止めます。** 前の日のキューに同じ「出典元：」URL があれば、その枠は空になります",
-        "  （2026-09-26 代表指摘。9/26 23:00 と 9/27 08:00 で「夏障子」が連日出ました）",
+        "- **同じ出来事は、直近14日で2回まで。2回目は前回から3日以上あける（2026-09-29）。**",
+        "  **これは機械で止めます。** 同じ「出典元：」URL が14日で2回出ていれば、または3日以内に出ていれば、その枠は空になります",
+        "  （6:00 の「今日で終わる」まとめだけは例外。最後に知らせる意味があるため）",
+        "  下の「使えない出典」に並んだ URL は選ばないこと",
         "- **「今日で終わる」話は 6:00 のまとめ枠だけです。** 他の枠では書かないこと。",
         "  朝に読んだ話をもう一度読ませないためです。これも機械で止めます",
         "- **同じ書き出し（1 行目）を同じ日に 2 回使わない。** 角度を変える",
         "- **本文をそのまま出し直すのは、前回から 7 日以上あいていれば可。**",
         "  伸びた投稿の再掲は歓迎します。ネタが薄い日は、新しく薄いものを作るより再掲のほうがよい",
         "",
-        "**12:00 と 19:00（先の予定の枠）も、1 日 1 本の決まりは守ります。**",
-        "この 2 枠は「日をまたいで何度でも出してよい」という意味で制限の外であって、",
-        "**同じ日に同じ催しを 2 回出してよい、という意味ではありません。**",
-        "12:00 と 19:00 で違う催しを選んでください。",
+        "**12:00・19:00・21:00 も、同じ日に同じ催しを出さないこと。** それぞれ違う催しを選んでください。",
         "",
-        "**21:00 のまとめ枠も同じです。** まとめに入れる催しは、その日の他の枠で",
-        "使っていないものから選んでください。",
+        "## 使えない出典（直近14日で2回出した／3日以内に出した。機械で止めます）",
+        "",
+        使えない or "（なし）",
         "",
         "## 直近 7 日の投稿（日時・1 行目・使ったネタ）",
         "",
@@ -767,7 +743,11 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
             *宿の決まり(hotel),
             "",
         ]
-    if not hotel and hotel_hour is None:
+    if stay and hotel_hour is not None:
+        sections += 催しと宿の決まり(stay, hotel_hour, target_date)
+    if 予備の数:
+        sections += 予備の決まり(予備の数, target_date)
+    if not hotel and not stay and hotel_hour is None:
         sections += [
             "## 今日は宿の紹介をしません",
             "",
@@ -781,8 +761,8 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
 def parse_posts(text: str) -> list[dict]:
     posts = []
     for body in re.findall(r"@@@POST[ \t]*\n(.*?)\n?@@@END", text, re.S):
-        item = {"hour": None, "note": "", "text": "", "thread": []}
-        tokens = re.split(r"^(HOUR:|NOTE:|TEXT:|THREAD:)", body, flags=re.M)
+        item = {"hour": None, "note": "", "text": "", "thread": [], "hotel": None, "until": ""}
+        tokens = re.split(r"^(HOUR:|NOTE:|TEXT:|THREAD:|HOTEL:|UNTIL:)", body, flags=re.M)
         for key, value in zip(tokens[1::2], tokens[2::2]):
             value = value.strip()
             if key == "HOUR:":
@@ -794,6 +774,11 @@ def parse_posts(text: str) -> list[dict]:
                 item["text"] = value
             elif key == "THREAD:" and value:
                 item["thread"].append(value)
+            elif key == "HOTEL:":
+                digits = re.sub(r"\D", "", value)
+                item["hotel"] = int(digits) if digits else None
+            elif key == "UNTIL:":
+                item["until"] = value
         if item["hour"] is not None and item["text"]:
             posts.append(item)
     return posts
@@ -813,6 +798,9 @@ def ask(api_key: str, model: str, prompt: str) -> str:
     return "".join(
         block.get("text", "") for block in payload.get("content", []) if block.get("type") == "text"
     ).strip()
+
+
+予備の作りかけ: list[dict] = []
 
 
 def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[dict]:
@@ -840,6 +828,9 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
             )
         text = ask(api_key, model, この回の指示)
         for post in parse_posts(text):
+            if post.get("hour") == 0 and attempt == 1:
+                予備の作りかけ.append(post)
+                continue
             try:
                 hour = int(post["hour"])
             except (TypeError, ValueError):
@@ -1292,6 +1283,242 @@ def 宿のリンク(選んだ: dict) -> list[str]:
     return かたまり
 
 
+# ------------------------------------------------------------------
+# 2026-09-29 代表了承の手入れ（目標 1日1万表示 ＝ 10本で平均1,000）
+# ------------------------------------------------------------------
+予備の置き場 = Path("posts/予備.jsonl")
+予備の目標 = 10
+同じ出典の上限 = 2      # 直近14日で2回まで
+同じ出典の見る日数 = 14
+同じ出典を空ける日数 = 3  # 2回目は3日以上あける
+
+
+def 過去の投稿(日数: int = 同じ出典の見る日数 + 2) -> list[dict]:
+    """queue の過去の版を git の履歴から読み、id ごとに最後の中身を返す。
+
+    queue からは投稿済みの行が消えることがあり（9/26 時点で3日ぶんしか残っていなかった）、
+    「直近7日」も「同じ催しの繰り返し」も見えていなかった。履歴から復元する。
+    ワークフローは fetch-depth: 0 で checkout すること。
+    """
+    try:
+        ハッシュ = subprocess.run(
+            ["git", "log", "--reverse", f"--since={日数} days ago", "--format=%H", "--", str(QUEUE_PATH)],
+            capture_output=True, text=True, timeout=60).stdout.split()
+    except Exception as e:  # git が無くても本体は動かす
+        print(f"::warning::queue の履歴が読めません（{e}）")
+        return []
+    出: dict[str, dict] = {}
+    for h in ハッシュ:
+        r = subprocess.run(["git", "show", f"{h}:{QUEUE_PATH}"], capture_output=True, text=True)
+        for e in parse_entries(r.stdout.splitlines()):
+            if e.get("id"):
+                出[str(e["id"])] = e
+    print(f"queue の履歴: {len(ハッシュ)} 版から {len(出)} 本を復元")
+    return list(出.values())
+
+
+# 新店まとめ・イベントまとめのように、1つのページに別々の出来事が載っているもの。
+# URL が同じでも出来事は別なので、回数に数えない（9/29、新店まとめが4回で止まりかけた）。
+まとめページ = re.compile(r"newopenlist|matome|/event/?$|index[_.]|/news/?$|/topics/?$")
+
+
+def 出典の記録(投稿たち: list[dict], target_date) -> dict[str, list[tuple[str, int]]]:
+    """出典URL → [(日付, 時)]。対象日より前・直近14日だけ。"""
+    記: dict[str, list[tuple[str, int]]] = {}
+    for e in 投稿たち:
+        at = str(e.get("scheduled_at", ""))
+        d = at[:10]
+        if not d or d >= target_date.isoformat():
+            continue
+        try:
+            差 = (target_date - datetime.strptime(d, "%Y-%m-%d").date()).days
+            時 = int(at[11:13])
+        except ValueError:
+            continue
+        if 差 > 同じ出典の見る日数:
+            continue
+        for u in source_urls(e.get("text", ""), e.get("thread") or []):
+            if まとめページ.search(u):
+                continue
+            記.setdefault(u, []).append((d, 時))
+    return 記
+
+
+def 出典で止める理由(urls: set[str], 記: dict, target_date) -> str | None:
+    for u in sorted(urls):
+        回 = 記.get(u) or []
+        if len(回) >= 同じ出典の上限:
+            return f"直近{同じ出典の見る日数}日で{len(回)}回出ている（{u}）"
+        for d, 時 in 回:
+            差 = (target_date - datetime.strptime(d, "%Y-%m-%d").date()).days
+            if 差 < 同じ出典を空ける日数:
+                return f"{d} {時}:00 に出したばかり（{u}）"
+    return None
+
+
+def 使えない出典の一覧(記: dict, 投稿たち: list[dict], target_date) -> str:
+    行 = []
+    for u, 回 in sorted(記.items()):
+        近い = any((target_date - datetime.strptime(d, "%Y-%m-%d").date()).days < 同じ出典を空ける日数 for d, _ in 回)
+        if len(回) >= 同じ出典の上限 or 近い:
+            行.append(f"- {u}（{len(回)}回・最後 {max(回)[0]}）")
+    return "\n".join(行)
+
+
+# ---- 15時：催し × 近くの宿1軒（福井だけ。2026-09-29 代表了承） -------------
+# 宿の一覧（まとめ型）は福井では 887〜1,155、【PR】始まりは 17。
+# 福井の読み手は福井の出来事を見に来ているので、1投稿目は催し、宿は返信で1軒だけ。
+def 催しと宿の材料(target_date, 宿たち: list[dict]) -> dict | None:
+    エリア = [c for c in 宿.切り口たち if c.get("種類") == "エリア"]
+    if not エリア or not 宿たち:
+        return None
+    短縮 = 宿.短縮を読む()
+    日数 = (target_date - 宿.起点).days
+    for ずれ in range(len(エリア)):
+        切 = エリア[(日数 + ずれ) % len(エリア)]
+        候補 = [h for h in 宿たち if 宿.当てはまる(切, h)]
+        # 短縮リンクのある宿を先に（代表が作ったリンク）
+        候補.sort(key=lambda h: (宿.宿のリンク先(h, 短縮).startswith("https://a.r10.to/") is False,
+                                 -(float(h.get("評価") or 0))))
+        候補 = 候補[:8]
+        if 候補:
+            return {"切り口": 切, "宿": 候補, "短縮": 短縮}
+    return None
+
+
+def 催しと宿の決まり(stay: dict, hotel_hour: int, target_date) -> list[str]:
+    旅の得 = お得日.旅(target_date)
+    行 = [
+        f"## {hotel_hour}:00 の枠は「催し × 近くの宿1軒」です（楽天トラベル・PR）",
+        "",
+        f"今日の土地：**{stay['切り口']['名']}**（{'・'.join(stay['切り口'].get('値') or [])}）",
+        "",
+        "1. **本文は、この土地で4日後以降に開かれる催しを1件紹介します。** ほかの紹介枠と同じ書き方",
+        "   （地名・催し名・日付を本文に。引用の文体。福井の出来事として）。",
+        "   この土地に材料が無ければ、となりの土地の催しでかまいません。",
+        "2. 本文の最後の1行で、泊まりにつなげます。例：「前の晩に近くに泊まれたら、朝から動けます。」",
+        "   **宿の名前は本文に書かない。** 【PR】・URL も書かない（こちらで返信に付けます）",
+        "3. THREAD は1件だけ。催しの一言と「出典元：URL」。",
+        "4. **HOTEL: の行に、下の宿から1軒の番号を書く。** 催しの場所にいちばん近い宿を選ぶ",
+        "5. **泊まった体で書かない。** この宿には泊まっていません",
+        "6. 12:00・19:00・21:00 と同じ催しは選ばない",
+        "",
+        "宿（番号｜名前｜市町｜楽天トラベルの紹介の一文）:",
+    ]
+    for i, h in enumerate(stay["宿"], 1):
+        行.append(f"- {i}｜{宿.見せる名(h)}｜{宿.市町(h)}｜{宿.一文(h)}")
+    if 旅の得:
+        行 += ["", f"今日は楽天トラベルの「{旅の得['名']}」です。クーポンの案内は返信にこちらで付けます。本文には書かないでください。"]
+    行 += ["", "この枠の形:", "@@@POST", f"HOUR: {hotel_hour}", "NOTE: 催し×宿／使ったネタ", "HOTEL: 2",
+           "TEXT:", "（本文）", "THREAD:", "（催しの一言。最後に 出典元：URL）", "@@@END", ""]
+    return 行
+
+
+def 宿の一言返信(stay: dict, 番号: int | None, target_date) -> tuple[list[str], dict]:
+    宿たち = stay["宿"]
+    選 = 宿たち[番号 - 1] if 番号 and 1 <= 番号 <= len(宿たち) else 宿たち[0]
+    if not (番号 and 1 <= 番号 <= len(宿たち)):
+        print(f"::warning::HOTEL の番号が読めないので、1番の宿にします（{番号}）")
+    一文 = 宿.一文(選)
+    塊 = [f"泊まるなら、{宿.見せる名(選)}（{宿.市町(選)}）。" + (f"\n{一文}。" if 一文 else ""),
+          "", 宿.宿のリンク先(選, stay["短縮"])]
+    旅の得 = お得日.旅(target_date)
+    if 旅の得:
+        使う = [c for c in 宿.クーポンを読む() if str(c.get("いつ", "いつでも")) != "5と0のつく日" or 旅の得]
+        if 使う:
+            塊 += ["", f"今日は{旅の得['名']}。クーポンはこちらです", 使う[0]["url"]]
+    return [PRを末尾に("\n".join(塊).strip())], 選
+
+
+# ---- 予備（2026-09-29 代表了承） -----------------------------------------
+# 残高切れ・生成の失敗で枠が欠けた日があった（9/25 は7本、9/28 は8本、9/29 は 06/08 が欠け）。
+# 常設・会期の長いものだけで予備を10本持ち、欠けた枠を埋める。
+def 予備を読む() -> list[dict]:
+    if not 予備の置き場.exists():
+        return []
+    return parse_entries(予備の置き場.read_text(encoding="utf-8").splitlines())
+
+
+def 予備を書く(行たち: list[dict]) -> None:
+    予備の置き場.parent.mkdir(exist_ok=True)
+    予備の置き場.write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in 行たち), encoding="utf-8")
+
+
+def 予備の決まり(数: int, target_date) -> list[str]:
+    return [
+        f"## 予備を {数} 本書いてください（HOUR: 0）",
+        "",
+        "枠が欠けた日に、あとで差し込むための投稿です。**いつ出しても嘘にならないものだけ。**",
+        "- 常設の施設・店、または会期が1か月以上先まで続く展示だけ。日付の決まった催しは使わない",
+        "- 「今日」「明日」「今週末」などの時の言葉を書かない。締めの問いは付けない",
+        "- 形はふつうの紹介枠と同じ。THREAD に一言と「出典元：URL」",
+        f"- **UNTIL: の行に、いつまで使えるかを書く。** 会期の最終日（YYYY-MM-DD）か「常設」。{target_date.isoformat()} から30日以上先であること",
+        "- 今日の10本や直近の投稿と同じ出来事は選ばない",
+        "",
+        "@@@POST", "HOUR: 0", "UNTIL: 常設", "NOTE: 予備／使ったネタ", "TEXT:", "（本文）", "THREAD:", "（一言と出典元：URL）", "@@@END",
+        "",
+    ]
+
+
+def 予備にする(posts: list[dict], target_date, 記: dict, 今日の出典: set[str]) -> list[dict]:
+    出 = []
+    for p in posts:
+        text = (p.get("text") or "").strip()
+        thread = [t.strip() for t in p.get("thread") or [] if t.strip()]
+        urls = source_urls(text, thread)
+        until = (p.get("until") or "").strip()
+        if not text or not urls:
+            continue
+        if 今日で終わる.search(text) or any(len(x) > 500 for x in [text, *thread]):
+            continue
+        if until != "常設":
+            try:
+                if (datetime.strptime(until[:10], "%Y-%m-%d").date() - target_date).days < 30:
+                    continue
+            except ValueError:
+                continue
+        if urls & 今日の出典 or 出典で止める理由(urls, 記, target_date):
+            continue
+        if 検索語 not in text:
+            text = text.rstrip() + "\n\n" + 検索語
+        出.append({"text": text, "thread": thread, "note": ("予備から／" + str(p.get("note") or ""))[:120],
+                   "期限": until, "作った日": datetime.now(JST).date().isoformat()})
+    return 出
+
+
+def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出典: set[str], existing_ids: set[str]) -> list[str]:
+    """空いた枠を予備で埋める。15時（PR）は埋めない。使ったものは予備から消す。"""
+    予備 = 予備を読む()
+    残す, 行 = [], []
+    空き = [h for h in 空き if h != HOTEL_HOUR]
+    now_jst = datetime.now(JST)
+    空き = [h for h in 空き if datetime(target_date.year, target_date.month, target_date.day, h, tzinfo=JST) > now_jst]
+    for x in 予備:
+        期限 = str(x.get("期限") or "")
+        if 期限 != "常設":
+            try:
+                if datetime.strptime(期限[:10], "%Y-%m-%d").date() < target_date:
+                    continue  # 期限切れは捨てる
+            except ValueError:
+                continue
+        urls = source_urls(x.get("text", ""), x.get("thread") or [])
+        if 空き and not (urls & 今日の出典) and not 出典で止める理由(urls, 記, target_date):
+            h = 空き.pop(0)
+            item = {"id": new_id(h, existing_ids), "text": x["text"],
+                    "scheduled_at": f"{target_date.isoformat()}T{h:02d}:00:00+09:00",
+                    "thread": x.get("thread") or [], "note": x.get("note") or "予備から"}
+            existing_ids.add(item["id"])
+            今日の出典 |= urls
+            行.append(json.dumps(item, ensure_ascii=False))
+            print(f"::warning::{h}:00 を予備で埋めました：{x['text'].splitlines()[0][:40]}")
+        else:
+            残す.append(x)
+    予備を書く(残す)
+    if 空き:
+        print(f"::warning::予備が足りず、空いたままの枠: " + "、".join(f"{h}:00" for h in 空き))
+    return 行
+
+
 class 枠を落とす(Exception):
     """この枠だけ作らない。他の枠は残す。
 
@@ -1315,7 +1542,8 @@ def new_id(hour: int, existing: set[str]) -> str:
 
 def main() -> None:
     api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-    if not api_key:
+    予備だけ = os.environ.get("USE_SPARE", "").strip() == "1"
+    if not api_key and not 予備だけ:
         fail("ANTHROPIC_API_KEY が未設定です。リポジトリの Secrets に登録してください。")
 
     dry_run = os.environ.get("DRY_RUN", "").lower() == "true"
@@ -1331,7 +1559,14 @@ def main() -> None:
 
     lines = read_queue_lines()
     entries = parse_entries(lines)
-    existing_ids = {str(e.get("id")) for e in entries if e.get("id")}
+    # queue から消えた過去の投稿も、git の履歴から戻して見る（2026-09-29）
+    全部: dict[str, dict] = {str(e["id"]): e for e in 過去の投稿() if e.get("id")}
+    for e in entries:
+        if e.get("id"):
+            全部[str(e["id"])] = e
+    全投稿 = list(全部.values())
+    existing_ids = set(全部)
+    記 = 出典の記録(全投稿, target_date)
 
     filled = find_filled(entries, target_date)
     needed = [slot for slot in SLOTS if slot[0] not in filled]
@@ -1340,13 +1575,26 @@ def main() -> None:
     if not needed:
         print(f"{target_date} は {len(SLOTS)} 枠とも埋まっています。何もしません。")
         return
+    # SHIFT_HOURS="6=7" のように書くと、その枠の中身を別の時刻に出す（2026-09-30 代表指示
+    # 「6:00 の分は 7:00 に置き換える」。当日に作り直して 6:00 を過ぎていたときのため）。
+    ずらす: dict[int, int] = {}
+    for 組 in re.split(r"[,、\s]+", os.environ.get("SHIFT_HOURS", "").strip()):
+        if "=" in 組:
+            a, b = 組.split("=", 1)
+            if a.strip().isdigit() and b.strip().isdigit():
+                ずらす[int(a)] = int(b)
+    出す時 = lambda h: ずらす.get(h, h)
+    for a, b in ずらす.items():
+        if b in filled:
+            filled[a] = filled[b]   # ずらし先がもう埋まっていれば作らない
+    needed = [slot for slot in SLOTS if slot[0] not in filled]
     # 当日ぶんを作り直すときに、すでに時刻を過ぎた枠を作らない
     # （過ぎた時刻で作ると、次の tick で即座に投稿されてしまうため）
     now_jst = datetime.now(JST)
     past = [
         slot[0]
         for slot in needed
-        if datetime(target_date.year, target_date.month, target_date.day, slot[0], tzinfo=JST) <= now_jst
+        if datetime(target_date.year, target_date.month, target_date.day, 出す時(slot[0]), tzinfo=JST) <= now_jst
     ]
     if past:
         print("すでに時刻を過ぎているため作らない枠: " + "、".join(f"{h}:00" for h in past))
@@ -1354,6 +1602,19 @@ def main() -> None:
         if not needed:
             print("作れる枠がありません。何もしません。")
             return
+
+    if 予備だけ:
+        # compose が失敗したとき（残高切れなど）に、空いた枠を予備で埋める。API は使わない。
+        今日の出典: set[str] = set()
+        for e in filled.values():
+            今日の出典 |= source_urls(e.get("text", ""), e.get("thread") or [])
+        行 = 予備で埋める(target_date, [h for h, *_ in needed], 記, 今日の出典, existing_ids)
+        if 行 and not dry_run:
+            with QUEUE_PATH.open("a", encoding="utf-8") as handle:
+                for line in 行:
+                    handle.write(line + "\n")
+        print(f"予備で {len(行)} 枠を埋めました。")
+        return
 
     # ONLY_HOURS=15 のように書くと、その枠だけを作る。
     # 枠ひとつの中身を先に見たいとき用（2026-09-25 追加）。
@@ -1438,13 +1699,30 @@ def main() -> None:
         else:
             print("::warning::5と0のつく日ですが、使えるクーポンがありません。9選型で出します。")
 
+    # 15時は「催し × 近くの宿1軒」に（福井だけ。2026-09-29 代表了承）。
+    # 宿の一覧の日も、5と0のつく日（クーポン）も、これに置きかえる。ふるさと納税の日はそのまま。
+    stay = None
+    if (hotel or mugi) and 宿たち:
+        stay = 催しと宿の材料(target_date, 宿たち)
+        if stay:
+            print(f"  → 15時は「催し × 宿1軒」（{stay['切り口']['名']}／候補 {len(stay['宿'])} 軒）")
+            hotel = None
+            mugi = None
+
+    予備の数 = 0 if os.environ.get("ONLY_HOURS", "").strip() else max(0, min(5, 予備の目標 - len(予備を読む())))
+    if 予備の数:
+        print(f"予備を {予備の数} 本あわせて作ります（いま {len(予備を読む())} 本）")
+
     model = pick_model(api_key)
     prompt = build_prompt(
-        board, neta, articles, works, recent_texts(entries), target_date, needed, filled,
+        board, neta, articles, works, recent_texts(全投稿), target_date, needed, filled,
         hotel=hotel,
-        hotel_hour=HOTEL_HOUR if (hotel or mugi or kifu) else None,
+        hotel_hour=HOTEL_HOUR if (hotel or mugi or kifu or stay) else None,
         mugi=mugi,
         kifu=kifu,
+        使えない=使えない出典の一覧(記, 全投稿, target_date),
+        stay=stay,
+        予備の数=予備の数,
     )
     posts = generate(api_key, model, prompt, [hour for hour, *_ in needed])
 
@@ -1535,7 +1813,25 @@ def main() -> None:
                     )
                 thread = むぎの返信(mugi)
 
-            if not hotel and not mugi and not kifu and hour == HOTEL_HOUR and text.startswith(PR_MARKERS):
+            if stay and hour == HOTEL_HOUR:
+                if URL_IN_TEXT.search(text):
+                    落とす(f"{hour}:00 の本文に URL が入っています。リンクは返信に付けます。")
+                if text.startswith(PR_MARKERS):
+                    落とす(f"{hour}:00 の本文が【PR】で始まっています。PR は返信の末尾に付けます。")
+                泊 = STAYED_VOICE.search(text)
+                if 泊:
+                    落とす(f"{hour}:00 の本文に「{泊.group(0)}」が入っています。泊まった体で書かないこと。")
+                if not thread or not SOURCE_URL.search(thread[0]):
+                    落とす(f"{hour}:00 の THREAD に出典元がありません。")
+                if 検索語 in text:
+                    text = text.replace("\n\n" + 検索語, "").replace(検索語, "").rstrip()
+                返信, 選んだ宿 = 宿の一言返信(stay, post.get("hotel"), target_date)
+                if 宿.見せる名(選んだ宿) in text:
+                    落とす(f"{hour}:00 の本文に宿の名前が入っています。宿は返信で紹介します。")
+                thread = [thread[0], *返信]
+                post["note"] = (str(post.get("note") or "") + f"／宿：{宿.見せる名(選んだ宿)}")[:120]
+
+            if not hotel and not mugi and not kifu and not stay and hour == HOTEL_HOUR and text.startswith(PR_MARKERS):
                 # 宿の枠が立っていないのに PR 投稿が作られた。
                 # リンクが付かないので成果にならず、表示だけが残る。
                 落とす(
@@ -1600,14 +1896,12 @@ def main() -> None:
                     f"（{今日で終わる.search(text).group(0)}）。この話は 6:00 のまとめ枠だけです。"
                 )
 
-            # 前の日と同じ出来事なら落とす（先の予定の枠はのぞく）
-            if hour not in 先の予定の枠:
-                連日 = source_urls(text, thread) & set(前の日の出典)
-                if 連日:
-                    print(
-                        f"::warning::{hour}:00 は {前の日の出典[sorted(連日)[0]]} と同じ出来事なので"
-                        f"入れません（出典 {sorted(連日)[0]}）。この枠は空のままにします。"
-                    )
+            # 同じ出来事は直近14日で2回まで・3日以上あける（6:00 の「今日で終わる」はのぞく）。
+            # 2026-09-29 代表了承。前の「前の日だけ見る・先の予定は何度でも」を改めた。
+            if hour != 6:
+                わけ = 出典で止める理由(source_urls(text, thread), 記, target_date)
+                if わけ:
+                    print(f"::warning::{hour}:00 は{わけ}ので入れません。この枠はあとで予備で埋めます。")
                     continue
             重なり = source_urls(text, thread) & set(出典の枠)
             if 重なり:
@@ -1626,7 +1920,7 @@ def main() -> None:
             item = {
                 "id": new_id(hour, existing_ids),
                 "text": text,
-                "scheduled_at": f"{target_date.isoformat()}T{hour:02d}:00:00+09:00",
+                "scheduled_at": f"{target_date.isoformat()}T{出す時(hour):02d}:00:00+09:00",
             }
             existing_ids.add(item["id"])
             if thread:
@@ -1643,9 +1937,21 @@ def main() -> None:
             print(f"::warning::{hour}:00 は作れませんでした（{わけ}）。この枠は空のままにします。")
             continue
 
+    # 空いた枠を予備で埋める／新しい予備をしまう（2026-09-29）
+    入った = {int(json.loads(l)["scheduled_at"][11:13]) for l in new_lines} | {h for h in ずらす if 出す時(h) in {int(json.loads(l)["scheduled_at"][11:13]) for l in new_lines}}
+    空き = [h for h, *_ in needed if h not in 入った]
+    新しい予備 = 予備にする(予備の作りかけ, target_date, 記, set(出典の枠))
+    if 新しい予備:
+        print(f"予備を {len(新しい予備)} 本作りました（出典・期限の見張りを通ったもの）")
     if dry_run:
         print("\nDRY_RUN のため、キューには書き込みません。")
+        if 空き:
+            print("空いた枠（本番なら予備で埋める）: " + "、".join(f"{h}:00" for h in 空き))
         return
+    if 新しい予備:
+        予備を書く(予備を読む() + 新しい予備)
+    if 空き:
+        new_lines += 予備で埋める(target_date, 空き, 記, set(出典の枠), existing_ids)
 
     with QUEUE_PATH.open("a", encoding="utf-8") as handle:
         for line in new_lines:

@@ -32,6 +32,8 @@ jobs:
       TARGET_DATE: ${{ github.event.client_payload.target_date || github.event.inputs.target_date }}
       # ONLY_HOURS=15 のように渡すと、その枠だけを作る（中身を先に見たいとき用）
       ONLY_HOURS: ${{ github.event.client_payload.only_hours }}
+      # SHIFT_HOURS="6=7" で、6:00 の枠の中身を 7:00 に出す（当日の作り直し用）
+      SHIFT_HOURS: ${{ github.event.client_payload.shift_hours }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       # ドキュメント ID は秘密ではないので Variables に置く
       BOARD_DOC_ID: ${{ vars.BOARD_DOC_ID }}
@@ -39,20 +41,38 @@ jobs:
       ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
       ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
     steps:
+      # queue の過去の版を読むので、履歴ごと取る（2026-09-29。同じ催しの繰り返しを見るため）
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: 翌日ぶんの 10 本を作る
+        id: make
+        run: python scripts/compose.py
+
+      # 残高切れなどで作れなかったとき、空いた枠を予備で埋める（API は使わない。2026-09-29）
+      - name: 失敗したら予備で埋める
+        if: ${{ failure() && steps.make.outcome == 'failure' }}
+        env:
+          USE_SPARE: "1"
         run: python scripts/compose.py
 
       - name: キューの形式を検証する
+        id: validate
+        if: ${{ always() }}
         env:
           PYTHONPATH: src
         run: python -m threads_bot validate
 
       - name: キューをコミットする
+        if: ${{ always() && steps.validate.outcome == 'success' }}
         run: |
           ./scripts/commit_file.sh posts/queue.jsonl "chore(queue): 翌日ぶんの 10 本を追加"
+          if [ -f posts/予備.jsonl ]; then
+            git add -N posts/予備.jsonl
+            ./scripts/commit_file.sh posts/予備.jsonl "chore(queue): 予備を更新"
+          fi
