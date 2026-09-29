@@ -795,9 +795,14 @@ def ask(api_key: str, model: str, prompt: str) -> str:
             "messages": [{"role": "user", "content": prompt}],
         },
     )
-    return "".join(
+    出 = "".join(
         block.get("text", "") for block in payload.get("content", []) if block.get("type") == "text"
     ).strip()
+    # 1本も読めなかったときの手がかり（2026-09-30。1回目だけ0本になる原因を調べる）
+    if "@@@POST" not in 出 or payload.get("stop_reason") != "end_turn":
+        print(f"::warning::返答の状態: stop_reason={payload.get('stop_reason')} ／ {len(出)} 字 ／ "
+              f"出力トークン {payload.get('usage', {}).get('output_tokens')} ／ 先頭: {出[:200]!r}")
+    return 出
 
 
 予備の作りかけ: list[dict] = []
