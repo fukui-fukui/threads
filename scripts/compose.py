@@ -791,7 +791,7 @@ def ask(api_key: str, model: str, prompt: str) -> str:
         api_key,
         {
             "model": model,
-            "max_tokens": 8000,
+            "max_tokens": 16000,
             "messages": [{"role": "user", "content": prompt}],
         },
     )
@@ -823,8 +823,14 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
             この回の指示 = prompt
         else:
             残り = [h for h in hours if h not in 集まった]
+            できた = [
+                f"- {h}:00 ｜ {(p.get('text') or '').splitlines()[0][:40]} ｜ "
+                + "、".join(sorted(source_urls(p.get('text', ''), p.get('thread') or [])))
+                for h, p in sorted(集まった.items())
+            ]
             この回の指示 = (
                 prompt
+                + ("\n\n---\nすでにできた枠（同じ出来事・同じ出典元URLは使わないこと）:\n" + "\n".join(できた) if できた else "")
                 + "\n\n---\n直前の返答では枠が足りませんでした。"
                 + "**足りないのは "
                 + "、".join(f"{h}:00" for h in 残り)

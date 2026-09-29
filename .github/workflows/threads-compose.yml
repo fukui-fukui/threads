@@ -71,8 +71,17 @@ jobs:
       - name: キューをコミットする
         if: ${{ always() && steps.validate.outcome == 'success' }}
         run: |
-          ./scripts/commit_file.sh posts/queue.jsonl "chore(queue): 翌日ぶんの 10 本を追加"
-          if [ -f posts/予備.jsonl ]; then
-            git add -N posts/予備.jsonl
-            ./scripts/commit_file.sh posts/予備.jsonl "chore(queue): 予備を更新"
-          fi
+          set -euo pipefail
+          # queue と予備を1つのコミットにする。別々にすると、片方が未コミットのまま
+          # rebase できずに push が止まる（2026-09-30 に実際に起きた）
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add posts/queue.jsonl
+          [ -f posts/予備.jsonl ] && git add posts/予備.jsonl
+          if git diff --cached --quiet; then echo "変更なし"; exit 0; fi
+          git commit -m "chore(queue): 翌日ぶんを追加"
+          for i in 1 2 3 4; do
+            if git pull --rebase origin "${GITHUB_REF_NAME}" && git push; then exit 0; fi
+            sleep $((2 ** i))
+          done
+          exit 1
