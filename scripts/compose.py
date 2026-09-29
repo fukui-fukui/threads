@@ -843,6 +843,9 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
 
     足りない = [h for h in hours if h not in 集まった]
     if len(集まった) < max(1, (expected + 1) // 2):
+        # 生の出力を注記に残す（ログは落とせないので、注記で読む。2026-09-30）
+        for i in range(0, min(len(text), 1800), 300):
+            print("::warning::生の出力" + str(i // 300 + 1) + ": " + text[i:i + 300].replace("\n", " ⏎ "))
         fail(
             f"{expected} 本のうち {len(集まった)} 本しか作れませんでした（3 回試行）。"
             f"半分に満たないので中止します。\n--- 最後の生の出力 ---\n{text[:1200]}"
