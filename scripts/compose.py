@@ -577,6 +577,16 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "- 記事本文を丸ごと写さない。引用するなら短く、事実（日付・場所・名前）を中心に",
         "- この枠に限り、下の文体ルールの「リンクは貼らない」を適用しません",
         "",
+        "#### 公式Instagramも載せる（2026-10-01 代表指示「インスタリンクは積極的に載せたい。出典元とインスタの両方が望ましい」）",
+        "",
+        "ネタ帳の行に「［Instagram: https://www.instagram.com/…/］」が付いていたら、",
+        "**出典元の行のすぐ下に、次の1行を足してください。**",
+        "",
+        "  Instagram：https://www.instagram.com/アカウント名/",
+        "",
+        "- URL はネタ帳に書かれたものをそのまま使う。**ネタ帳に無いインスタのURLを作らない**（機械で確かめて、無いものは消します）",
+        "- 出典元そのものがインスタのときは、同じURLを2回書かない",
+        "",
     ]
     if already:
         sections += [
@@ -1898,6 +1908,20 @@ def main() -> None:
                     )
                 text = 宿の本文(hotel["raw"], 見出し)
                 thread = 宿の返信(hotel["raw"], target_date)
+
+            # インスタのURLは、ネタ帳に書かれたものだけ通す（作ったURLを載せない。2026-10-01）
+            インスタ = re.compile(r"https?://(?:www\.)?instagram\.com/[A-Za-z0-9._/]+")
+            def _インスタを確かめる(部: str) -> str:
+                残す = []
+                for 行 in 部.splitlines():
+                    urls = インスタ.findall(行)
+                    if urls and not all(u.rstrip("/") in neta for u in urls) and not SOURCE_URL.search(行):
+                        print(f"::warning::{hour}:00 のインスタのURLがネタ帳にないので外しました：{urls[0]}")
+                        continue
+                    残す.append(行)
+                return "\n".join(残す).strip()
+            thread = [_インスタを確かめる(t) for t in thread]
+            thread = [t for t in thread if t]
 
             # 同じ催しを 1 日に 2 本出していないかを、ここで機械的に確かめる。
             # 指示だけだと読み飛ばされる（9/24 ぶんで 3 組の重複が通った）。
