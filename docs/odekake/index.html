@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ふくいおでかけ帖</title>
+<meta name="description" content="@fukui._.fukui が集めた福井県内のイベント・新スポットのまとめ">
+<style>
+:root {
+  --bg: #fbfaf7; --card: #ffffff; --fg: #1d1d1b; --muted: #6a6862; --border: #e6e2d9;
+  --accent: #c2410c; --accent-soft: #fdebdd; --event: #0f6b5c; --spot: #7a3fb5; --topic: #6a6862;
+  --radius: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151513; --card: #1e1e1b; --fg: #ecebe7; --muted: #a29f97; --border: #33322d;
+    --accent: #fb923c; --accent-soft: #3a2415; --event: #4fd1b5; --spot: #c39af0; --topic: #a29f97;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; line-height: 1.6; }
+header { padding: 28px 16px 12px; max-width: 760px; margin: 0 auto; }
+h1 { margin: 0; font-size: 1.6rem; letter-spacing: .02em; }
+.sub { color: var(--muted); font-size: .9rem; margin: 4px 0 0; }
+.sub a { color: inherit; }
+main { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+.controls { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--border); }
+.tabs, .areas { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.tabs::-webkit-scrollbar, .areas::-webkit-scrollbar { display: none; }
+.areas { margin-top: 8px; }
+button.chip { flex: none; border: 1px solid var(--border); background: var(--card); color: var(--fg);
+  border-radius: 999px; padding: 6px 14px; font: inherit; font-size: .9rem; cursor: pointer; }
+.areas button.chip { padding: 3px 11px; font-size: .82rem; }
+button.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+input[type=search] { width: 100%; margin-top: 8px; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--card); color: var(--fg); font: inherit; }
+.count { color: var(--muted); font-size: .85rem; margin: 14px 0 6px; }
+.group { margin: 22px 0 8px; font-size: .95rem; color: var(--muted); font-weight: 600; }
+ul.list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: .8rem; color: var(--muted); }
+.kind { font-weight: 700; }
+.kind.催し { color: var(--event); } .kind.スポット { color: var(--spot); } .kind.話題 { color: var(--topic); }
+.when { color: var(--fg); font-weight: 600; }
+.badge { background: var(--accent-soft); color: var(--accent); border-radius: 4px; padding: 0 6px; font-weight: 700; }
+.text { margin: 6px 0 0; }
+.note { margin: 6px 0 0; color: var(--muted); font-size: .9rem; }
+.src { display: inline-block; margin-top: 8px; font-size: .82rem; color: var(--accent); word-break: break-all; }
+.empty { color: var(--muted); text-align: center; padding: 40px 0; }
+footer { color: var(--muted); font-size: .8rem; text-align: center; padding: 24px 16px 40px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ふくいおでかけ帖</h1>
+  <p class="sub">Threads <a href="https://www.threads.com/@fukui._.fukui" target="_blank" rel="noopener">@fukui._.fukui</a> が集めた、福井のイベントと新しいお店・スポット。<span id="updated"></span></p>
+</header>
+<main>
+  <div class="controls">
+    <div class="tabs" role="group" aria-label="表示">
+      <button class="chip" data-tab="weekend">今週末</button>
+      <button class="chip" data-tab="upcoming">開催中・これから</button>
+      <button class="chip" data-tab="spot">新スポット</button>
+      <button class="chip" data-tab="all">すべて</button>
+    </div>
+    <div class="areas" role="group" aria-label="エリア" id="areas"></div>
+    <input type="search" id="q" placeholder="キーワードで探す（例：そば、美術館、子ども）">
+  </div>
+  <p class="count" id="count"></p>
+  <div id="out"></div>
+</main>
+<footer>日付・内容は集めた時点のものです。お出かけ前に必ず出典（主催者・お店の公式）で確かめてください。</footer>
+
+<script>
+(() => {
+  const AREA_ORDER = ["嶺北", "嶺南", "福井市", "坂井市", "あわら市", "永平寺町", "鯖江市", "越前市", "越前町",
+    "南越前町", "池田町", "大野市", "勝山市", "敦賀市", "美浜町", "若狭町", "小浜市", "おおい町", "高浜町"];
+  const WD = "日月火水木金土";
+  const state = { tab: "upcoming", area: "", q: "" };
+  try {
+    const saved = JSON.parse(localStorage.getItem("odekake") || "{}");
+    if (saved.tab) state.tab = saved.tab;
+    if (saved.area !== undefined) state.area = saved.area;
+  } catch (_) {}
+
+  const $ = (s) => document.querySelector(s);
+  const pd = (s) => s ? new Date(s + "T00:00:00") : null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const fmt = (d) => `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`;
+
+  // 今週末 = 次の土日（今日が土日ならその週末）
+  const dow = today.getDay();
+  const sat = dow === 0 ? addDays(today, -1) : addDays(today, 6 - dow);
+  const sun = addDays(sat, 1);
+
+  let items = [];
+
+  function when(it) {
+    const s = pd(it.start), e = pd(it.end);
+    if (!s) return "";
+    if (it.kind === "スポット") return `${s.getFullYear()}/${fmt(s)} オープン`;
+    return +s === +e ? fmt(s) : `${fmt(s)} 〜 ${fmt(e)}`;
+  }
+
+  function badge(it) {
+    const s = pd(it.start), e = pd(it.end);
+    if (!s || it.kind === "スポット") return "";
+    if (s <= today && today <= e) return +s === +e ? "今日" : "開催中";
+    if (s <= sun && e >= sat) return "今週末";
+    const days = Math.round((s - today) / 864e5);
+    if (days > 0 && days <= 7) return `あと${days}日`;
+    return "";
+  }
+
+  function matchTab(it) {
+    const s = pd(it.start), e = pd(it.end);
+    switch (state.tab) {
+      case "weekend": return it.kind !== "スポット" && s && s <= sun && e >= sat;
+      case "upcoming": return it.kind !== "スポット" && (!e || e >= today);
+      case "spot": return it.kind === "スポット";
+      default: return true;
+    }
+  }
+
+  function matchArea(it) {
+    if (!state.area) return true;
+    return it.area === state.area || it.region === state.area;
+  }
+
+  function matchQ(it) {
+    if (!state.q) return true;
+    const hay = (it.text + it.note + (it.area || "")).toLowerCase();
+    return state.q.toLowerCase().split(/\s+/).every((w) => hay.includes(w));
+  }
+
+  function card(it) {
+    const li = document.createElement("li");
+    li.className = "card";
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const add = (cls, txt) => { if (!txt) return; const s = document.createElement("span"); s.className = cls; s.textContent = txt; meta.append(s); };
+    add(`kind ${it.kind}`, it.kind === "スポット" ? "新スポット" : it.kind);
+    add("badge", badge(it));
+    add("when", when(it));
+    add("area", it.area || "");
+    li.append(meta);
+    const p = document.createElement("p"); p.className = "text"; p.textContent = it.text; li.append(p);
+    if (it.note) { const n = document.createElement("p"); n.className = "note"; n.textContent = it.note; li.append(n); }
+    if (it.source) {
+      const a = document.createElement("a"); a.className = "src"; a.href = it.source;
+      a.target = "_blank"; a.rel = "noopener";
+      try { a.textContent = "出典：" + new URL(it.source).hostname.replace(/^www\./, ""); } catch (_) { a.textContent = "出典"; }
+      li.append(a);
+    }
+    return li;
+  }
+
+  function sortKey(it) {
+    if (state.tab === "spot" || it.kind === "スポット") return -(pd(it.start) || pd(it.written));
+    const s = pd(it.start), e = pd(it.end);
+    if (!s) return 9e15;
+    // 開催中のものは終わりが近い順、これからのものは始まりが近い順
+    return s <= today ? +e - 1e13 : +s;
+  }
+
+  function monthLabel(it) {
+    const s = pd(it.start);
+    if (!s) return "日付なし・随時";
+    if (it.kind !== "スポット" && s <= today) return "開催中";
+    return `${s.getFullYear()}年${s.getMonth() + 1}月`;
+  }
+
+  function render() {
+    document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tab === state.tab));
+    document.querySelectorAll("[data-area]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.area === state.area));
+    try { localStorage.setItem("odekake", JSON.stringify({ tab: state.tab, area: state.area })); } catch (_) {}
+
+    const list = items.filter((it) => matchTab(it) && matchArea(it) && matchQ(it))
+      .sort((a, b) => sortKey(a) - sortKey(b));
+    const out = $("#out");
+    out.textContent = "";
+    $("#count").textContent = state.tab === "weekend"
+      ? `${fmt(sat)}・${fmt(sun)} の予定 ${list.length} 件`
+      : `${list.length} 件`;
+    if (!list.length) {
+      const p = document.createElement("p"); p.className = "empty";
+      p.textContent = "当てはまるものがありません。エリアやキーワードを変えてみてください。";
+      out.append(p); return;
+    }
+    let cur = null, ul = null;
+    for (const it of list) {
+      const label = state.tab === "spot" || state.tab === "weekend" ? "" : monthLabel(it);
+      if (label !== cur || !ul) {
+        cur = label;
+        if (label) { const h = document.createElement("h2"); h.className = "group"; h.textContent = label; out.append(h); }
+        ul = document.createElement("ul"); ul.className = "list"; out.append(ul);
+      }
+      ul.append(card(it));
+    }
+  }
+
+  function buildAreas() {
+    const present = new Set(items.flatMap((it) => [it.area, it.region]).filter(Boolean));
+    const box = $("#areas");
+    const mk = (val, label) => { const b = document.createElement("button"); b.className = "chip"; b.dataset.area = val; b.textContent = label; box.append(b); };
+    mk("", "全県");
+    AREA_ORDER.filter((a) => present.has(a)).forEach((a) => mk(a, a));
+    if (state.area && !present.has(state.area)) state.area = "";
+  }
+
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-tab],[data-area]");
+    if (!t) return;
+    if (t.dataset.tab) state.tab = t.dataset.tab;
+    if (t.dataset.area !== undefined) state.area = t.dataset.area;
+    render();
+  });
+  $("#q").addEventListener("input", (e) => { state.q = e.target.value.trim(); render(); });
+
+  fetch("data.json", { cache: "no-cache" })
+    .then((r) => r.json())
+    .then((data) => {
+      items = data.items || [];
+      if (data.updated) $("#updated").textContent = `（${data.updated.replace(/-/g, "/")} 更新）`;
+      buildAreas();
+      render();
+    })
+    .catch(() => { $("#out").innerHTML = '<p class="empty">データを読み込めませんでした。</p>'; });
+})();
+</script>
+</body>
+</html>
