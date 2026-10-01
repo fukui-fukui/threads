@@ -10,6 +10,8 @@ on:
     paths:
       - "neta/ネタ帳.md"
       - "scripts/おでかけ.py"
+      - "scripts/おでかけ_宿.py"
+      - "scripts/宿.py"
   workflow_dispatch:
 
 permissions:
@@ -29,6 +31,9 @@ jobs:
           python-version: "3.12"
       - name: データを作り直す
         run: python scripts/おでかけ.py --thumbs
+      - name: 宿のデータを作り直す
+        run: python scripts/おでかけ_宿.py --images
       - name: コミットする
         run: |
           ./scripts/commit_file.sh docs/odekake/data.json "chore(odekake): ネタ帳からサイトのデータを更新"
+          ./scripts/commit_file.sh docs/odekake/hotels.json "chore(odekake): 宿のデータを更新"
