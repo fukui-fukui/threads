@@ -88,6 +88,12 @@ class BuildTest(unittest.TestCase):
         shop = data["items"][1]
         self.assertEqual((shop["kind"], shop["start"]), ("スポット", "2026-06-13"))
 
+    def test_pick_from_daihyo_section(self):
+        md = NETA.replace("### 2026-09-30\n", "### 2026-09-30（代表が見つけた催し）\n", 1)
+        items = odekake.build(md)["items"]
+        self.assertTrue(all(it["pick"] for it in items if it["written"] == "2026-09-30"))
+        self.assertFalse(any(it["pick"] for it in items if it["written"] == "2026-09-29"))
+
     def test_sources_not_paired_when_counts_differ(self):
         data = odekake.build(NETA)
         topic = [it for it in data["items"] if it["text"].startswith("日付のない")][0]

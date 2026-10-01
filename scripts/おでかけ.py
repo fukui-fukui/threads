@@ -162,10 +162,12 @@ def parse_neta(md: str) -> list[dict]:
     body = re.split(r"\n## ", section[1], maxsplit=1)[0]
 
     for block in re.split(r"\n(?=### )", body):
-        head = re.match(r"### (\d{4})-(\d{2})-(\d{2})", block)
+        head = re.match(r"### (\d{4})-(\d{2})-(\d{2})(.*)", block)
         if not head:
             continue
         written = date(int(head.group(1)), int(head.group(2)), int(head.group(3)))
+        # 「### 2026-10-01（代表が見つけた催し）」のように、代表が手で足した欄はおすすめとして目立たせる
+        pick = "代表" in head.group(4)
         main, _, rest = block.partition("<details>")
         bullets = [ln[2:].strip() for ln in main.splitlines() if ln.startswith("- ")]
         sources = re.findall(r"^- (https?://\S+)", rest, flags=re.M)
@@ -186,6 +188,7 @@ def parse_neta(md: str) -> list[dict]:
                 "source": sources[i] if paired else None,
                 "instagram": instagram,
                 "written": written.isoformat(),
+                "pick": pick,
             })
 
     # 同じ本文が二度入っていたら、新しく書いたほうを残す

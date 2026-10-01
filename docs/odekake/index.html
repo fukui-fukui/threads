@@ -420,10 +420,13 @@ footer a { color: var(--main); font-weight: 700; }
   const base = (it) => inArea(it) && inKind(it) && inQ(it);
 
   // 並び順の段（小さいほど上）。日付は年付きで比べる
-  //   1 いま開催中 → 2 これから → 3 新しくできた場所 → 4 日程未定の催し → 5 話題 → 6 終わったもの
+  //   0 話題・おすすめ（「ぜんぶ」だけ）→ 1 いま開催中 → 2 これから → 3 新しくできた場所
+  //   → 4 日程未定の催し → 5 話題 → 6 終わったもの
   const ended = (it) => it.kind !== "スポット" && it.end && pd(it.end) < today;
   function rankOf(it) {
     const s = pd(it.start);
+    // 「ぜんぶ」では、代表が足したもの（終わっていないもの）と日付の無い話題を一番上にまとめる
+    if (state.tab === "all" && ((it.pick && !ended(it)) || (!s && it.kind === "話題"))) return 0;
     if (it.kind === "スポット") return 3;
     if (!s) return it.kind === "催し" ? 4 : 5;
     if (ended(it)) return 6;
@@ -435,7 +438,9 @@ footer a { color: var(--main); font-weight: 700; }
     const w = pd(it.written);
     if (state.tab === "spot") return FAR - +(s || w);
     const r = rankOf(it);
-    const v = r === 1 ? +e                 // 開催中：終わりが近い順
+    // おすすめ：代表が足したものを先に、新しく集めた順。同じ日なら後から書いた行を先に
+    const v = r === 0 ? (it.pick ? 0 : 1e12) + FAR / 2 - +w + 1e6 - it._i
+      : r === 1 ? +e                       // 開催中：終わりが近い順
       : r === 2 ? +s                       // これから：始まりが近い順
       : r === 3 ? FAR - +(s || w)          // 新しい場所：新しい順
       : r === 6 ? FAR - +e                 // 終わったもの：最近終わった順
@@ -447,6 +452,7 @@ footer a { color: var(--main); font-weight: 700; }
     if (state.tab === "weekend" || state.tab === "spot" || state.day) return "";
     const s = pd(it.start);
     switch (rankOf(it)) {
+      case 0: return "話題・おすすめ";
       case 1: return "いま開催中";
       case 2: return s.getFullYear() === today.getFullYear()
         ? `${s.getMonth() + 1}月のおでかけ` : `${s.getFullYear()}年${s.getMonth() + 1}月のおでかけ`;
@@ -478,7 +484,7 @@ footer a { color: var(--main); font-weight: 700; }
     const t = el("span", "lc-txt");
     const site = el("span", "lc-site");
     site.append(icon("i-out"), og.site ? `${og.site}・${hostOf(it.source)}` : hostOf(it.source));
-    t.append(site, el("span", "lc-title", og.title || "出典ページを開く"));
+    t.append(site, el("span", "lc-title", og.title || (/\.pdf($|\?)/i.test(it.source) ? "発表資料（PDF）を開く" : "出典ページを開く")));
     if (og.description) t.append(el("span", "lc-desc", og.description));
     a.append(t);
     return a;
@@ -723,6 +729,7 @@ footer a { color: var(--main); font-weight: 700; }
     .then((r) => r.json())
     .then((data) => {
       items = data.items || [];
+      items.forEach((it, i) => { it._i = i; });
       if (data.updated) {
         $("#updated").textContent = `（${data.updated.replace(/-/g, "/")} 更新）`;
         newSince = addDays(pd(data.updated), -(NEW_DAYS - 1));

@@ -11,6 +11,7 @@
    "source": "https://fupo.jp/event/sobamatsurimiyama/",
    "instagram": null,
    "written": "2026-10-01",
+   "pick": true,
    "region": "嶺北",
    "og": {
     "image": "https://fupo.jp/wp-content/uploads/2024/09/ce4ae359088d381a5f2987f5c9462c88.jpg",
@@ -29,6 +30,7 @@
    "source": "https://tabiiro.jp/yado/s/102055-awara-haiya/",
    "instagram": "https://www.instagram.com/p/Dd3Y2lFNBiZ/",
    "written": "2026-10-01",
+   "pick": true,
    "region": "嶺北",
    "og": {
     "image": "https://tabiiro.jp/lpimg/yado/102055/main/img1.jpg",
@@ -36,6 +38,20 @@
     "description": "西陣織を染め上げるために使用された、上質な灰を作り続けた先祖にあやかる屋号が宿名の老舗旅館。2024年に創業140周年を迎えた、長い歴史を持つ宿が大切にし続けているのは“伝統旅館の温もりとおもてなし…",
     "site": "トラベルウェブマガジン旅色"
    }
+  },
+  {
+   "text": "福井市文京7丁目に、焼きたてポップオーバーがおかわり自由のハンバーグカフェ「おかわり!!ハンバーグ グリエ・ミア！」が2026年4月17日オープン。ハンバーグは1つ220円で追加でき、ソースは6種類から選べる",
+   "note": "ハンバーグもパンも、好きなだけおかわりできる店ができた",
+   "kind": "スポット",
+   "area": "福井市",
+   "start": "2026-04-17",
+   "end": "2026-04-17",
+   "source": "https://www.colowide.co.jp/datafile_new/pr_news_pdf_file_177570930724.pdf",
+   "instagram": "https://www.instagram.com/p/DdyG_hCzYMZ/",
+   "written": "2026-10-01",
+   "pick": true,
+   "region": "嶺北",
+   "og": null
   },
   {
    "text": "あわら市温泉「あわら温泉屋台村 湯けむり横丁」に天ぷら店「天ぷら たかさか」が2026年1月26日オープン。三国産海鮮や地元野菜を使った天ぷらを提供",
@@ -47,6 +63,7 @@
    "source": "https://fupo.jp/article/newopen_tempuratakasaka/",
    "instagram": null,
    "written": "2026-10-01",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://fupo.jp/wp-content/uploads/2026/02/Image_20260213_183946_303.jpeg",
@@ -65,6 +82,7 @@
    "source": "https://fuku-iro.jp/blog/detail_290.html",
    "instagram": null,
    "written": "2026-10-01",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://fuku-iro.jp/lsc/upfile/blog/0000/0290/290_1_l.jpg",
@@ -83,6 +101,7 @@
    "source": "https://avend.co.jp/notime/",
    "instagram": null,
    "written": "2026-10-01",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://avend.co.jp/wp-content/uploads/waseda.png",
@@ -101,6 +120,7 @@
    "source": "https://www.town-echizen.jp/event/detail.php?id=865",
    "instagram": null,
    "written": "2026-10-01",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -119,6 +139,7 @@
    "source": "https://kyodonewsprwire.jp/release/202609095589",
    "instagram": null,
    "written": "2026-10-01",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://kyodonewsprwire.jp/prwfile/release/M109061/202609095589/_prw_PI1lg_r84E8SWE.jpg",
@@ -137,6 +158,7 @@
    "source": "http://www.e-ikeda.jp/event/p004689.html",
    "instagram": null,
    "written": "2026-10-01",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -155,6 +177,7 @@
    "source": "https://www.city.fukui-sakai.lg.jp/ryushokan/2026event/sunsetmuseum.html",
    "instagram": null,
    "written": "2026-10-01",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -173,6 +196,7 @@
    "source": "https://kanko-sakai.com/event/7528/",
    "instagram": null,
    "written": "2026-09-30",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://kanko-sakai.com/kanko-sakai/wp-content/uploads/スクリーンショット-2026-09-28-123601.png",
@@ -191,6 +215,7 @@
    "source": "https://fupo.jp/event/sakaikomefes2026/",
    "instagram": null,
    "written": "2026-09-30",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://fupo.jp/wp-content/uploads/2026/09/0924212302_sakai_fesu2026.jpg",
@@ -209,6 +234,7 @@
    "source": "https://wakasa-obama.jp/event/obama-syokunomasturi/",
    "instagram": null,
    "written": "2026-09-30",
+   "pick": false,
    "region": "嶺南",
    "og": {
     "image": "https://wakasa-obama.jp/wp-content/uploads/2025/10/2026leaflet-1.jpg.png",
@@ -227,6 +253,7 @@
    "source": "https://fupo.jp/event/tisakimonoten/",
    "instagram": null,
    "written": "2026-09-30",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://fupo.jp/wp-content/uploads/2026/09/0913111547_nohiraninoru_sakimono.jpg",
@@ -245,6 +272,7 @@
    "source": "https://nigiwai.ftmo.co.jp/archives/event/4606",
    "instagram": null,
    "written": "2026-09-30",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -263,6 +291,7 @@
    "source": "https://www.instagram.com/aquarium_obama/",
    "instagram": null,
    "written": "2026-09-30",
+   "pick": false,
    "region": "嶺南",
    "og": null
   },
@@ -276,6 +305,7 @@
    "source": "https://maruokajo-machiyori.jp/",
    "instagram": null,
    "written": "2026-09-30",
+   "pick": false,
    "region": "嶺北"
   },
   {
@@ -288,6 +318,7 @@
    "source": "https://dormy-hotels.com/dormyinn/hotels/nono_fukui/",
    "instagram": null,
    "written": "2026-09-30",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -306,6 +337,7 @@
    "source": "https://www.goldsgym.jp/shop/20251027",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://www.goldsgym.jp/wp-content/uploads/2026/06/IMG_8974.jpg",
@@ -324,6 +356,7 @@
    "source": "https://fukui-kenbi.pref.fukui.lg.jp/exhibition/exhibition/archives/140",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://fukui-kenbi.pref.fukui.lg.jp/files/blog/3/blog_posts/2026/06/00000140_eye_catch.png",
@@ -342,6 +375,7 @@
    "source": "https://www.city.ono.fukui.jp/kosodate/bunka-rekishi/hakubutsukan/oshirase/asakura100.html",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": null
   },
@@ -355,6 +389,7 @@
    "source": "https://www.fuku-e.com/event/detail_5114.html",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://www.fuku-e.com/lsc/upfile/spot/0000/5114/5114_1_l.jpg",
@@ -373,6 +408,7 @@
    "source": "https://www.fuku-e.com/event/detail_5111.html",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://www.fuku-e.com/lsc/upfile/spot/0000/5111/5111_2_l.jpg",
@@ -391,6 +427,7 @@
    "source": "https://fupo.jp/event/ishigatari/",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://fupo.jp/wp-content/uploads/2026/08/cyclingtour_260818.jpg",
@@ -409,6 +446,7 @@
    "source": "https://gekiryu-online.jp/2026/08/249426",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺南",
    "og": {
     "image": "https://gekiryu-online.jp/wp-content/uploads/2026/08/S__114565124-1.jpg",
@@ -427,6 +465,7 @@
    "source": "https://www.michi-no-eki.jp/notices/views/23216",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺南",
    "og": {
     "image": null,
@@ -445,6 +484,7 @@
    "source": "https://prtimes.jp/main/html/rd/p/000000002.000189989.html",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://prcdn.freetls.fastly.net/release_image/189989/2/189989-2-a68adf3eb700b8f734961e5aed72dff6-3900x2189.jpg?format=jpeg&auto=webp&fit=bounds&width=2400&height=1260",
@@ -463,6 +503,7 @@
    "source": "https://renew-fukui.com/",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://renew-fukui.com/kanri/wp-content/uploads/2026/06/SNS-OGP_1200x675px.jpg",
@@ -481,6 +522,7 @@
    "source": "https://ichijodani-bun.com/",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://ichijodani-bun.com/bunkasai/wp-content/uploads/2026/06/fav2.png",
@@ -499,6 +541,7 @@
    "source": "https://www.city.ono.fukui.jp/kurashi/douro-kotsu/tetsudou/norikata_20261018.html",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://www.city.ono.fukui.jp/kurashi/douro-kotsu/tetsudou/norikata_20261018.images/0006_20260915.jpg",
@@ -517,6 +560,7 @@
    "source": "http://www.city.katsuyama.fukui.jp/soshiki/32/39054.html",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -535,6 +579,7 @@
    "source": "https://www.fuku-e.com/event/detail_8342.html",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": null
   },
@@ -548,6 +593,7 @@
    "source": "https://www.fuku-e.com/event/detail_8390.html",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": "嶺北",
    "og": null
   },
@@ -561,6 +607,7 @@
    "source": "https://www.fuku-e.com/event/detail_8289.html",
    "instagram": null,
    "written": "2026-09-25",
+   "pick": false,
    "region": null,
    "og": {
     "image": "https://www.fuku-e.com/lsc/upfile/spot/0000/8289/8289_1_l.png",
@@ -579,6 +626,7 @@
    "source": "https://www.corolla-fukui.jp/c-base_fukui",
    "instagram": null,
    "written": "2026-09-23",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://www.corolla-fukui.jp/file/cms/34301/7187792/image.jpg",
@@ -597,6 +645,7 @@
    "source": "https://www.fukuishimbun.co.jp/articles/-/2698983",
    "instagram": null,
    "written": "2026-09-23",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://fki.ismcdn.jp/mwimgs/5/3/-/img_537cc1132bff24e24d156f966b66569f246574.jpg",
@@ -615,6 +664,7 @@
    "source": "https://fupo.jp/article/kaihotsunoyu_2608/",
    "instagram": null,
    "written": "2026-09-23",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://fupo.jp/wp-content/uploads/2026/07/0e92d8ad6e9d6425ae4a000377fc940f.png",
@@ -633,6 +683,7 @@
    "source": "https://fupo.jp/article/newopenlist/",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://fupo.jp/wp-content/uploads/2023/09/2a3a863037d164884e8e59e652482b73.jpg",
@@ -651,6 +702,7 @@
    "source": "https://www.dinopark.jp/437/",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": null
   },
@@ -664,6 +716,7 @@
    "source": "https://www.osoumenya.jp/",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -682,6 +735,7 @@
    "source": "https://fupo.jp/event/boatracemikuni_asoviva/",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://fupo.jp/wp-content/uploads/2026/09/9c87c479e0a8e7321fdb81957545e33c-1.jpg",
@@ -700,6 +754,7 @@
    "source": "https://www.wakasa-ohi.jp/sabaichi-cycling/",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺南",
    "og": {
     "image": "https://www.wakasa-ohi.jp/wp/wp-content/uploads/2026/09/鯖街道スタンプラリーちらし-1-pdf-724x1024.jpg",
@@ -718,6 +773,7 @@
    "source": "https://www.town.fukui-mihama.lg.jp/soshiki/5/16591.html",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺南",
    "og": {
     "image": null,
@@ -736,6 +792,7 @@
    "source": "https://urala.today/264727/",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://urala.today/wp-content/uploads/2026/09/a11b4bb3ba448d1fa402ac3dc62cc91f-2.jpg",
@@ -754,6 +811,7 @@
    "source": "https://wakasa-obama.jp/event/patisserie-bar-artrium-in-goshoen/",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺南",
    "og": {
     "image": null,
@@ -772,6 +830,7 @@
    "source": "https://wakasa-obama.jp/event/%E3%80%8Csuwayuumi-solo-exhibition%E3%80%8Din-goshoen/",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺南",
    "og": {
     "image": null,
@@ -790,6 +849,7 @@
    "source": "https://kouno-fukui.jp/%e3%82%a8%e3%82%ae%e3%83%b3%e3%82%b0%e5%a4%a7%e4%bc%9a-in-%e3%81%93%e3%81%86%e3%81%ae-2026%e3%80%80%e4%bc%9a%e5%a0%b4%e6%a1%88%e5%86%85/",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -808,6 +868,7 @@
    "source": "https://nigiwai.ftmo.co.jp/archives/event/4579",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": null
   },
@@ -821,6 +882,7 @@
    "source": "https://nigiwai.ftmo.co.jp/archives/event/4544",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -839,6 +901,7 @@
    "source": "https://fupo.jp/event/hoshikawakazumi_touten/",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://fupo.jp/wp-content/uploads/2026/08/0812130449_no_title.jpg",
@@ -857,6 +920,7 @@
    "source": "https://www.city.fukui.lg.jp/kyoiku/gakusyu/museum/p073425.html",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://www.city.fukui.lg.jp/kyoiku/gakusyu/museum/p073425_d/img/002.png",
@@ -875,6 +939,7 @@
    "source": "https://www.city.ono.fukui.jp/kanko/kanko-joho/kanko_event/rsm_fes.html",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://www.city.ono.fukui.jp/kanko/kanko-joho/kanko_event/rsm_fes.images/fes_chirashi_dai1dan.jpg",
@@ -893,6 +958,7 @@
    "source": "https://www.city.ono.fukui.jp/kanko/event/event-calendar/bunka-art-sports/monomane.html",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://www.city.ono.fukui.jp/kanko/event/event-calendar/bunka-art-sports/monomane.images/0001_20260916.png",
@@ -911,6 +977,7 @@
    "source": "https://www.athome.tsuruga.fukui.jp/events/9671.html",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺南",
    "og": null
   },
@@ -924,6 +991,7 @@
    "source": "http://www.e-ikeda.jp/event/p004692.html",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": null
   },
@@ -937,6 +1005,7 @@
    "source": "http://www.e-ikeda.jp/event/p004691.html",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -955,6 +1024,7 @@
    "source": "https://wakasa-mihama.jp/%E3%80%8C%E5%BA%83%E5%9F%9F%E4%B9%97%E3%82%8A%E6%8D%A8%E3%81%A6%E5%8F%AF%E8%83%BD%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%B5%E3%82%A4%E3%82%AF%E3%83%AB%E3%80%8D%E3%81%AE%E5%AE%9F%E8%A8%BC%E4%BA%8B%E6%A5%AD/",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": null,
    "og": {
     "image": null,
@@ -973,6 +1043,7 @@
    "source": "http://www.e-ikeda.jp/new/p004690.html",
    "instagram": null,
    "written": "2026-09-22",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -991,6 +1062,7 @@
    "source": "https://katsuyama-navi.jp/news/8731.html",
    "instagram": null,
    "written": "2026-09-21",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1009,6 +1081,7 @@
    "source": "https://www.city.sabae.fukui.jp/about_city/koho_kocho/oshirase/Shuyaku5080710.html",
    "instagram": null,
    "written": "2026-09-21",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1027,6 +1100,7 @@
    "source": "https://www.city.sabae.fukui.jp/kurashi_tetsuduki/doro_kasen_koen/nishiyamadobutsuen/Zoo01202609.html",
    "instagram": null,
    "written": "2026-09-21",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1045,6 +1119,7 @@
    "source": "https://www.city.echizen.lg.jp/office/060/100/kamihaku20260916.html",
    "instagram": null,
    "written": "2026-09-21",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1063,6 +1138,7 @@
    "source": "https://www.city.echizen.lg.jp/office/060/100/hamono20261003.html",
    "instagram": null,
    "written": "2026-09-21",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1081,6 +1157,7 @@
    "source": "https://www.city.fukui-sakai.lg.jp/kankou/nijikoutuu/komatsuairport-tojinbo-trialbus.html",
    "instagram": null,
    "written": "2026-09-21",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1099,6 +1176,7 @@
    "source": "http://www.town.takahama.fukui.jp/page/kyouiku/p009013.html",
    "instagram": null,
    "written": "2026-09-21",
+   "pick": false,
    "region": "嶺南",
    "og": {
     "image": null,
@@ -1117,6 +1195,7 @@
    "source": "https://www.city.ono.fukui.jp/kosodate/sonota/R8bihinhanbaikai.html",
    "instagram": null,
    "written": "2026-09-21",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1135,6 +1214,7 @@
    "source": "http://www.e-ikeda.jp/new/p004693.html",
    "instagram": null,
    "written": "2026-09-21",
+   "pick": false,
    "region": "嶺北",
    "og": null
   },
@@ -1148,6 +1228,7 @@
    "source": "https://aflare.jp/event/212/",
    "instagram": null,
    "written": "2026-09-20",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1166,6 +1247,7 @@
    "source": "https://www.pref.fukui.lg.jp/muse/Cul-Hist/kikaku/index.html",
    "instagram": null,
    "written": "2026-09-20",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1184,6 +1266,7 @@
    "source": "https://kyodonewsprwire.jp/release/202608274850",
    "instagram": null,
    "written": "2026-09-20",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://kyodonewsprwire.jp/prwfile/release/M109061/202608274850/_prw_PI2lg_95ERctqo.jpg",
@@ -1202,6 +1285,7 @@
    "source": "https://japan.kfc.co.jp/news_release/8169",
    "instagram": null,
    "written": "2026-09-18",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1220,6 +1304,7 @@
    "source": "https://www.minamiechizen.com/news/",
    "instagram": null,
    "written": "2026-09-18",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://www.minamiechizen.com/wp-content/uploads/2023/09/灯りゃんせ②.jpg",
@@ -1238,6 +1323,7 @@
    "source": "https://www.fk-kosha.or.jp/koueki/fair",
    "instagram": null,
    "written": "2026-09-18",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1256,6 +1342,7 @@
    "source": "https://www.sabaecci.or.jp/latest_information/2026%E3%81%95%E3%81%B0%E3%81%88%E9%96%80%E5%89%8D%E3%81%BE%E3%81%A4%E3%82%8A%E3%80%809%E6%9C%8819%E6%97%A5%EF%BC%88%E5%9C%9F%EF%BC%89%E3%83%BB20%E6%97%A5%E9%96%8B%E5%82%AC/",
    "instagram": null,
    "written": "2026-09-17",
+   "pick": false,
    "region": "嶺北",
    "og": null
   },
@@ -1269,6 +1356,7 @@
    "source": "https://www.town-echizen.jp/event/detail.php?id=421",
    "instagram": null,
    "written": "2026-09-17",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://www.town-echizen.jp/CMSF/uploads/10_013.jpg",
@@ -1287,6 +1375,7 @@
    "source": "https://www.dinosaur.pref.fukui.jp/",
    "instagram": null,
    "written": "2026-09-17",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1305,6 +1394,7 @@
    "source": "https://prtimes.jp/main/html/rd/p/000001831.000018324.html",
    "instagram": null,
    "written": "2026-09-17",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://prcdn.freetls.fastly.net/release_image/18324/1831/18324-1831-56a927defc7f20d71e996a569de871df-700x700.jpg?format=jpeg&auto=webp&fit=bounds&width=2400&height=1260",
@@ -1323,6 +1413,7 @@
    "source": "https://fuku-iro.jp/event/index_2_1____0__.html",
    "instagram": null,
    "written": "2026-09-17",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": null,
@@ -1341,6 +1432,7 @@
    "source": "https://prtimes.jp/main/html/rd/p/000000258.000017744.html",
    "instagram": null,
    "written": "2026-09-14",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://prcdn.freetls.fastly.net/release_image/17744/258/17744-258-7e4062fe452598207b8ac519fe5d17bb-1280x1811.png?format=jpeg&auto=webp&fit=bounds&width=2400&height=1260",
@@ -1359,6 +1451,7 @@
    "source": "https://urala.today/264359/",
    "instagram": null,
    "written": "2026-09-14",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://urala.today/wp-content/uploads/2026/09/7966bae78213db11914ad7af893f8431.jpg",
@@ -1377,6 +1470,7 @@
    "source": "https://news.yahoo.co.jp/articles/24884ebda24aed498186f2c17b1ec454d8918776",
    "instagram": null,
    "written": "2026-09-14",
+   "pick": false,
    "region": "嶺北",
    "og": null
   },
@@ -1390,6 +1484,7 @@
    "source": "https://urala.today/264318/",
    "instagram": null,
    "written": "2026-09-14",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://urala.today/wp-content/uploads/2026/08/3a41f1dab95a2997e6e4308304d62d31.jpg",
@@ -1408,6 +1503,7 @@
    "source": "https://urala.today/264445/",
    "instagram": null,
    "written": "2026-09-14",
+   "pick": false,
    "region": null,
    "og": {
     "image": "https://urala.today/wp-content/uploads/2026/09/f4205a7fc8c643dc3b86b8c5b1e653d7.jpg",
@@ -1426,6 +1522,7 @@
    "source": "https://meganefes.com/",
    "instagram": null,
    "written": "2026-09-14",
+   "pick": false,
    "region": "嶺北",
    "og": {
     "image": "https://meganefes.com/wp/wp-content/uploads/2024/09/05ba7ab37395481d894f48fc26c7434f.png",
@@ -1444,6 +1541,7 @@
    "source": "https://fupo.jp/article/akimatsuri2025/",
    "instagram": null,
    "written": "2026-09-14",
+   "pick": false,
    "region": "嶺南",
    "og": {
     "image": "https://fupo.jp/wp-content/uploads/2025/08/a51067ad7ac07ad0d72e691d99a270b3-1.jpg",
