@@ -81,3 +81,6 @@ jobs:
         run: |
           python3 scripts/おでかけ.py --thumbs
           ./scripts/commit_file.sh docs/odekake/data.json "chore(odekake): ネタ帳からサイトのデータを更新"
+          # 宿のリストは X のリポジトリで更新されるので、毎朝ここで取り直す
+          python3 scripts/おでかけ_宿.py --images
+          ./scripts/commit_file.sh docs/odekake/hotels.json "chore(odekake): 宿のデータを更新"
