@@ -95,5 +95,44 @@ class BuildTest(unittest.TestCase):
         self.assertIsNone(topic["start"])
 
 
+class ThumbTest(unittest.TestCase):
+    def test_find_og_image_relative_and_attribute_order(self):
+        html = '<head><meta content="/img/a.jpg" property="og:image"><meta name="twitter:image" content="https://x/b.jpg"></head>'
+        self.assertEqual(odekake.find_og_image(html, "https://fupo.jp/event/x/"), "https://fupo.jp/img/a.jpg")
+
+    def test_find_og_image_falls_back_to_twitter(self):
+        html = "<meta name='twitter:image' content='https://ex.com/t.png?a=1&amp;b=2'>"
+        self.assertEqual(odekake.find_og_image(html, "https://ex.com/"), "https://ex.com/t.png?a=1&b=2")
+
+    def test_find_og_image_none(self):
+        self.assertIsNone(odekake.find_og_image("<title>x</title>", "https://ex.com/"))
+
+    def test_attach_thumbs_uses_cache_and_skips_instagram_and_retries_errors(self):
+        items = [
+            {"source": "https://a.example/1"},
+            {"source": "https://b.example/2"},
+            {"source": "https://www.instagram.com/shop/"},
+            {"source": "https://c.example/3"},
+            {"source": None},
+        ]
+        calls = []
+
+        def fake(url):
+            calls.append(url)
+            if "c.example" in url:
+                raise OSError("timeout")
+            return '<meta property="og:image" content="https://img.example/b.jpg">'
+
+        prev = {"https://a.example/1": "https://img.example/a.jpg"}
+        n = odekake.attach_thumbs(items, prev, fetch=fake)
+        self.assertEqual(calls, ["https://b.example/2", "https://c.example/3"])
+        self.assertEqual(n, 1)
+        self.assertEqual(items[0]["image"], "https://img.example/a.jpg")
+        self.assertEqual(items[1]["image"], "https://img.example/b.jpg")
+        self.assertIsNone(items[2]["image"])
+        self.assertNotIn("image", items[3])  # 失敗は覚えない
+        self.assertNotIn("https://c.example/3", prev)
+
+
 if __name__ == "__main__":
     unittest.main()

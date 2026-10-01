@@ -79,5 +79,5 @@ jobs:
       - name: おでかけサイトを更新する
         if: ${{ !inputs.dry_run }}
         run: |
-          python3 scripts/おでかけ.py
+          python3 scripts/おでかけ.py --thumbs
           ./scripts/commit_file.sh docs/odekake/data.json "chore(odekake): ネタ帳からサイトのデータを更新"

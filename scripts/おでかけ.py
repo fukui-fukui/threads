@@ -5,6 +5,7 @@ neta/ネタ帳.md の「書き足す場所」にある箇条書きを 1 件ず�
 サイト（docs/odekake/index.html）はこの JSON を読むだけ。
 
     python scripts/おでかけ.py            # 書き出す
+    python scripts/おでかけ.py --thumbs   # 出典ページのサムネ（OG 画像）も取りに行く
     python scripts/おでかけ.py --check    # 書き出さずに件数だけ見る
 
 日付の読み取りは本文の書き方に頼った推測なので、読めなかったものは
@@ -17,8 +18,11 @@ import argparse
 import json
 import re
 import sys
+import urllib.request
 from datetime import date
+from html import unescape
 from pathlib import Path
+from urllib.parse import urljoin, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 NETA = ROOT / "neta" / "ネタ帳.md"
@@ -185,13 +189,96 @@ def build(md: str) -> dict:
     return {"updated": updated, "items": items}
 
 
+# サムネを取りに行かない出典。Instagram の画像 URL は期限付きですぐ切れる。
+NO_THUMB_HOSTS = ("instagram.com", "facebook.com", "x.com", "twitter.com", "threads.com", "threads.net")
+
+_META = re.compile(r"<meta\b[^>]*>", re.I)
+_ATTR = re.compile(r"""([a-zA-Z:_-]+)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)""")
+
+
+def find_og_image(html: str, page_url: str) -> str | None:
+    """HTML から og:image（なければ twitter:image）を取り出し、絶対 URL にする。"""
+    found: dict[str, str] = {}
+    for tag in _META.findall(html):
+        attrs = {k.lower(): v.strip("\"'") for k, v in _ATTR.findall(tag)}
+        key = (attrs.get("property") or attrs.get("name") or "").lower()
+        if key in ("og:image", "og:image:url", "og:image:secure_url", "twitter:image") and attrs.get("content"):
+            found.setdefault(key, unescape(attrs["content"]))
+    for key in ("og:image:secure_url", "og:image", "og:image:url", "twitter:image"):
+        if key in found:
+            url = urljoin(page_url, found[key])
+            return url if url.startswith(("https://", "http://")) else None
+    return None
+
+
+def fetch_html(url: str, timeout: float = 15) -> str:
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "Mozilla/5.0 (compatible; fukui-odekake/1.0; +https://github.com/)",
+        "Accept-Language": "ja",
+    })
+    with urllib.request.urlopen(req, timeout=timeout) as res:
+        # 頭の部分に meta があるので、全部は読まない
+        raw = res.read(400_000)
+        charset = res.headers.get_content_charset() or "utf-8"
+    return raw.decode(charset, errors="replace")
+
+
+def attach_thumbs(items: list[dict], previous: dict[str, str | None], fetch=fetch_html) -> int:
+    """各項目に出典のサムネを付ける。前回取れたもの（取れなかったものも）は使い回す。
+
+    previous は 出典 URL → 画像 URL（取れなかったら None）。通信に失敗したものは
+    覚えずに次回また試す。新しく取りに行った件数を返す。
+    """
+    fetched = 0
+    for it in items:
+        src = it.get("source")
+        if not src:
+            it["image"] = None
+            continue
+        if src in previous:
+            it["image"] = previous[src]
+            continue
+        host = urlparse(src).hostname or ""
+        if any(host == h or host.endswith("." + h) for h in NO_THUMB_HOSTS):
+            it["image"] = None
+            continue
+        try:
+            it["image"] = find_og_image(fetch(src), src)
+        except Exception as e:  # noqa: BLE001 — 1 件の失敗で全体を止めない
+            print(f"  サムネ取得に失敗（次回また試す）: {src} — {e}", file=sys.stderr)
+            continue  # image キーを付けない = 覚えない
+        previous[src] = it["image"]
+        fetched += 1
+    return fetched
+
+
+def load_previous_thumbs(path: Path) -> dict[str, str | None]:
+    try:
+        old = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {it["source"]: it["image"] for it in old.get("items", [])
+            if it.get("source") and "image" in it}
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true", help="書き出さずに件数だけ表示する")
+    ap.add_argument("--thumbs", action="store_true", help="出典ページのサムネ（OG 画像）を取りに行く")
     args = ap.parse_args(argv)
 
     data = build(NETA.read_text(encoding="utf-8"))
     items = data["items"]
+    previous = load_previous_thumbs(OUT)
+    if args.thumbs:
+        n = attach_thumbs(items, previous)
+        print(f"サムネ: 新しく {n} 件を取りに行った")
+    else:
+        # 取りに行かないときも、前回取れたものは残す
+        for it in items:
+            if it.get("source") in previous:
+                it["image"] = previous[it["source"]]
+    print(f"サムネあり {sum(1 for i in items if i.get('image'))} 件")
     counts = {k: sum(1 for i in items if i["kind"] == k) for k in ("催し", "スポット", "話題")}
     undated = sum(1 for i in items if not i["start"])
     print(f"{len(items)} 件（{'・'.join(f'{k}{v}' for k, v in counts.items())}、日付なし {undated}）")

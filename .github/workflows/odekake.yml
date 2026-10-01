@@ -28,6 +28,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: データを作り直す
-        run: python scripts/おでかけ.py
+        run: python scripts/おでかけ.py --thumbs
       - name: コミットする
         run: ./scripts/commit_file.sh docs/odekake/data.json "chore(odekake): ネタ帳からサイトのデータを更新"

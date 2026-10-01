@@ -2,111 +2,283 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ふくいおでかけ帖</title>
 <meta name="description" content="@fukui._.fukui が集めた福井県内のイベント・新スポットのまとめ">
+<meta name="theme-color" content="#fff8ec">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #fbfaf7; --card: #ffffff; --fg: #1d1d1b; --muted: #6a6862; --border: #e6e2d9;
-  --accent: #c2410c; --accent-soft: #fdebdd; --event: #0f6b5c; --spot: #7a3fb5; --topic: #6a6862;
-  --radius: 12px;
+  --bg: #fff8ec; --surface: #ffffff; --fg: #2b2622; --muted: #7d746b; --line: #f0e4d2;
+  --brand: #f0642c; --brand-soft: #ffe8db; --sun: #ffc53d;
+  --event: #14a38b; --spot: #e0548a; --topic: #8a7f74;
+  --shadow: 0 2px 0 rgba(120, 80, 30, .06), 0 8px 24px rgba(120, 80, 30, .08);
+  --radius: 18px;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #151513; --card: #1e1e1b; --fg: #ecebe7; --muted: #a29f97; --border: #33322d;
-    --accent: #fb923c; --accent-soft: #3a2415; --event: #4fd1b5; --spot: #c39af0; --topic: #a29f97;
+    --bg: #1b1814; --surface: #262119; --fg: #f3ede4; --muted: #b3a899; --line: #3a3228;
+    --brand: #ff8a57; --brand-soft: #43271a; --sun: #ffcf5c;
+    --event: #3fd0b4; --spot: #ff7fae; --topic: #b3a899;
+    --shadow: 0 8px 24px rgba(0, 0, 0, .35);
   }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--fg);
-  font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; line-height: 1.6; }
-header { padding: 28px 16px 12px; max-width: 760px; margin: 0 auto; }
-h1 { margin: 0; font-size: 1.6rem; letter-spacing: .02em; }
-.sub { color: var(--muted); font-size: .9rem; margin: 4px 0 0; }
-.sub a { color: inherit; }
-main { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
-.controls { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--border); }
-.tabs, .areas { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-.tabs::-webkit-scrollbar, .areas::-webkit-scrollbar { display: none; }
-.areas { margin-top: 8px; }
-button.chip { flex: none; border: 1px solid var(--border); background: var(--card); color: var(--fg);
-  border-radius: 999px; padding: 6px 14px; font: inherit; font-size: .9rem; cursor: pointer; }
-.areas button.chip { padding: 3px 11px; font-size: .82rem; }
-button.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
-input[type=search] { width: 100%; margin-top: 8px; padding: 8px 12px; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--card); color: var(--fg); font: inherit; }
-.count { color: var(--muted); font-size: .85rem; margin: 14px 0 6px; }
-.group { margin: 22px 0 8px; font-size: .95rem; color: var(--muted); font-weight: 600; }
-ul.list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
-.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
-.meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: .8rem; color: var(--muted); }
-.kind { font-weight: 700; }
-.kind.催し { color: var(--event); } .kind.スポット { color: var(--spot); } .kind.話題 { color: var(--topic); }
-.when { color: var(--fg); font-weight: 600; }
-.badge { background: var(--accent-soft); color: var(--accent); border-radius: 4px; padding: 0 6px; font-weight: 700; }
-.text { margin: 6px 0 0; }
-.note { margin: 6px 0 0; color: var(--muted); font-size: .9rem; }
-.src { display: inline-block; margin-top: 8px; font-size: .82rem; color: var(--accent); word-break: break-all; }
-.empty { color: var(--muted); text-align: center; padding: 40px 0; }
-footer { color: var(--muted); font-size: .8rem; text-align: center; padding: 24px 16px 40px; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); line-height: 1.65;
+  font-family: "M PLUS Rounded 1c", system-ui, -apple-system, "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif; font-weight: 500; }
+button { font: inherit; color: inherit; }
+svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ヘッダー */
+.top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid var(--line); }
+.bar { max-width: 1080px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
+.logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--fg); margin-right: auto; min-width: 0; }
+.logo .mark { width: 36px; height: 36px; border-radius: 12px; background: var(--brand); display: grid; place-items: center; color: #fff; flex: none;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.12); }
+.logo .mark svg { width: 22px; height: 22px; }
+.logo b { font-weight: 800; font-size: 1.15rem; letter-spacing: .02em; white-space: nowrap; }
+.logo small { display: block; font-size: .66rem; color: var(--muted); font-weight: 700; letter-spacing: .08em; line-height: 1.2; }
+.icon-btn { position: relative; width: 42px; height: 42px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--surface);
+  display: grid; place-items: center; cursor: pointer; transition: transform .12s, border-color .12s, background .12s; }
+.icon-btn:hover { border-color: var(--brand); color: var(--brand); }
+.icon-btn:active { transform: scale(.94); }
+.icon-btn[aria-expanded="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+.dot { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--sun);
+  color: #3b2a00; font-size: .7rem; font-weight: 800; display: grid; place-items: center; border: 2px solid var(--bg); }
+.dot[hidden] { display: none; }
+
+/* アイコンのメニュー */
+.nav { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 12px 8px; }
+.nav button { border: 0; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 4px 7px; border-radius: 14px; color: var(--muted); font-size: .72rem; font-weight: 700; transition: background .15s, color .15s; }
+.nav button .ic { width: 40px; height: 32px; border-radius: 12px; display: grid; place-items: center; transition: background .15s; }
+.nav button[aria-pressed="true"] { color: var(--brand); }
+.nav button[aria-pressed="true"] .ic { background: var(--brand-soft); }
+.nav .pc { display: none; }
+@media (min-width: 720px) {
+  .nav .pc { display: inline; } .nav .sp { display: none; }
+  .nav { display: flex; gap: 8px; padding-bottom: 10px; }
+  .nav button { flex-direction: row; gap: 6px; padding: 6px 14px 6px 6px; font-size: .9rem; border: 1.5px solid transparent; }
+  .nav button .ic { width: 32px; height: 32px; border-radius: 10px; }
+  .nav button[aria-pressed="true"] { background: var(--surface); border-color: var(--line); box-shadow: var(--shadow); }
+}
+
+/* 検索 */
+.search { max-width: 1080px; margin: 0 auto; padding: 0 16px 12px; }
+.search[hidden] { display: none; }
+.field { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 2px solid var(--brand); border-radius: 999px; padding: 4px 6px 4px 16px; box-shadow: var(--shadow); }
+.field svg { color: var(--brand); }
+.field input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; color: var(--fg); padding: 8px 0; font-size: 1rem; }
+.field input::placeholder { color: var(--muted); }
+.field input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+.field .clear { border: 0; background: var(--line); width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; }
+.field .clear svg { width: 16px; height: 16px; color: var(--fg); }
+.suggest { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.suggest button { border: 0; background: var(--brand-soft); color: var(--brand); border-radius: 999px; padding: 3px 12px; font-size: .8rem; font-weight: 700; cursor: pointer; }
+
+/* 絞り込み（スマホは下から、PC は右上に出る） */
+.scrim { position: fixed; inset: 0; background: rgba(30, 20, 10, .35); z-index: 20; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.scrim.open { opacity: 1; pointer-events: auto; }
+.sheet { position: fixed; z-index: 21; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 24px 24px 0 0;
+  padding: 10px 20px calc(20px + env(safe-area-inset-bottom)); max-height: 80vh; overflow: auto; transform: translateY(105%); transition: transform .25s cubic-bezier(.2,.8,.2,1); box-shadow: 0 -10px 40px rgba(0,0,0,.15); }
+.sheet.open { transform: none; }
+.sheet .grip { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 12px; }
+@media (min-width: 720px) {
+  .sheet { left: auto; right: max(16px, calc((100vw - 1080px) / 2 + 16px)); top: 64px; bottom: auto; width: 380px; border-radius: 20px;
+    transform: translateY(-8px); opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s; }
+  .sheet.open { transform: none; opacity: 1; pointer-events: auto; }
+  .sheet .grip { display: none; }
+}
+.sheet h3 { margin: 4px 0 10px; font-size: 1.05rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.sheet h4 { margin: 14px 0 8px; font-size: .78rem; color: var(--muted); letter-spacing: .06em; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1.5px solid var(--line); background: var(--bg); border-radius: 999px; padding: 5px 14px; font-size: .88rem; font-weight: 700; cursor: pointer; transition: all .12s; }
+.chip:hover { border-color: var(--brand); }
+.chip[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+.chip.kind-催し[aria-pressed="true"] { background: var(--event); border-color: var(--event); }
+.chip.kind-スポット[aria-pressed="true"] { background: var(--spot); border-color: var(--spot); }
+.sheet-foot { display: flex; gap: 10px; margin-top: 20px; }
+.sheet-foot button { flex: 1; border-radius: 14px; padding: 11px; font-weight: 800; cursor: pointer; border: 1.5px solid var(--line); background: var(--surface); }
+.sheet-foot .go { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+/* 本文 */
+main { max-width: 1080px; margin: 0 auto; padding: 8px 16px 48px; }
+.hero { margin: 14px 0 6px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.hero h1 { margin: 0; font-size: clamp(1.3rem, 4.6vw, 1.8rem); font-weight: 800; line-height: 1.35; }
+.hero h1 .em { background: linear-gradient(transparent 62%, var(--sun) 62%); padding: 0 2px; }
+.hero p { margin: 2px 0 0; color: var(--muted); font-size: .85rem; }
+.active { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+.active button { border: 0; background: var(--fg); color: var(--bg); border-radius: 999px; padding: 3px 8px 3px 12px; font-size: .8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.active svg { width: 14px; height: 14px; }
+.group { margin: 26px 0 12px; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+.group::before { content: ""; width: 6px; height: 20px; border-radius: 3px; background: var(--brand); }
+.group span { color: var(--muted); font-size: .8rem; font-weight: 700; }
+.grid { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+
+.card { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column;
+  transition: transform .15s, box-shadow .15s; }
+.card:hover { transform: translateY(-3px); }
+.thumb { position: relative; aspect-ratio: 16 / 9; background: var(--brand-soft); overflow: hidden; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ph { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; }
+.ph svg { width: 54px; height: 54px; stroke-width: 1.6; opacity: .95; }
+.ph span { position: absolute; bottom: 10px; right: 14px; font-weight: 800; font-size: 1.1rem; opacity: .9; }
+.ph.催し { background: linear-gradient(135deg, #1fb89c, #7bd8a6); }
+.ph.スポット { background: linear-gradient(135deg, #ef5f93, #ffa26b); }
+.ph.話題 { background: linear-gradient(135deg, #f09a3c, #ffd36b); }
+.label { position: absolute; top: 10px; left: 10px; border-radius: 999px; padding: 2px 11px; font-size: .74rem; font-weight: 800; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+.label.催し { background: var(--event); } .label.スポット { background: var(--spot); } .label.話題 { background: var(--topic); }
+.badge { position: absolute; top: 10px; right: 10px; background: var(--sun); color: #3b2a00; border-radius: 999px; padding: 2px 10px; font-size: .74rem; font-weight: 800; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+.body { padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .8rem; color: var(--muted); font-weight: 700; }
+.meta span { display: inline-flex; align-items: center; gap: 4px; }
+.meta svg { width: 15px; height: 15px; }
+.meta .when { color: var(--brand); }
+.title { margin: 0; font-size: 1rem; font-weight: 800; line-height: 1.5; }
+.desc { margin: 0; font-size: .86rem; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.note { margin: 2px 0 0; font-size: .85rem; background: var(--bg); border-radius: 10px; padding: 7px 10px; }
+.src { margin-top: auto; padding-top: 6px; display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 700; color: var(--brand); text-decoration: none; }
+.src:hover { text-decoration: underline; }
+.src svg { width: 14px; height: 14px; }
+.empty { text-align: center; padding: 56px 16px; color: var(--muted); }
+.empty svg { width: 56px; height: 56px; color: var(--line); stroke-width: 1.6; }
+footer { color: var(--muted); font-size: .78rem; text-align: center; padding: 28px 16px 44px; border-top: 1px solid var(--line); }
+footer a { color: inherit; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
-<header>
-  <h1>ふくいおでかけ帖</h1>
-  <p class="sub">Threads <a href="https://www.threads.com/@fukui._.fukui" target="_blank" rel="noopener">@fukui._.fukui</a> が集めた、福井のイベントと新しいお店・スポット。<span id="updated"></span></p>
-</header>
-<main>
-  <div class="controls">
-    <div class="tabs" role="group" aria-label="表示">
-      <button class="chip" data-tab="weekend">今週末</button>
-      <button class="chip" data-tab="upcoming">開催中・これから</button>
-      <button class="chip" data-tab="spot">新スポット</button>
-      <button class="chip" data-tab="all">すべて</button>
-    </div>
-    <div class="areas" role="group" aria-label="エリア" id="areas"></div>
-    <input type="search" id="q" placeholder="キーワードで探す（例：そば、美術館、子ども）">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+  <symbol id="i-weekend" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="m12 12.6.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3Z" fill="currentColor" stroke-width="1"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-shop" viewBox="0 0 24 24"><path d="M4 9h16l-1.4-4.2A1 1 0 0 0 17.7 4H6.3a1 1 0 0 0-.9.8Z"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9"/><path d="M5.5 11.5V20h13v-8.5"/><path d="M10 20v-4.5h4V20"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="bar">
+    <a class="logo" href="./">
+      <span class="mark"><svg class="i"><use href="#i-pin"/></svg></span>
+      <span><small>FUKUI ODEKAKE</small><b>ふくいおでかけ帖</b></span>
+    </a>
+    <button class="icon-btn" id="btn-search" aria-label="キーワードで探す" aria-expanded="false" aria-controls="search"><svg class="i"><use href="#i-search"/></svg></button>
+    <button class="icon-btn" id="btn-filter" aria-label="絞り込み" aria-expanded="false" aria-controls="sheet"><svg class="i"><use href="#i-filter"/></svg><span class="dot" id="filter-dot" hidden></span></button>
   </div>
-  <p class="count" id="count"></p>
+  <div class="search" id="search" hidden>
+    <label class="field">
+      <svg class="i"><use href="#i-search"/></svg>
+      <input type="search" id="q" placeholder="そば、美術館、子ども…" enterkeyhint="search" aria-label="キーワード">
+      <button class="clear" id="q-clear" type="button" aria-label="消す" hidden><svg class="i"><use href="#i-x"/></svg></button>
+    </label>
+    <div class="suggest" id="suggest"></div>
+  </div>
+  <nav class="nav" aria-label="表示の切り替え">
+    <button data-tab="weekend"><span class="ic"><svg class="i"><use href="#i-weekend"/></svg></span>今週末</button>
+    <button data-tab="upcoming"><span class="ic"><svg class="i"><use href="#i-flag"/></svg></span><span class="sp">これから</span><span class="pc">開催中・これから</span></button>
+    <button data-tab="spot"><span class="ic"><svg class="i"><use href="#i-shop"/></svg></span>新スポット</button>
+    <button data-tab="all"><span class="ic"><svg class="i"><use href="#i-grid"/></svg></span>すべて</button>
+  </nav>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <div class="grip"></div>
+  <h3 id="sheet-title"><svg class="i"><use href="#i-filter"/></svg>絞り込み</h3>
+  <h4>エリア</h4>
+  <div class="chips" id="areas"></div>
+  <h4>種類</h4>
+  <div class="chips" id="kinds"></div>
+  <div class="sheet-foot">
+    <button id="reset">リセット</button>
+    <button class="go" id="apply">この条件で見る</button>
+  </div>
+</div>
+
+<main>
+  <div class="hero">
+    <div>
+      <h1 id="heading"></h1>
+      <p id="sub"></p>
+    </div>
+  </div>
+  <div class="active" id="active"></div>
   <div id="out"></div>
 </main>
-<footer>日付・内容は集めた時点のものです。お出かけ前に必ず出典（主催者・お店の公式）で確かめてください。</footer>
+<footer>
+  Threads <a href="https://www.threads.com/@fukui._.fukui" target="_blank" rel="noopener">@fukui._.fukui</a> が集めた情報をまとめています。<span id="updated"></span><br>
+  日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・お店の公式）で必ず確かめてください。<br>
+  サムネイル画像は各出典ページのものです。
+</footer>
 
 <script>
 (() => {
-  const AREA_ORDER = ["嶺北", "嶺南", "福井市", "坂井市", "あわら市", "永平寺町", "鯖江市", "越前市", "越前町",
-    "南越前町", "池田町", "大野市", "勝山市", "敦賀市", "美浜町", "若狭町", "小浜市", "おおい町", "高浜町"];
+  const AREAS = {
+    "嶺北": ["福井市", "坂井市", "あわら市", "永平寺町", "鯖江市", "越前市", "越前町", "南越前町", "池田町", "大野市", "勝山市"],
+    "嶺南": ["敦賀市", "美浜町", "若狭町", "小浜市", "おおい町", "高浜町"],
+  };
+  const KINDS = [["催し", "イベント"], ["スポット", "新スポット"], ["話題", "話題"]];
+  const TABS = {
+    weekend: { title: "今週末の<span class=em>おでかけ</span>" },
+    upcoming: { title: "開催中・<span class=em>これから</span>のイベント" },
+    spot: { title: "新しくできた<span class=em>スポット</span>" },
+    all: { title: "<span class=em>すべて</span>の情報" },
+  };
+  const SUGGEST = ["まつり", "グルメ", "美術館", "子ども", "カフェ", "温泉"];
+  const KIND_ICON = { "催し": "i-flag", "スポット": "i-shop", "話題": "i-bulb" };
   const WD = "日月火水木金土";
-  const state = { tab: "upcoming", area: "", q: "" };
+
+  const state = { tab: "upcoming", area: "", kind: "", q: "" };
   try {
     const saved = JSON.parse(localStorage.getItem("odekake") || "{}");
-    if (saved.tab) state.tab = saved.tab;
-    if (saved.area !== undefined) state.area = saved.area;
+    if (TABS[saved.tab]) state.tab = saved.tab;
+    if (typeof saved.area === "string") state.area = saved.area;
   } catch (_) {}
+  let draft = { area: state.area, kind: state.kind };
 
   const $ = (s) => document.querySelector(s);
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const icon = (id, cls = "i") => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("class", cls);
+    const u = document.createElementNS("http://www.w3.org/2000/svg", "use"); u.setAttribute("href", "#" + id); s.append(u); return s; };
   const pd = (s) => s ? new Date(s + "T00:00:00") : null;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
   const fmt = (d) => `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`;
-
-  // 今週末 = 次の土日（今日が土日ならその週末）
   const dow = today.getDay();
   const sat = dow === 0 ? addDays(today, -1) : addDays(today, 6 - dow);
   const sun = addDays(sat, 1);
 
   let items = [];
 
+  // 本文の頭からタイトルを作る：「」の中があればそれ、なければ最初の句点まで
+  function titleOf(it) {
+    const m = it.text.match(/「([^」]{2,40})」/);
+    if (m) return m[1];
+    const first = it.text.replace(/^[\d/()（）・\-〜～月火水木金土日祝時分\s]+/, "").split(/[。．]/)[0];
+    return first.length > 44 ? first.slice(0, 43) + "…" : first;
+  }
+
   function when(it) {
     const s = pd(it.start), e = pd(it.end);
-    if (!s) return "";
-    if (it.kind === "スポット") return `${s.getFullYear()}/${fmt(s)} オープン`;
-    return +s === +e ? fmt(s) : `${fmt(s)} 〜 ${fmt(e)}`;
+    if (!s) return it.kind === "スポット" ? "" : "日程は出典で";
+    if (it.kind === "スポット") return `${s.getFullYear()}.${s.getMonth() + 1} オープン`;
+    return +s === +e ? fmt(s) : `${fmt(s)}〜${fmt(e)}`;
   }
 
   function badge(it) {
     const s = pd(it.start), e = pd(it.end);
-    if (!s || it.kind === "スポット") return "";
+    if (!s) return "";
+    if (it.kind === "スポット") return s > today ? "オープン予定" : (today - s) / 864e5 <= 45 ? "NEW" : "";
     if (s <= today && today <= e) return +s === +e ? "今日" : "開催中";
     if (s <= sun && e >= sat) return "今週末";
     const days = Math.round((s - today) / 864e5);
@@ -114,7 +286,7 @@ footer { color: var(--muted); font-size: .8rem; text-align: center; padding: 24p
     return "";
   }
 
-  function matchTab(it) {
+  const inTab = (it) => {
     const s = pd(it.start), e = pd(it.end);
     switch (state.tab) {
       case "weekend": return it.kind !== "スポット" && s && s <= sun && e >= sat;
@@ -122,109 +294,182 @@ footer { color: var(--muted); font-size: .8rem; text-align: center; padding: 24p
       case "spot": return it.kind === "スポット";
       default: return true;
     }
-  }
-
-  function matchArea(it) {
-    if (!state.area) return true;
-    return it.area === state.area || it.region === state.area;
-  }
-
-  function matchQ(it) {
+  };
+  const inArea = (it) => !state.area || it.area === state.area || it.region === state.area;
+  const inKind = (it) => !state.kind || it.kind === state.kind;
+  const inQ = (it) => {
     if (!state.q) return true;
     const hay = (it.text + it.note + (it.area || "")).toLowerCase();
     return state.q.toLowerCase().split(/\s+/).every((w) => hay.includes(w));
-  }
-
-  function card(it) {
-    const li = document.createElement("li");
-    li.className = "card";
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    const add = (cls, txt) => { if (!txt) return; const s = document.createElement("span"); s.className = cls; s.textContent = txt; meta.append(s); };
-    add(`kind ${it.kind}`, it.kind === "スポット" ? "新スポット" : it.kind);
-    add("badge", badge(it));
-    add("when", when(it));
-    add("area", it.area || "");
-    li.append(meta);
-    const p = document.createElement("p"); p.className = "text"; p.textContent = it.text; li.append(p);
-    if (it.note) { const n = document.createElement("p"); n.className = "note"; n.textContent = it.note; li.append(n); }
-    if (it.source) {
-      const a = document.createElement("a"); a.className = "src"; a.href = it.source;
-      a.target = "_blank"; a.rel = "noopener";
-      try { a.textContent = "出典：" + new URL(it.source).hostname.replace(/^www\./, ""); } catch (_) { a.textContent = "出典"; }
-      li.append(a);
-    }
-    return li;
-  }
+  };
 
   function sortKey(it) {
     if (state.tab === "spot" || it.kind === "スポット") return -(pd(it.start) || pd(it.written));
     const s = pd(it.start), e = pd(it.end);
     if (!s) return 9e15;
-    // 開催中のものは終わりが近い順、これからのものは始まりが近い順
     return s <= today ? +e - 1e13 : +s;
   }
 
-  function monthLabel(it) {
+  function groupOf(it) {
+    if (state.tab === "weekend" || state.tab === "spot") return "";
     const s = pd(it.start);
-    if (!s) return "日付なし・随時";
-    if (it.kind !== "スポット" && s <= today) return "開催中";
+    if (!s) return "日程は出典で・随時";
+    if (it.kind !== "スポット" && s <= today) return "いま開催中";
     return `${s.getFullYear()}年${s.getMonth() + 1}月`;
+  }
+
+  function placeholder(it) {
+    const ph = el("div", `ph ${it.kind}`);
+    ph.append(icon(KIND_ICON[it.kind] || "i-pin"));
+    if (it.area) ph.append(el("span", null, it.area));
+    return ph;
+  }
+
+  function card(it) {
+    const li = el("li", "card");
+    const th = el("div", "thumb");
+    if (it.image) {
+      const img = el("img");
+      img.loading = "lazy"; img.decoding = "async"; img.alt = ""; img.referrerPolicy = "no-referrer";
+      img.src = it.image;
+      img.onerror = () => { img.replaceWith(placeholder(it)); };
+      th.append(img);
+    } else {
+      th.append(placeholder(it));
+    }
+    th.append(el("span", `label ${it.kind}`, it.kind === "催し" ? "イベント" : it.kind === "スポット" ? "新スポット" : "話題"));
+    const b = badge(it);
+    if (b) th.append(el("span", "badge", b));
+    li.append(th);
+
+    const body = el("div", "body");
+    const meta = el("div", "meta");
+    const w = when(it);
+    if (w) { const s = el("span", "when"); s.append(icon("i-cal"), w); meta.append(s); }
+    if (it.area) { const s = el("span"); s.append(icon("i-pin"), it.area); meta.append(s); }
+    body.append(meta, el("h3", "title", titleOf(it)), el("p", "desc", it.text));
+    if (it.note) body.append(el("p", "note", it.note));
+    if (it.source) {
+      const a = el("a", "src");
+      a.href = it.source; a.target = "_blank"; a.rel = "noopener";
+      let host = "出典";
+      try { host = new URL(it.source).hostname.replace(/^www\./, ""); } catch (_) {}
+      a.append("出典：" + host, icon("i-out"));
+      body.append(a);
+    }
+    li.append(body);
+    return li;
   }
 
   function render() {
     document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tab === state.tab));
-    document.querySelectorAll("[data-area]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.area === state.area));
     try { localStorage.setItem("odekake", JSON.stringify({ tab: state.tab, area: state.area })); } catch (_) {}
 
-    const list = items.filter((it) => matchTab(it) && matchArea(it) && matchQ(it))
-      .sort((a, b) => sortKey(a) - sortKey(b));
+    const nFilters = (state.area ? 1 : 0) + (state.kind ? 1 : 0);
+    $("#filter-dot").hidden = !nFilters;
+    $("#filter-dot").textContent = nFilters;
+
+    const active = $("#active");
+    active.textContent = "";
+    const pill = (label, clear) => { const b = el("button"); b.append(label, icon("i-x")); b.setAttribute("aria-label", label + " を外す"); b.onclick = () => { clear(); render(); }; active.append(b); };
+    if (state.area) pill(state.area, () => (state.area = ""));
+    if (state.kind) pill(KINDS.find((k) => k[0] === state.kind)[1], () => (state.kind = ""));
+    if (state.q) pill(`「${state.q}」`, () => { state.q = ""; $("#q").value = ""; syncClear(); });
+
+    const list = items.filter((it) => inTab(it) && inArea(it) && inKind(it) && inQ(it)).sort((a, b) => sortKey(a) - sortKey(b));
+    $("#heading").innerHTML = TABS[state.tab].title;
+    $("#sub").textContent = state.tab === "weekend" ? `${fmt(sat)}・${fmt(sun)}　${list.length} 件` : `${list.length} 件`;
+
     const out = $("#out");
     out.textContent = "";
-    $("#count").textContent = state.tab === "weekend"
-      ? `${fmt(sat)}・${fmt(sun)} の予定 ${list.length} 件`
-      : `${list.length} 件`;
     if (!list.length) {
-      const p = document.createElement("p"); p.className = "empty";
-      p.textContent = "当てはまるものがありません。エリアやキーワードを変えてみてください。";
-      out.append(p); return;
+      const p = el("div", "empty");
+      p.append(icon("i-search"), el("p", null, "当てはまるものがありません。絞り込みやキーワードを変えてみてください。"));
+      out.append(p);
+      return;
     }
     let cur = null, ul = null;
     for (const it of list) {
-      const label = state.tab === "spot" || state.tab === "weekend" ? "" : monthLabel(it);
-      if (label !== cur || !ul) {
-        cur = label;
-        if (label) { const h = document.createElement("h2"); h.className = "group"; h.textContent = label; out.append(h); }
-        ul = document.createElement("ul"); ul.className = "list"; out.append(ul);
+      const g = groupOf(it);
+      if (g !== cur || !ul) {
+        cur = g;
+        if (g) out.append(el("h2", "group", g));
+        ul = el("ul", "grid");
+        out.append(ul);
       }
       ul.append(card(it));
     }
   }
 
-  function buildAreas() {
+  // 絞り込みシート
+  function buildSheet() {
     const present = new Set(items.flatMap((it) => [it.area, it.region]).filter(Boolean));
-    const box = $("#areas");
-    const mk = (val, label) => { const b = document.createElement("button"); b.className = "chip"; b.dataset.area = val; b.textContent = label; box.append(b); };
-    mk("", "全県");
-    AREA_ORDER.filter((a) => present.has(a)).forEach((a) => mk(a, a));
-    if (state.area && !present.has(state.area)) state.area = "";
+    const areas = $("#areas");
+    areas.textContent = "";
+    const chip = (box, val, label, key, cls = "") => {
+      const b = el("button", "chip " + cls, label);
+      b.dataset[key] = val;
+      b.setAttribute("aria-pressed", draft[key] === val);
+      box.append(b);
+    };
+    chip(areas, "", "全県", "area");
+    for (const [region, cities] of Object.entries(AREAS)) {
+      if (present.has(region)) chip(areas, region, region + "ぜんぶ", "area");
+      cities.filter((c) => present.has(c)).forEach((c) => chip(areas, c, c, "area"));
+    }
+    const kinds = $("#kinds");
+    kinds.textContent = "";
+    chip(kinds, "", "ぜんぶ", "kind");
+    KINDS.forEach(([k, label]) => chip(kinds, k, label, "kind", "kind-" + k));
   }
 
-  document.addEventListener("click", (e) => {
-    const t = e.target.closest("[data-tab],[data-area]");
-    if (!t) return;
-    if (t.dataset.tab) state.tab = t.dataset.tab;
-    if (t.dataset.area !== undefined) state.area = t.dataset.area;
+  function openSheet(open) {
+    if (open) { draft = { area: state.area, kind: state.kind }; buildSheet(); }
+    $("#sheet").classList.toggle("open", open);
+    $("#scrim").classList.toggle("open", open);
+    $("#btn-filter").setAttribute("aria-expanded", open);
+  }
+
+  $("#sheet").addEventListener("click", (e) => {
+    const b = e.target.closest(".chip");
+    if (!b) return;
+    if (b.dataset.area !== undefined) draft.area = b.dataset.area;
+    if (b.dataset.kind !== undefined) draft.kind = b.dataset.kind;
+    buildSheet();
+  });
+  $("#apply").onclick = () => { state.area = draft.area; state.kind = draft.kind; openSheet(false); render(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  $("#reset").onclick = () => { draft = { area: "", kind: "" }; buildSheet(); };
+  $("#scrim").onclick = () => openSheet(false);
+  $("#btn-filter").onclick = () => openSheet(!$("#sheet").classList.contains("open"));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") openSheet(false); });
+
+  // 検索
+  const syncClear = () => { $("#q-clear").hidden = !$("#q").value; };
+  $("#btn-search").onclick = () => {
+    const box = $("#search");
+    box.hidden = !box.hidden;
+    $("#btn-search").setAttribute("aria-expanded", !box.hidden);
+    if (!box.hidden) $("#q").focus();
+  };
+  $("#q").addEventListener("input", (e) => { state.q = e.target.value.trim(); syncClear(); render(); });
+  $("#q").addEventListener("keydown", (e) => { if (e.key === "Enter") e.target.blur(); });
+  $("#q-clear").onclick = () => { $("#q").value = ""; state.q = ""; syncClear(); render(); $("#q").focus(); };
+  SUGGEST.forEach((w) => { const b = el("button", null, "#" + w); b.onclick = () => { $("#q").value = w; state.q = w; syncClear(); render(); }; $("#suggest").append(b); });
+
+  document.querySelector(".nav").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-tab]");
+    if (!b) return;
+    state.tab = b.dataset.tab;
     render();
   });
-  $("#q").addEventListener("input", (e) => { state.q = e.target.value.trim(); render(); });
 
   fetch("data.json", { cache: "no-cache" })
     .then((r) => r.json())
     .then((data) => {
       items = data.items || [];
       if (data.updated) $("#updated").textContent = `（${data.updated.replace(/-/g, "/")} 更新）`;
-      buildAreas();
+      const present = new Set(items.flatMap((it) => [it.area, it.region]));
+      if (state.area && !present.has(state.area)) state.area = "";
       render();
     })
     .catch(() => { $("#out").innerHTML = '<p class="empty">データを読み込めませんでした。</p>'; });
