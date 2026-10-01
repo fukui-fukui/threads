@@ -95,6 +95,24 @@ class BuildTest(unittest.TestCase):
         self.assertIsNone(topic["start"])
 
 
+class InstagramTest(unittest.TestCase):
+    def test_split_instagram_post_after_note(self):
+        line = "10/3 祭り開催（→ ひとこと） ［Instagram: https://www.instagram.com/p/AbC-12_x/?igsh=xyz］"
+        rest, url = odekake.split_instagram(line)
+        self.assertEqual(rest, "10/3 祭り開催（→ ひとこと）")
+        self.assertEqual(url, "https://www.instagram.com/p/AbC-12_x/")
+        self.assertEqual(odekake.split_note(rest), ("10/3 祭り開催", "ひとこと"))
+
+    def test_split_instagram_none(self):
+        self.assertEqual(odekake.split_instagram("ふつうの行"), ("ふつうの行", None))
+
+    def test_build_keeps_instagram(self):
+        md = NETA.replace("（→ 新しい店）", "（→ 新しい店） ［Instagram: https://www.instagram.com/test_shop/］")
+        shop = [it for it in odekake.build(md)["items"] if "テスト店" in it["text"]][0]
+        self.assertEqual(shop["instagram"], "https://www.instagram.com/test_shop/")
+        self.assertEqual(shop["note"], "新しい店")
+
+
 class ThumbTest(unittest.TestCase):
     def test_find_og_image_relative_and_attribute_order(self):
         html = '<head><meta content="/img/a.jpg" property="og:image"><meta name="twitter:image" content="https://x/b.jpg"></head>'

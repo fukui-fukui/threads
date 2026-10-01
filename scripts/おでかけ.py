@@ -129,6 +129,20 @@ def guess_kind(text: str) -> str:
     return "話題"
 
 
+# ネタ帳の行末に付く公式 Instagram の印。収集はアカウントの URL を、人が手で足すときは
+# 投稿やリールの URL を入れてもよい（サイトでは投稿を公式の埋め込みで出す）。
+INSTAGRAM_MARK = re.compile(r"\s*［Instagram:\s*(https?://(?:www\.)?instagram\.com/[^\s］]+)\s*］")
+
+
+def split_instagram(line: str) -> tuple[str, str | None]:
+    """行から［Instagram: URL］を外し、(残りの行, URL) を返す。URL の ? 以降は捨てる。"""
+    m = INSTAGRAM_MARK.search(line)
+    if not m:
+        return line, None
+    url = m.group(1).split("?")[0]
+    return (line[: m.start()] + line[m.end():]).strip(), url
+
+
 def split_note(line: str) -> tuple[str, str]:
     """「本文（→ ひとこと）」を本文とひとことに分ける。"""
     m = re.search(r"（→\s*(.+?)）\s*$", line)
@@ -157,6 +171,7 @@ def parse_neta(md: str) -> list[dict]:
         paired = len(sources) == len(bullets)
 
         for i, line in enumerate(bullets):
+            line, instagram = split_instagram(line)
             text, note = split_note(line)
             start, end = parse_dates(text, written)
             items.append({
@@ -167,6 +182,7 @@ def parse_neta(md: str) -> list[dict]:
                 "start": start.isoformat() if start else None,
                 "end": end.isoformat() if end else None,
                 "source": sources[i] if paired else None,
+                "instagram": instagram,
                 "written": written.isoformat(),
             })
 

@@ -204,7 +204,14 @@ main { max-width: 1160px; margin: 0 auto; padding: 18px 16px 40px; }
 .lc-site svg { width: 12px; height: 12px; }
 .lc-title { font-size: .8rem; font-weight: 800; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .lc-desc { font-size: .7rem; color: var(--muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-@media (prefers-color-scheme: dark) { .t-area { color: var(--main); } }
+.ig { margin-top: 8px; }
+.ig-btn, .ig-acct { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 6px 14px 6px 10px; font-size: .78rem; font-weight: 800; cursor: pointer; text-decoration: none;
+  color: #fff; background: linear-gradient(90deg, #f58529, #dd2a7b 55%, #8134af); }
+.ig-acct { background: var(--surface); color: #c1356b; border: 1.5px solid #e9b3c8; }
+.ig-btn svg, .ig-acct svg { width: 16px; height: 16px; }
+.ig-embed { margin-top: 4px; }
+.ig-embed .instagram-media { margin: 0 !important; min-width: 0 !important; width: 100% !important; }
+@media (prefers-color-scheme: dark) { .t-area { color: var(--main); } .ig-acct { color: #ff8fbd; border-color: #6b3a4f; } }
 
 .empty { text-align: center; padding: 50px 16px; color: var(--muted); }
 .empty svg { width: 48px; height: 48px; color: var(--line); }
@@ -232,6 +239,7 @@ footer a { color: var(--main); font-weight: 700; }
   <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
   <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z"/></symbol>
   <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+  <symbol id="i-ig" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></symbol>
 </svg>
 
 <header class="hd">
@@ -436,6 +444,47 @@ footer a { color: var(--main); font-weight: 700; }
     return a;
   }
 
+  // Instagram：投稿・リールは公式の埋め込みで出す。押したときだけ読み込む
+  // （最初から全部読むと重く、見るだけで Meta へ通信が飛ぶため）
+  const IG_POST = /^https:\/\/(www\.)?instagram\.com\/(?:[A-Za-z0-9._]+\/)?(p|reel|tv)\/[A-Za-z0-9_-]+/;
+  const IG_ACCT = /^https:\/\/(www\.)?instagram\.com\/([A-Za-z0-9._]+)\/?$/;
+  const isIg = (u) => /^https:\/\/(www\.)?instagram\.com\//.test(u || "");
+  let igScript = null;
+  function loadIgEmbed() {
+    if (window.instgrm) { window.instgrm.Embeds.process(); return; }
+    if (igScript) return;
+    igScript = document.createElement("script");
+    igScript.async = true;
+    igScript.src = "https://www.instagram.com/embed.js";
+    document.body.append(igScript);
+  }
+  function igBlock(url) {
+    const box = el("div", "ig");
+    if (IG_POST.test(url)) {
+      const btn = el("button", "ig-btn");
+      btn.type = "button";
+      btn.append(icon("i-ig"), "Instagram の投稿を見る");
+      btn.onclick = () => {
+        const wrap = el("div", "ig-embed");
+        const bq = el("blockquote", "instagram-media");
+        bq.setAttribute("data-instgrm-permalink", url.replace(/\/?$/, "/"));
+        bq.setAttribute("data-instgrm-version", "14");
+        const a = el("a", null, "Instagram で見る"); a.href = url; a.target = "_blank"; a.rel = "noopener";
+        bq.append(a); wrap.append(bq);
+        btn.replaceWith(wrap);
+        loadIgEmbed();
+      };
+      box.append(btn);
+    } else {
+      const m = url.match(IG_ACCT);
+      const a = el("a", "ig-acct");
+      a.href = url; a.target = "_blank"; a.rel = "noopener";
+      a.append(icon("i-ig"), m ? `@${m[2]}` : "Instagram");
+      box.append(a);
+    }
+    return box;
+  }
+
   function card(it) {
     const li = el("li", `ticket ${it.kind}`);
     const main = el("div", "t-main");
@@ -459,10 +508,15 @@ footer a { color: var(--main); font-weight: 700; }
     main.append(tx);
     li.append(main);
 
-    if (it.source) {
+    // 出典がインスタのときはリンクカードを作れない（中身が取れない）ので、インスタの枠で出す
+    const ig = it.instagram || (isIg(it.source) ? it.source : null);
+    const showSource = it.source && !isIg(it.source);
+    if (showSource || ig) {
       li.append(el("div", "perf"));
       const stub = el("div", "stub");
-      stub.append(el("div", "stub-label", "出典"), linkCard(it));
+      stub.append(el("div", "stub-label", showSource ? "出典" : "出典（Instagram）"));
+      if (showSource) stub.append(linkCard(it));
+      if (ig) stub.append(igBlock(ig));
       li.append(stub);
     }
     return li;
