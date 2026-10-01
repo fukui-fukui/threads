@@ -824,7 +824,13 @@
    "end": "2026-10-17",
    "source": "https://www.city.ono.fukui.jp/kanko/event/event-calendar/bunka-art-sports/monomane.html",
    "written": "2026-09-22",
-   "region": "嶺北"
+   "region": "嶺北",
+   "og": {
+    "image": "https://www.city.ono.fukui.jp/kanko/event/event-calendar/bunka-art-sports/monomane.images/0001_20260916.png",
+    "title": "星のふるさと★モノマネLIVE「花」inスターランドさかだに 大野市公式ウェブサイト",
+    "description": "「結の故郷 越前おおの」福井県大野市の公式ホームページです。",
+    "site": null
+   }
   },
   {
    "text": "敦賀・原子力の科学館「あっとほうむ」開館50周年記念イベント「こどもの広場」、9/23まで開催中",
