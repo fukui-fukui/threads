@@ -30,4 +30,5 @@ jobs:
       - name: データを作り直す
         run: python scripts/おでかけ.py --thumbs
       - name: コミットする
-        run: ./scripts/commit_file.sh docs/odekake/data.json "chore(odekake): ネタ帳からサイトのデータを更新"
+        run: |
+          ./scripts/commit_file.sh docs/odekake/data.json "chore(odekake): ネタ帳からサイトのデータを更新"
