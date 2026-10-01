@@ -47,7 +47,7 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 
 /* ── ヘッダー ── */
 .hd { position: sticky; top: 0; z-index: 20; background: var(--hd); color: #fff; }
-.hd-in { max-width: 1160px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
+.hd-in { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
 .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: auto; min-width: 0; }
 .emblem { width: 40px; height: 40px; border-radius: 50%; background: #fff; color: var(--hd); display: grid; place-items: center; flex: none; position: relative; }
 .emblem { overflow: hidden; box-shadow: 0 0 0 2px #fff; }
@@ -69,13 +69,14 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 @media (min-width: 900px) {
   body { padding-bottom: 0; }
   .hd-in { gap: 14px; padding: 12px 24px; }
-  .logo { margin-right: 8px; }
-  .hd-nav { display: flex; gap: 4px; margin-right: auto; }
+  .logo { margin-right: 8px; flex: none; }
+  /* メニューは残りの幅に収める。入りきらないときは JS が compact を付けてアイコンだけにする */
+  .hd-nav { display: flex; gap: 4px; margin-right: auto; flex: 1 1 auto; min-width: 0; overflow: hidden; }
   .hd-nav button { white-space: nowrap; flex: none; border: 0; background: none; color: rgba(255,255,255,.85); padding: 8px 14px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: .88rem; font-weight: 700; }
   .hd-nav button:hover { background: rgba(255,255,255,.12); color: #fff; }
   .hd-nav button[aria-pressed="true"] { background: #fff; color: var(--hd-deep); }
   .hd-nav svg { width: 18px; height: 18px; }
-  .hd-search { display: flex; align-items: center; gap: 6px; width: 220px; flex: none; background: rgba(255,255,255,.14); border-radius: 999px; padding: 0 6px 0 14px; border: 1.5px solid transparent; transition: background .15s; }
+  .hd-search { display: flex; align-items: center; gap: 6px; flex: 0 1 220px; min-width: 150px; background: rgba(255,255,255,.14); border-radius: 999px; padding: 0 6px 0 14px; border: 1.5px solid transparent; transition: background .15s; }
   .hd-search:focus-within { background: #fff; color: var(--ink); }
   .hd-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: inherit; font: inherit; font-size: .9rem; padding: 9px 0; }
   .hd-search input::placeholder { color: rgba(255,255,255,.75); }
@@ -85,7 +86,8 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
   .hd-btn .t { display: inline; white-space: nowrap; }
   .tabbar { display: none !important; }
 }
-@media (min-width: 900px) and (max-width: 1360px) { .hd-nav button > span:not(.dot) { display: none; } .hd-nav button { padding: 9px 11px; } }
+.hd-nav.compact button > span:not(.dot) { display: none; }
+.hd-nav.compact button { padding: 9px 11px; }
 
 /* スマホの下のタブバー */
 .tabbar { position: fixed; z-index: 20; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line);
@@ -108,7 +110,7 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 @media (min-width: 900px) {
   .panel.from-bottom { left: auto; right: 24px; top: 74px; bottom: auto; width: 400px; border-radius: 20px; transform: translateY(-10px); opacity: 0; pointer-events: none; box-shadow: 0 16px 40px rgba(0,0,0,.18); }
   .panel.from-bottom.open { transform: none; opacity: 1; pointer-events: auto; }
-  @media (min-width: 1208px) { .panel.from-bottom { right: calc((100vw - 1160px) / 2 + 24px); } }
+  @media (min-width: 1328px) { .panel.from-bottom { right: calc((100vw - 1280px) / 2 + 24px); } }
 }
 .p-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .p-head h2 { margin: 0; font-size: 1.05rem; font-weight: 800; flex: 1; display: flex; align-items: center; gap: 8px; }
@@ -134,7 +136,7 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 .p-foot .ok { background: var(--main); border-color: var(--main); color: #fff; }
 
 /* ── 本文 ── */
-main { max-width: 1160px; margin: 0 auto; padding: 18px 16px 40px; }
+main { max-width: 1280px; margin: 0 auto; padding: 18px 16px 40px; }
 @media (min-width: 900px) { main { padding: 26px 24px 64px; } }
 .today { font-size: .8rem; color: var(--muted); font-weight: 700; display: flex; align-items: center; gap: 6px; }
 .today b { color: var(--accent); }
@@ -255,7 +257,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 18px 16px 40px; }
 
 .empty { text-align: center; padding: 50px 16px; color: var(--muted); }
 .empty svg { width: 48px; height: 48px; color: var(--line); }
-footer { max-width: 1160px; margin: 0 auto; color: var(--muted); font-size: .76rem; text-align: center; padding: 22px 16px 28px; line-height: 1.9; border-top: 2px dashed var(--line); }
+footer { max-width: 1280px; margin: 0 auto; color: var(--muted); font-size: .76rem; text-align: center; padding: 22px 16px 28px; line-height: 1.9; border-top: 2px dashed var(--line); }
 footer a { color: var(--main); font-weight: 700; }
 .totop { position: fixed; right: 16px; bottom: calc(var(--tabbar) + 14px + env(safe-area-inset-bottom)); z-index: 15; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; display: grid; place-items: center;
   opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .2s, transform .2s; }
@@ -616,6 +618,17 @@ footer a { color: var(--main); font-weight: 700; }
     });
   }
 
+  // PC のメニュー：文字付きで入りきるかを実際に測り、入らなければアイコンだけにする
+  // （画面の幅だけで決めると、表示倍率やフォントの違いでロゴに重なることがある）
+  function fitNav() {
+    const nav = document.querySelector(".hd-nav");
+    if (!nav || getComputedStyle(nav).display === "none") return;
+    nav.classList.remove("compact");
+    if (nav.scrollWidth > nav.clientWidth + 1) nav.classList.add("compact");
+  }
+  addEventListener("resize", fitNav);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitNav);
+
   function renderDays() {
     const box = $("#days");
     box.textContent = "";
@@ -739,7 +752,7 @@ footer a { color: var(--main); font-weight: 700; }
 
   function render() {
     try { localStorage.setItem("odekake", JSON.stringify({ tab: state.tab, area: state.area })); } catch (_) {}
-    renderNav(); renderDays(); renderPanel();
+    renderNav(); fitNav(); renderDays(); renderPanel();
 
     const n = (state.area ? 1 : 0) + (state.kind ? 1 : 0);
     $("#filter-cnt").hidden = !n; $("#filter-cnt").textContent = n;
