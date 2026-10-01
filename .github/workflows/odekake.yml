@@ -1,0 +1,33 @@
+name: おでかけサイトの更新
+
+# ネタ帳が予約画面や手で直されたとき、おでかけサイト（docs/odekake/）のデータを作り直す。
+# 毎朝の収集ぶんは neta-collect.yml の中で続けて行う（GITHUB_TOKEN のコミットでは
+# このワークフローが起動しないため）。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "neta/ネタ帳.md"
+      - "scripts/おでかけ.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: odekake
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: データを作り直す
+        run: python scripts/おでかけ.py --thumbs
+      - name: コミットする
+        run: ./scripts/commit_file.sh docs/odekake/data.json "chore(odekake): ネタ帳からサイトのデータを更新"

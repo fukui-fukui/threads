@@ -73,3 +73,11 @@ jobs:
             sleep "${wait}"
           done
           exit 1
+
+      # ネタ帳からおでかけサイト（docs/odekake/）のデータを作り直す。
+      # 上のコミットは GITHUB_TOKEN なので odekake.yml は起動しない。ここで続けて行う。
+      - name: おでかけサイトを更新する
+        if: ${{ !inputs.dry_run }}
+        run: |
+          python3 scripts/おでかけ.py --thumbs
+          ./scripts/commit_file.sh docs/odekake/data.json "chore(odekake): ネタ帳からサイトのデータを更新"
