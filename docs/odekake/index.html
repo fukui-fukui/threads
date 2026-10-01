@@ -192,6 +192,10 @@ main { max-width: 1160px; margin: 0 auto; padding: 18px 16px 40px; }
 .t-tags .new { background: var(--accent); color: #fff; border-radius: 5px; padding: 0 6px; letter-spacing: .08em; }
 .t-tags .soon { background: var(--accent-soft); color: var(--accent); border-radius: 5px; padding: 0 6px; }
 .ticket.done { opacity: .72; }
+.ended-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 420px; margin: 28px auto 0; padding: 12px 18px; border-radius: 14px;
+  border: 1.5px dashed var(--line); background: var(--surface); color: var(--muted); font-weight: 800; font-size: .9rem; cursor: pointer; }
+.ended-toggle:hover { border-color: var(--main); color: var(--main); }
+.ended-toggle svg { width: 18px; height: 18px; }
 .ticket.done .stamp { border-color: var(--muted); color: var(--muted); }
 .t-tags .soon.done { background: var(--line); color: var(--muted); }
 .t-when { font-size: .8rem; font-weight: 800; color: var(--accent); }
@@ -329,7 +333,7 @@ footer a { color: var(--main); font-weight: 700; }
   const NEW_DAYS = 3;
   const DAY_SPAN = 14;
 
-  const state = { tab: "upcoming", area: "", kind: "", q: "", day: "" };
+  const state = { tab: "upcoming", area: "", kind: "", q: "", day: "", showEnded: false }; // 終わったものは最初は隠す
   try {
     const saved = JSON.parse(localStorage.getItem("odekake") || "{}");
     if (TABS.some((t) => t[0] === saved.tab)) state.tab = saved.tab;
@@ -625,7 +629,10 @@ footer a { color: var(--main); font-weight: 700; }
     const n = (state.area ? 1 : 0) + (state.kind ? 1 : 0);
     $("#filter-cnt").hidden = !n; $("#filter-cnt").textContent = n;
 
-    const list = items.filter((it) => inTab(it) && base(it) && inDay(it)).sort((a, b) => sortKey(a) - sortKey(b));
+    const matched = items.filter((it) => inTab(it) && base(it) && inDay(it));
+    // 終わったものは「ぜんぶ」タブにしか入らない。切り替えボタンで出し入れする
+    const endedCount = matched.filter(ended).length;
+    const list = matched.filter((it) => state.showEnded || !ended(it)).sort((a, b) => sortKey(a) - sortKey(b));
     const tab = TABS.find((t) => t[0] === state.tab);
     const ttl = $("#ttl"); ttl.textContent = "";
     const ic = el("span", "ic"); ic.append(icon(tab[2]));
@@ -641,10 +648,22 @@ footer a { color: var(--main); font-weight: 700; }
     $("#ok").textContent = `${list.length}件を見る`;
 
     const out = $("#out"); out.textContent = "";
+    const endedToggle = () => {
+      if (!endedCount) return;
+      const b = el("button", "ended-toggle");
+      b.type = "button";
+      b.setAttribute("aria-pressed", state.showEnded);
+      b.append(icon(state.showEnded ? "i-up" : "i-cal"),
+        state.showEnded ? "終わったものを隠す" : `終わったものも見る（${endedCount}件）`);
+      b.onclick = () => { state.showEnded = !state.showEnded; render(); };
+      out.append(b);
+    };
     if (!list.length) {
       const p = el("div", "empty");
-      p.append(icon("i-map"), el("p", null, "当てはまるものがありません。日付や地域、キーワードを変えてみてください。"));
-      out.append(p); return;
+      p.append(icon("i-map"), el("p", null, endedCount && !state.showEnded
+        ? "開催中・これからのものはありません。終わったものは下のボタンで見られます。"
+        : "当てはまるものがありません。日付や地域、キーワードを変えてみてください。"));
+      out.append(p); endedToggle(); return;
     }
     let cur = null, ul = null;
     for (const it of list) {
@@ -656,6 +675,7 @@ footer a { color: var(--main); font-weight: 700; }
       }
       ul.append(card(it));
     }
+    endedToggle();
   }
 
   // 検索：スマホは上から出るパネル、PC はヘッダーの欄。どちらも同じ状態を使う
@@ -685,7 +705,7 @@ footer a { color: var(--main); font-weight: 700; }
 
   document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-nav] [data-tab]");
-    if (t) { state.tab = t.dataset.tab; state.day = ""; render(); if (scrollY > 150) scrollTo({ top: 0 }); return; }
+    if (t) { state.tab = t.dataset.tab; state.day = ""; state.showEnded = false; render(); if (scrollY > 150) scrollTo({ top: 0 }); return; }
     const d = e.target.closest("#days [data-day]");
     if (d) { state.day = state.day === d.dataset.day ? "" : d.dataset.day; render(); }
   });
