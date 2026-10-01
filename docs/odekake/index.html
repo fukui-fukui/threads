@@ -160,48 +160,51 @@ main { max-width: 1160px; margin: 0 auto; padding: 18px 16px 40px; }
 .group::after { content: ""; flex: 1; height: 0; border-top: 2px dashed var(--line); }
 .group svg { color: var(--main); }
 
-/* チケット型のカード */
-.grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); }
-.ticket { --notch: 12px; position: relative; background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); transition: transform .15s; }
-.ticket:hover { transform: translateY(-3px) rotate(-.3deg); }
-.ticket > a, .ticket > div { display: flex; flex-direction: column; height: 100%; text-decoration: none; color: inherit; }
-.t-img { position: relative; aspect-ratio: 16 / 9; border-radius: 18px 18px 0 0; overflow: hidden; background: var(--main-soft); }
-.t-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ph { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; overflow: hidden; }
-.ph svg { width: 52px; height: 52px; stroke-width: 1.5; position: relative; }
-.ph.催し { background: linear-gradient(160deg, #2a9a6d, #1b6b4c); }
-.ph.スポット { background: linear-gradient(160deg, #f39a5b, #dc6327); }
-.ph.話題 { background: linear-gradient(160deg, #b5a68c, #8a7d6b); }
-.ph::before { content: ""; position: absolute; left: -10%; right: -10%; bottom: -35%; height: 70%; border-radius: 50%; background: rgba(255,255,255,.14); }
-.kind { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,.94); color: var(--ink); border-radius: 999px; padding: 2px 10px 2px 8px; font-size: .72rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; }
-.kind i { width: 8px; height: 8px; border-radius: 50%; }
-.kind.催し i { background: var(--event); } .kind.スポット i { background: var(--spot); } .kind.話題 i { background: var(--topic); }
-.new-dot { position: absolute; top: 10px; left: 10px; background: var(--accent); color: #fff; border-radius: 6px; padding: 1px 7px; font-size: .68rem; font-weight: 800; letter-spacing: .08em; }
-/* 切り取り線と左右の切り欠き */
-.perf { position: relative; height: 0; border-top: 2px dashed var(--line); margin: 0 14px; }
-.perf::before, .perf::after { content: ""; position: absolute; top: calc(var(--notch) * -1 - 1px); width: calc(var(--notch) * 2); height: calc(var(--notch) * 2); border-radius: 50%; background: var(--bg); }
-.perf::before { left: calc(-14px - var(--notch)); } .perf::after { right: calc(-14px - var(--notch)); }
+/* チケット型のカード：上がこちらの紹介、切り取り線の下（半券）が出典のリンクカード */
+.grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); align-items: start; }
+.ticket { --notch: 12px; position: relative; background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); transition: transform .15s; display: flex; flex-direction: column; overflow: hidden; }
+.ticket:hover { transform: translateY(-2px); }
+.ticket::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--kc); }
+.ticket.催し { --kc: var(--event); } .ticket.スポット { --kc: var(--spot); } .ticket.話題 { --kc: var(--topic); }
+.t-main { display: grid; grid-template-columns: 64px 1fr; gap: 4px 14px; padding: 16px 16px 14px 20px; }
 /* 日付のスタンプ */
-.stamp { position: absolute; left: 14px; bottom: -26px; z-index: 2; width: 62px; height: 62px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--accent); color: var(--accent);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; transform: rotate(-8deg); box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+.stamp { width: 62px; height: 62px; border-radius: 50%; border: 2.5px solid var(--accent); color: var(--accent); align-self: start;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; transform: rotate(-8deg); }
 .stamp .m { font-size: .62rem; font-weight: 800; }
 .stamp .dd { font-size: 1.15rem; font-weight: 800; }
 .stamp .wd { font-size: .58rem; font-weight: 700; }
 .stamp.spot { border-color: var(--spot); color: var(--spot); }
 .stamp.spot .dd { font-size: .78rem; letter-spacing: .04em; }
-.stamp.none { display: none; }
-.t-body { padding: 14px 16px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-.t-body.has-stamp { padding-left: 88px; min-height: 64px; }
-.t-when { font-size: .78rem; font-weight: 800; color: var(--accent); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
-.t-when .soon { background: var(--accent); color: #fff; border-radius: 6px; padding: 0 7px; font-size: .7rem; }
-.t-title { margin: 0; font-size: 1rem; font-weight: 800; line-height: 1.45; }
-.t-note { margin: 2px 0 0; font-size: .84rem; color: var(--muted); grid-column: 1 / -1; }
-.t-foot { margin-top: auto; padding-top: 6px; display: flex; align-items: center; gap: 8px; font-size: .74rem; color: var(--muted); font-weight: 700; }
-.t-foot .area { display: inline-flex; align-items: center; gap: 3px; background: var(--main-soft); color: var(--main-deep); border-radius: 999px; padding: 2px 10px 2px 6px; }
-.t-foot .area svg { width: 14px; height: 14px; }
-.t-foot .src { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
-.t-foot .src svg { width: 13px; height: 13px; }
-@media (prefers-color-scheme: dark) { .t-foot .area { color: var(--main); } .kind { background: rgba(20,24,21,.88); } }
+.stamp.icon { border-style: dashed; border-color: var(--kc); color: var(--kc); }
+.stamp.icon svg { width: 26px; height: 26px; }
+.t-text { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.t-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .7rem; font-weight: 800; }
+.t-tags .kind { color: var(--kc); display: inline-flex; align-items: center; gap: 4px; }
+.t-tags .kind i { width: 8px; height: 8px; border-radius: 50%; background: var(--kc); }
+.t-tags .new { background: var(--accent); color: #fff; border-radius: 5px; padding: 0 6px; letter-spacing: .08em; }
+.t-tags .soon { background: var(--accent-soft); color: var(--accent); border-radius: 5px; padding: 0 6px; }
+.t-when { font-size: .8rem; font-weight: 800; color: var(--accent); }
+.t-title { margin: 0; font-size: 1.02rem; font-weight: 800; line-height: 1.45; }
+.t-note { margin: 0; font-size: .84rem; color: var(--muted); }
+.t-area { align-self: flex-start; display: inline-flex; align-items: center; gap: 3px; background: var(--main-soft); color: var(--main-deep); border-radius: 999px; padding: 1px 10px 1px 6px; font-size: .74rem; font-weight: 700; margin-top: 2px; }
+.t-area svg { width: 14px; height: 14px; }
+/* 切り取り線と左右の切り欠き */
+.perf { position: relative; height: 0; border-top: 2px dashed var(--line); margin: 0 16px; }
+.perf::before, .perf::after { content: ""; position: absolute; top: calc(var(--notch) * -1 - 1px); width: calc(var(--notch) * 2); height: calc(var(--notch) * 2); border-radius: 50%; background: var(--bg); }
+.perf::before { left: calc(-16px - var(--notch)); } .perf::after { right: calc(-16px - var(--notch)); }
+/* 半券：出典のリンクカード */
+.stub { padding: 12px 14px 14px 20px; }
+.stub-label { font-size: .64rem; font-weight: 800; color: var(--muted); letter-spacing: .12em; margin-bottom: 6px; }
+.lc { display: flex; text-decoration: none; color: inherit; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--bg); transition: border-color .15s; min-height: 64px; }
+.lc:hover { border-color: var(--main); }
+.lc-img { flex: none; width: 112px; align-self: stretch; min-height: 64px; background: var(--line); position: relative; }
+.lc-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.lc-txt { min-width: 0; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+.lc-site { display: flex; align-items: center; gap: 4px; font-size: .66rem; color: var(--muted); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-site svg { width: 12px; height: 12px; }
+.lc-title { font-size: .8rem; font-weight: 800; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lc-desc { font-size: .7rem; color: var(--muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+@media (prefers-color-scheme: dark) { .t-area { color: var(--main); } }
 
 .empty { text-align: center; padding: 50px 16px; color: var(--muted); }
 .empty svg { width: 48px; height: 48px; color: var(--line); }
@@ -280,7 +283,7 @@ footer a { color: var(--main); font-weight: 700; }
 <footer>
   Threads <a href="https://www.threads.com/@fukui._.fukui" target="_blank" rel="noopener">@fukui._.fukui</a> が集めた福井の情報をまとめています。<span id="updated"></span><br>
   日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・お店の公式）で必ず確かめてください。<br>
-  サムネイル画像は各出典ページのものです。
+  出典のリンクカードには、各ページが共有用に公開している画像・タイトル・説明を表示しています。
 </footer>
 
 <nav class="tabbar" aria-label="メニュー" data-nav></nav>
@@ -406,56 +409,62 @@ footer a { color: var(--main); font-weight: 700; }
     return `${s.getMonth() + 1}月のおでかけ`;
   }
 
-  function placeholder(it) {
-    const ph = el("div", `ph ${it.kind}`);
-    ph.append(icon(KIND_ICON[it.kind] || "i-pin"));
-    return ph;
+  function hostOf(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ""); } catch (_) { return "出典"; }
+  }
+
+  // 出典のリンクカード。SNS のリンクプレビューと同じく、出典ページが共有用に用意した
+  // 画像・タイトル・説明をそのまま小さく出し、出典ページへ飛ばす
+  function linkCard(it) {
+    const og = it.og || {};
+    const a = el("a", "lc");
+    a.href = it.source; a.target = "_blank"; a.rel = "noopener";
+    if (og.image) {
+      const box = el("span", "lc-img");
+      const im = el("img");
+      im.loading = "lazy"; im.decoding = "async"; im.alt = ""; im.referrerPolicy = "no-referrer";
+      im.src = og.image;
+      im.onerror = () => box.remove();
+      box.append(im); a.append(box);
+    }
+    const t = el("span", "lc-txt");
+    const site = el("span", "lc-site");
+    site.append(icon("i-out"), og.site ? `${og.site}・${hostOf(it.source)}` : hostOf(it.source));
+    t.append(site, el("span", "lc-title", og.title || "出典ページを開く"));
+    if (og.description) t.append(el("span", "lc-desc", og.description));
+    a.append(t);
+    return a;
   }
 
   function card(it) {
-    const li = el("li", "ticket");
-    const a = el(it.source ? "a" : "div");
-    if (it.source) { a.href = it.source; a.target = "_blank"; a.rel = "noopener"; }
-
-    const img = el("div", "t-img");
-    if (it.image) {
-      const im = el("img");
-      im.loading = "lazy"; im.decoding = "async"; im.alt = ""; im.referrerPolicy = "no-referrer";
-      im.src = it.image;
-      im.onerror = () => im.replaceWith(placeholder(it));
-      img.append(im);
-    } else img.append(placeholder(it));
-    if (isNew(it)) img.append(el("span", "new-dot", "NEW"));
-    const k = el("span", `kind ${it.kind}`); k.append(el("i"), KIND_LABEL[it.kind]); img.append(k);
-    a.append(img);
+    const li = el("li", `ticket ${it.kind}`);
+    const main = el("div", "t-main");
 
     const st = stamp(it);
-    const wrap = el("div"); wrap.style.position = "relative";
-    const perf = el("div", "perf"); wrap.append(perf);
-    if (st) {
-      const s = el("div", "stamp " + st.cls);
-      s.append(el("span", "m", st.m), el("span", "dd", st.dd));
-      if (st.wd) s.append(el("span", "wd", st.wd));
-      wrap.append(s);
-    }
-    a.append(wrap);
+    const s = el("div", "stamp " + (st ? st.cls : "icon"));
+    if (st) { s.append(el("span", "m", st.m), el("span", "dd", st.dd)); if (st.wd) s.append(el("span", "wd", st.wd)); }
+    else s.append(icon(KIND_ICON[it.kind] || "i-pin"));
+    main.append(s);
 
-    const body = el("div", "t-body" + (st ? " has-stamp" : ""));
-    const w = el("div", "t-when");
-    w.append(when(it));
-    const so = soon(it); if (so) w.append(el("span", "soon", so));
-    body.append(w, el("h3", "t-title", titleOf(it)));
-    if (it.note) body.append(el("p", "t-note", it.note));
-    const foot = el("div", "t-foot");
-    if (it.area) { const ar = el("span", "area"); ar.append(icon("i-pin"), it.area); foot.append(ar); }
+    const tx = el("div", "t-text");
+    const tags = el("div", "t-tags");
+    const k = el("span", "kind"); k.append(el("i"), KIND_LABEL[it.kind]); tags.append(k);
+    if (isNew(it)) tags.append(el("span", "new", "NEW"));
+    const so = soon(it); if (so) tags.append(el("span", "soon", so));
+    tx.append(tags);
+    const w = when(it); if (w) tx.append(el("div", "t-when", w));
+    tx.append(el("h3", "t-title", titleOf(it)));
+    if (it.note) tx.append(el("p", "t-note", it.note));
+    if (it.area) { const ar = el("span", "t-area"); ar.append(icon("i-pin"), it.area); tx.append(ar); }
+    main.append(tx);
+    li.append(main);
+
     if (it.source) {
-      let host = "出典";
-      try { host = new URL(it.source).hostname.replace(/^www\./, ""); } catch (_) {}
-      const sr = el("span", "src"); sr.append(host, icon("i-out")); foot.append(sr);
+      li.append(el("div", "perf"));
+      const stub = el("div", "stub");
+      stub.append(el("div", "stub-label", "出典"), linkCard(it));
+      li.append(stub);
     }
-    body.append(foot);
-    a.append(body);
-    li.append(a);
     return li;
   }
 

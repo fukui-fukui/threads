@@ -5,7 +5,7 @@ neta/ネタ帳.md の「書き足す場所」にある箇条書きを 1 件ず�
 サイト（docs/odekake/index.html）はこの JSON を読むだけ。
 
     python scripts/おでかけ.py            # 書き出す
-    python scripts/おでかけ.py --thumbs   # 出典ページのサムネ（OG 画像）も取りに行く
+    python scripts/おでかけ.py --thumbs   # 出典ページのリンクカード（OG）も取りに行く
     python scripts/おでかけ.py --check    # 書き出さずに件数だけ見る
 
 日付の読み取りは本文の書き方に頼った推測なので、読めなかったものは
@@ -190,13 +190,17 @@ def build(md: str) -> dict:
     return {"updated": updated, "items": items}
 
 
-# サムネを取りに行かない出典。Instagram の画像 URL は期限付きですぐ切れる。
-NO_THUMB_HOSTS = ("instagram.com", "facebook.com", "x.com", "twitter.com", "threads.com", "threads.net")
+# リンクカード（OG）を取りに行かない出典。Instagram などは画像 URL が期限付きですぐ切れ、
+# ログインを求められて中身も取れない。サイト名だけのカードにする。
+NO_OG_HOSTS = ("instagram.com", "facebook.com", "x.com", "twitter.com", "threads.com", "threads.net")
 
 # サイト共通のロゴや既定の OG 画像。どの記事にも同じ絵が出るだけなので使わない。
 # WordPress の uploads に置かれたものは記事ごとの画像のことが多いので、ロゴ類だけ除く。
 GENERIC_IMAGE = re.compile(r"logo|cropped-|site[-_]?icon|no[-_]?image", re.I)
 GENERIC_OUTSIDE_UPLOADS = re.compile(r"ogp|og[-_]?im(age|g)|fb_ogp|/shared/|/common/|default", re.I)
+
+OG_TITLE_MAX = 80
+OG_DESC_MAX = 100
 
 
 def is_generic_image(path: str) -> bool:
@@ -204,25 +208,60 @@ def is_generic_image(path: str) -> bool:
         return True
     return "/uploads/" not in path and bool(GENERIC_OUTSIDE_UPLOADS.search(path))
 
+
 _META = re.compile(r"<meta\b[^>]*>", re.I)
 _ATTR = re.compile(r"""([a-zA-Z:_-]+)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)""")
+_TITLE = re.compile(r"<title[^>]*>(.*?)</title>", re.I | re.S)
 
 
-def find_og_image(html: str, page_url: str) -> str | None:
-    """HTML から og:image（なければ twitter:image）を取り出し、絶対 URL にする。"""
+def _metas(html: str) -> dict[str, str]:
     found: dict[str, str] = {}
     for tag in _META.findall(html):
         attrs = {k.lower(): v.strip("\"'") for k, v in _ATTR.findall(tag)}
         key = (attrs.get("property") or attrs.get("name") or "").lower()
-        if key in ("og:image", "og:image:url", "og:image:secure_url", "twitter:image") and attrs.get("content"):
-            found.setdefault(key, unescape(attrs["content"]))
+        if key and attrs.get("content", "").strip():
+            found.setdefault(key, unescape(attrs["content"]).strip())
+    return found
+
+
+def _clip(text: str | None, limit: int) -> str | None:
+    if not text:
+        return None
+    text = re.sub(r"\s+", " ", text).strip()
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def find_og_image(html: str, page_url: str, metas: dict[str, str] | None = None) -> str | None:
+    """HTML から og:image（なければ twitter:image）を取り出し、絶対 URL にする。"""
+    metas = _metas(html) if metas is None else metas
     for key in ("og:image:secure_url", "og:image", "og:image:url", "twitter:image"):
-        if key in found:
-            url = urljoin(page_url, found[key])
+        if key in metas:
+            url = urljoin(page_url, metas[key])
             if not url.startswith(("https://", "http://")):
                 return None
             return None if is_generic_image(urlparse(url).path) else url
     return None
+
+
+def parse_og(html: str, page_url: str) -> dict | None:
+    """リンクカードに出すもの（画像・タイトル・説明・サイト名）を取り出す。
+
+    SNS のリンクプレビューと同じく、出典ページが共有用に用意した情報だけを使う。
+    説明は長くなりすぎないように切る。何も取れなければ None。
+    """
+    metas = _metas(html)
+    title = metas.get("og:title") or metas.get("twitter:title")
+    if not title:
+        m = _TITLE.search(html)
+        title = unescape(m.group(1)) if m else None
+    og = {
+        "image": find_og_image(html, page_url, metas),
+        "title": _clip(title, OG_TITLE_MAX),
+        "description": _clip(metas.get("og:description") or metas.get("description")
+                             or metas.get("twitter:description"), OG_DESC_MAX),
+        "site": _clip(metas.get("og:site_name"), 40),
+    }
+    return og if any(og.values()) else None
 
 
 def fetch_html(url: str, timeout: float = 15) -> str:
@@ -238,69 +277,70 @@ def fetch_html(url: str, timeout: float = 15) -> str:
     return raw.decode(charset, errors="replace")
 
 
-def attach_thumbs(items: list[dict], previous: dict[str, str | None], fetch=fetch_html) -> int:
-    """各項目に出典のサムネを付ける。前回取れたもの（取れなかったものも）は使い回す。
+def attach_og(items: list[dict], previous: dict[str, dict | None], fetch=fetch_html) -> int:
+    """各項目に出典のリンクカード情報（og）を付ける。前回取れたもの（取れなかったものも）は使い回す。
 
-    previous は 出典 URL → 画像 URL（取れなかったら None）。通信に失敗したものは
+    previous は 出典 URL → og（取れなかったら None）。通信に失敗したものは
     覚えずに次回また試す。新しく取りに行った件数を返す。
     """
     fetched = 0
     for it in items:
         src = it.get("source")
         if not src:
-            it["image"] = None
+            it["og"] = None
             continue
         if src in previous:
-            it["image"] = previous[src]
+            it["og"] = previous[src]
             continue
         host = urlparse(src).hostname or ""
-        if any(host == h or host.endswith("." + h) for h in NO_THUMB_HOSTS):
-            it["image"] = None
+        if any(host == h or host.endswith("." + h) for h in NO_OG_HOSTS):
+            it["og"] = None
             continue
         try:
-            it["image"] = find_og_image(fetch(src), src)
+            it["og"] = parse_og(fetch(src), src)
         except urllib.error.HTTPError as e:
             if not 400 <= e.code < 500:
-                print(f"  サムネ取得に失敗（次回また試す）: {src} — {e}", file=sys.stderr)
+                print(f"  リンクカードの取得に失敗（次回また試す）: {src} — {e}", file=sys.stderr)
                 continue
             # ページが無い・断られた：何度試しても同じなので、無しとして覚える
-            print(f"  サムネなし（{e.code}）: {src}", file=sys.stderr)
-            it["image"] = None
+            print(f"  リンクカードなし（{e.code}）: {src}", file=sys.stderr)
+            it["og"] = None
         except Exception as e:  # noqa: BLE001 — 1 件の失敗で全体を止めない
-            print(f"  サムネ取得に失敗（次回また試す）: {src} — {e}", file=sys.stderr)
-            continue  # image キーを付けない = 覚えない
-        previous[src] = it["image"]
+            print(f"  リンクカードの取得に失敗（次回また試す）: {src} — {e}", file=sys.stderr)
+            continue  # og キーを付けない = 覚えない
+        previous[src] = it["og"]
         fetched += 1
     return fetched
 
 
-def load_previous_thumbs(path: Path) -> dict[str, str | None]:
+def load_previous_og(path: Path) -> dict[str, dict | None]:
     try:
         old = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
-    return {it["source"]: it["image"] for it in old.get("items", [])
-            if it.get("source") and "image" in it}
+    return {it["source"]: it["og"] for it in old.get("items", [])
+            if it.get("source") and "og" in it}
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true", help="書き出さずに件数だけ表示する")
-    ap.add_argument("--thumbs", action="store_true", help="出典ページのサムネ（OG 画像）を取りに行く")
+    ap.add_argument("--thumbs", action="store_true", help="出典ページのリンクカード（OG）を取りに行く")
     args = ap.parse_args(argv)
 
     data = build(NETA.read_text(encoding="utf-8"))
     items = data["items"]
-    previous = load_previous_thumbs(OUT)
+    previous = load_previous_og(OUT)
     if args.thumbs:
-        n = attach_thumbs(items, previous)
-        print(f"サムネ: 新しく {n} 件を取りに行った")
+        n = attach_og(items, previous)
+        print(f"リンクカード: 新しく {n} 件を取りに行った")
     else:
         # 取りに行かないときも、前回取れたものは残す
         for it in items:
             if it.get("source") in previous:
-                it["image"] = previous[it["source"]]
-    print(f"サムネあり {sum(1 for i in items if i.get('image'))} 件")
+                it["og"] = previous[it["source"]]
+    with_og = [i for i in items if i.get("og")]
+    print(f"リンクカードあり {len(with_og)} 件（うち画像あり {sum(1 for i in with_og if i['og'].get('image'))} 件）")
     counts = {k: sum(1 for i in items if i["kind"] == k) for k in ("催し", "スポット", "話題")}
     undated = sum(1 for i in items if not i["start"])
     print(f"{len(items)} 件（{'・'.join(f'{k}{v}' for k, v in counts.items())}、日付なし {undated}）")
