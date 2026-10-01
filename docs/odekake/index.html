@@ -734,7 +734,7 @@ footer a { color: var(--main); font-weight: 700; }
 
     const out = $("#out"); out.textContent = "";
     const note = el("div", "pr-note");
-    note.append(el("b", null, "PR"), "このタブは楽天トラベルのアフィリエイトリンクを含みます。リンクから予約されると、運営者に紹介料が入ることがあります。料金は掲載時点の最安で、日付や部屋で変わります。");
+    note.append(el("b", null, "PR"), "このタブは楽天トラベルのアフィリエイトリンクを含みます。");
     out.append(note);
     const feats = el("div", "feats");
     STAY_FEATS.forEach(([v, l]) => {
