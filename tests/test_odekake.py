@@ -115,7 +115,7 @@ class ThumbTest(unittest.TestCase):
         html = f'<meta property="og:image" content="{url}">'
         self.assertEqual(odekake.find_og_image(html, "https://renew-fukui.com/"), url)
 
-    def test_attach_thumbs_remembers_404_but_retries_5xx(self):
+    def test_attach_og_remembers_404_but_retries_5xx(self):
         import urllib.error
 
         def fake(url):
@@ -123,14 +123,41 @@ class ThumbTest(unittest.TestCase):
 
         items = [{"source": "https://ex.com/gone"}, {"source": "https://ex.com/busy"}]
         prev = {}
-        odekake.attach_thumbs(items, prev, fetch=fake)
+        odekake.attach_og(items, prev, fetch=fake)
         self.assertEqual(prev, {"https://ex.com/gone": None})
-        self.assertNotIn("image", items[1])
+        self.assertNotIn("og", items[1])
 
     def test_find_og_image_none(self):
         self.assertIsNone(odekake.find_og_image("<title>x</title>", "https://ex.com/"))
 
-    def test_attach_thumbs_uses_cache_and_skips_instagram_and_retries_errors(self):
+    def test_parse_og_collects_card_fields(self):
+        html = (
+            '<head><title>ページ | サイト</title>'
+            '<meta property="og:title" content="さかい米フェス2026">'
+            '<meta property="og:description" content="  新米の食べ比べ\n と 交流  ">'
+            '<meta property="og:site_name" content="ふーぽ">'
+            '<meta property="og:image" content="/img/fes.jpg"></head>'
+        )
+        og = odekake.parse_og(html, "https://fupo.jp/event/x/")
+        self.assertEqual(og, {
+            "image": "https://fupo.jp/img/fes.jpg",
+            "title": "さかい米フェス2026",
+            "description": "新米の食べ比べ と 交流",
+            "site": "ふーぽ",
+        })
+
+    def test_parse_og_falls_back_to_title_and_description(self):
+        html = '<title>坂井市｜お知らせ</title><meta name="description" content="' + "あ" * 200 + '">'
+        og = odekake.parse_og(html, "https://ex.jp/")
+        self.assertEqual(og["title"], "坂井市｜お知らせ")
+        self.assertIsNone(og["image"])
+        self.assertEqual(len(og["description"]), odekake.OG_DESC_MAX)
+        self.assertTrue(og["description"].endswith("…"))
+
+    def test_parse_og_none_when_empty(self):
+        self.assertIsNone(odekake.parse_og("<p>x</p>", "https://ex.jp/"))
+
+    def test_attach_og_uses_cache_and_skips_instagram_and_retries_errors(self):
         items = [
             {"source": "https://a.example/1"},
             {"source": "https://b.example/2"},
@@ -144,18 +171,19 @@ class ThumbTest(unittest.TestCase):
             calls.append(url)
             if "c.example" in url:
                 raise OSError("timeout")
-            return '<meta property="og:image" content="https://img.example/b.jpg">'
+            return '<meta property="og:title" content="B"><meta property="og:image" content="https://img.example/b.jpg">'
 
-        prev = {"https://a.example/1": "https://img.example/a.jpg"}
-        n = odekake.attach_thumbs(items, prev, fetch=fake)
+        cached = {"image": None, "title": "A", "description": None, "site": None}
+        prev = {"https://a.example/1": cached}
+        n = odekake.attach_og(items, prev, fetch=fake)
         self.assertEqual(calls, ["https://b.example/2", "https://c.example/3"])
         self.assertEqual(n, 1)
-        self.assertEqual(items[0]["image"], "https://img.example/a.jpg")
-        self.assertEqual(items[1]["image"], "https://img.example/b.jpg")
-        self.assertIsNone(items[2]["image"])
-        self.assertNotIn("image", items[3])  # 失敗は覚えない
+        self.assertEqual(items[0]["og"], cached)
+        self.assertEqual(items[1]["og"]["title"], "B")
+        self.assertEqual(items[1]["og"]["image"], "https://img.example/b.jpg")
+        self.assertIsNone(items[2]["og"])
+        self.assertNotIn("og", items[3])  # 失敗は覚えない
         self.assertNotIn("https://c.example/3", prev)
-
 
 if __name__ == "__main__":
     unittest.main()
