@@ -140,6 +140,8 @@ def split_instagram(line: str) -> tuple[str, str | None]:
     if not m:
         return line, None
     url = m.group(1).split("?")[0]
+    # アプリの共有で付く /reels/（複数形）は、埋め込みに使える /reel/ にそろえる
+    url = re.sub(r"instagram\.com/reels/", "instagram.com/reel/", url)
     return (line[: m.start()] + line[m.end():]).strip(), url
 
 
