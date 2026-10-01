@@ -103,6 +103,10 @@ class InstagramTest(unittest.TestCase):
         self.assertEqual(url, "https://www.instagram.com/p/AbC-12_x/")
         self.assertEqual(odekake.split_note(rest), ("10/3 祭り開催", "ひとこと"))
 
+    def test_split_instagram_normalizes_reels(self):
+        _, url = odekake.split_instagram("催し ［Instagram: https://www.instagram.com/reels/Dd3Y2lFNBiZ/］")
+        self.assertEqual(url, "https://www.instagram.com/reel/Dd3Y2lFNBiZ/")
+
     def test_split_instagram_none(self):
         self.assertEqual(odekake.split_instagram("ふつうの行"), ("ふつうの行", None))
 

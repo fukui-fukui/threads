@@ -446,7 +446,7 @@ footer a { color: var(--main); font-weight: 700; }
 
   // Instagram：投稿・リールは公式の埋め込みで出す。押したときだけ読み込む
   // （最初から全部読むと重く、見るだけで Meta へ通信が飛ぶため）
-  const IG_POST = /^https:\/\/(www\.)?instagram\.com\/(?:[A-Za-z0-9._]+\/)?(p|reel|tv)\/[A-Za-z0-9_-]+/;
+  const IG_POST = /^https:\/\/(www\.)?instagram\.com\/(?:[A-Za-z0-9._]+\/)?(p|reels?|tv)\/[A-Za-z0-9_-]+/;
   const IG_ACCT = /^https:\/\/(www\.)?instagram\.com\/([A-Za-z0-9._]+)\/?$/;
   const isIg = (u) => /^https:\/\/(www\.)?instagram\.com\//.test(u || "");
   let igScript = null;
@@ -467,7 +467,7 @@ footer a { color: var(--main); font-weight: 700; }
       btn.onclick = () => {
         const wrap = el("div", "ig-embed");
         const bq = el("blockquote", "instagram-media");
-        bq.setAttribute("data-instgrm-permalink", url.replace(/\/?$/, "/"));
+        bq.setAttribute("data-instgrm-permalink", url.replace("/reels/", "/reel/").replace(/\/?$/, "/"));
         bq.setAttribute("data-instgrm-version", "14");
         const a = el("a", null, "Instagram で見る"); a.href = url; a.target = "_blank"; a.rel = "noopener";
         bq.append(a); wrap.append(bq);
