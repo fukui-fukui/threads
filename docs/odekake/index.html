@@ -408,7 +408,7 @@ footer a { color: var(--main); font-weight: 700; }
     if (!s) return "";
     if (it.kind === "スポット") return s > today ? "まもなく" : "";
     if (ended(it)) return "終了";
-    if (s <= today && today <= e) return +s === +e ? "今日" : "開催中";
+    if (s <= today && today <= e) return +s === +e ? "今日" : +e === +today ? "今日まで" : endsThisWeek(it) ? "今週末まで" : "開催中";
     if (s <= sun && e >= sat) return "今週末";
     const days = Math.round((s - today) / 864e5);
     if (days > 0 && days <= 7) return `あと${days}日`;
@@ -456,14 +456,27 @@ footer a { color: var(--main); font-weight: 700; }
   //   0 話題・おすすめ（「ぜんぶ」だけ）→ 1 いま開催中 → 2 これから → 3 新しくできた場所
   //   → 4 日程未定の催し → 5 話題 → 6 終わったもの
   const ended = (it) => it.kind !== "スポット" && it.end && pd(it.end) < today;
+  // 会期が LONG_DAYS 日以上の催し（展示・フェア・スタンプラリーなど）は「期間中いつでも」として下げる。
+  // ずっと開催中のものが一覧の上に居座らないように（2026-10-02 代表指示）
+  const LONG_DAYS = 8;
+  const spanDays = (it) => it.start && it.end ? Math.round((pd(it.end) - pd(it.start)) / 864e5) + 1 : 1;
+  const isLong = (it) => it.kind !== "スポット" && spanDays(it) >= LONG_DAYS;
+  const started = (it) => it.start && pd(it.start) <= today && !ended(it);
+  // 今週末（日曜）までに終わる、開催中のもの。長期のものも含めて一番上に出す
+  const endsThisWeek = (it) => it.kind !== "スポット" && started(it) && pd(it.end) <= sun;
+
+  // 並びの段（小さいほど上）
+  //   0 話題・おすすめ（「ぜんぶ」だけ）→ 1 今週末まで → 2 いま開催中（短い催し）→ 3 これから
+  //   → 4 期間中いつでも（長期）→ 5 新しくできた場所 → 6 日程未定の催し → 7 話題 → 8 終わったもの
   function rankOf(it) {
     const s = pd(it.start);
-    // 「ぜんぶ」では、代表が足したもの（終わっていないもの）と日付の無い話題を一番上にまとめる
     if (state.tab === "all" && ((it.pick && !ended(it)) || (!s && it.kind === "話題"))) return 0;
-    if (it.kind === "スポット") return 3;
-    if (!s) return it.kind === "催し" ? 4 : 5;
-    if (ended(it)) return 6;
-    return s <= today ? 1 : 2;
+    if (it.kind === "スポット") return 5;
+    if (!s) return it.kind === "催し" ? 6 : 7;
+    if (ended(it)) return 8;
+    if (endsThisWeek(it)) return 1;
+    if (s > today) return 3;
+    return isLong(it) ? 4 : 2;
   }
   const FAR = 4e12; // 日時の数値（ミリ秒）より大きい値。新しい順にしたいときに引く
   function sortKey(it) {
@@ -473,10 +486,10 @@ footer a { color: var(--main); font-weight: 700; }
     const r = rankOf(it);
     // おすすめ：代表が足したものを先に、新しく集めた順。同じ日なら後から書いた行を先に
     const v = r === 0 ? (it.pick ? 0 : 1e12) + FAR / 2 - +w + 1e6 - it._i
-      : r === 1 ? +e                       // 開催中：終わりが近い順
-      : r === 2 ? +s                       // これから：始まりが近い順
-      : r === 3 ? FAR - +(s || w)          // 新しい場所：新しい順
-      : r === 6 ? FAR - +e                 // 終わったもの：最近終わった順
+      : r === 1 || r === 2 || r === 4 ? +e // 開催中：終わりが近い順
+      : r === 3 ? +s                       // これから：始まりが近い順
+      : r === 5 ? FAR - +(s || w)          // 新しい場所：新しい順
+      : r === 8 ? FAR - +e                 // 終わったもの：最近終わった順
       : FAR - +w;                          // 日付なし：最近集めた順
     return r * 1e13 + v;
   }
@@ -486,12 +499,14 @@ footer a { color: var(--main); font-weight: 700; }
     const s = pd(it.start);
     switch (rankOf(it)) {
       case 0: return "話題・おすすめ";
-      case 1: return "いま開催中";
-      case 2: return s.getFullYear() === today.getFullYear()
+      case 1: return "今週末まで";
+      case 2: return "いま開催中";
+      case 3: return s.getFullYear() === today.getFullYear()
         ? `${s.getMonth() + 1}月のおでかけ` : `${s.getFullYear()}年${s.getMonth() + 1}月のおでかけ`;
-      case 3: return "新しくできた場所";
-      case 4: return "日程は出典で・随時";
-      case 5: return "話題・おすすめ";
+      case 4: return "期間中いつでも";
+      case 5: return "新しくできた場所";
+      case 6: return "日程は出典で・随時";
+      case 7: return "話題・おすすめ";
       default: return "終わったもの";
     }
   }
@@ -637,7 +652,8 @@ footer a { color: var(--main); font-weight: 700; }
     if (!show) return;
     for (let i = 0; i < DAY_SPAN; i++) {
       const d = addDays(today, i), key = iso(d);
-      const n = items.filter((it) => inTab(it) && base(it) && onDay(it, key)).length;
+      // 長期の催しは毎日に数えると件数が横並びになるので、日ごとの件数には入れない
+      const n = items.filter((it) => inTab(it) && base(it) && onDay(it, key) && !isLong(it)).length;
       const b = el("button", "day" + (d.getDay() === 6 ? " sat" : d.getDay() === 0 ? " sun" : "") + (i === 0 ? " today-d" : "") + (n ? "" : " zero"));
       b.dataset.day = key;
       b.setAttribute("aria-pressed", state.day === key);
@@ -799,7 +815,7 @@ footer a { color: var(--main); font-weight: 700; }
       const g = groupOf(it);
       if (g !== cur || !ul) {
         cur = g;
-        if (g) { const h = el("h2", "group"); h.append(icon(g === "いま開催中" ? "i-ticket" : g.startsWith("新") ? "i-shop" : "i-cal"), g); out.append(h); }
+        if (g) { const h = el("h2", "group"); h.append(icon(g === "いま開催中" || g === "今週末まで" ? "i-ticket" : g.startsWith("新") ? "i-shop" : "i-cal"), g); out.append(h); }
         ul = el("ul", "grid"); out.append(ul);
       }
       ul.append(card(it));
