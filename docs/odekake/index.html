@@ -6,6 +6,14 @@
 <title>ふくいおでかけ帖</title>
 <meta name="description" content="@fukui._.fukui が集めた福井県内のイベント・新スポットのまとめ">
 <meta name="theme-color" content="#1f7a57">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="ふくいおでかけ帖">
+<meta property="og:description" content="福井のイベント・新スポットを毎朝まとめて更新。Threads @fukui._.fukui のおでかけ情報サイト">
+<meta property="og:image" content="https://y-umeda-urala.github.io/threads/odekake/icon-192.png">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
@@ -42,8 +50,8 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 .hd-in { max-width: 1160px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
 .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: auto; min-width: 0; }
 .emblem { width: 40px; height: 40px; border-radius: 50%; background: #fff; color: var(--hd); display: grid; place-items: center; flex: none; position: relative; }
-.emblem::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; border: 1.5px dashed currentColor; opacity: .5; }
-.emblem svg { width: 22px; height: 22px; stroke-width: 2.4; }
+.emblem { overflow: hidden; box-shadow: 0 0 0 2px #fff; }
+.emblem img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .logo-t b { display: block; font-weight: 800; font-size: 1.12rem; letter-spacing: .06em; line-height: 1.2; white-space: nowrap; }
 .logo-t small { display: block; font-size: .62rem; letter-spacing: .22em; opacity: .8; line-height: 1.3; }
 .hd-btn { position: relative; height: 40px; min-width: 40px; padding: 0 12px; border-radius: 999px; border: 1.5px solid rgba(255,255,255,.45); background: rgba(255,255,255,.08); color: #fff;
@@ -245,7 +253,7 @@ footer a { color: var(--main); font-weight: 700; }
 <header class="hd">
   <div class="hd-in">
     <a class="logo" href="./">
-      <span class="emblem"><svg class="i"><use href="#i-pin"/></svg></span>
+      <span class="emblem"><img src="logo.jpg" alt="" width="40" height="40"></span>
       <span class="logo-t"><small>FUKUI DAY OUT</small><b>ふくいおでかけ帖</b></span>
     </a>
     <nav class="hd-nav" aria-label="メニュー" data-nav></nav>
@@ -351,7 +359,7 @@ footer a { color: var(--main); font-weight: 700; }
 
   function when(it) {
     const s = pd(it.start), e = pd(it.end);
-    if (!s) return it.kind === "スポット" ? "" : "日程は出典で";
+    if (!s) return it.kind === "催し" ? "日程は出典で" : "";
     if (it.kind === "スポット") return `${s.getFullYear()}年${s.getMonth() + 1}月${s.getDate()}日オープン`;
     return +s === +e ? fmt(s) : `${fmt(s)} 〜 ${fmt(e)}`;
   }
@@ -412,7 +420,7 @@ footer a { color: var(--main); font-weight: 700; }
     if (state.tab === "weekend" || state.tab === "spot" || state.day) return "";
     const s = pd(it.start);
     if (it.kind === "スポット") return "新しくできた場所";
-    if (!s) return "日程は出典で・随時";
+    if (!s) return it.kind === "催し" ? "日程は出典で・随時" : "話題・おすすめ";
     if (s <= today) return "いま開催中";
     return `${s.getMonth() + 1}月のおでかけ`;
   }
