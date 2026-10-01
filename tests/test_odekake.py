@@ -104,6 +104,29 @@ class ThumbTest(unittest.TestCase):
         html = "<meta name='twitter:image' content='https://ex.com/t.png?a=1&amp;b=2'>"
         self.assertEqual(odekake.find_og_image(html, "https://ex.com/"), "https://ex.com/t.png?a=1&b=2")
 
+    def test_find_og_image_skips_site_logo(self):
+        html = '<meta property="og:image" content="https://www.city.sabae.fukui.jp/images/ogp.png">'
+        self.assertIsNone(odekake.find_og_image(html, "https://www.city.sabae.fukui.jp/"))
+        html = '<meta property="og:image" content="https://ex.jp/wp-content/uploads/2024/06/cropped-header.png">'
+        self.assertIsNone(odekake.find_og_image(html, "https://ex.jp/"))
+
+    def test_find_og_image_keeps_uploaded_ogp(self):
+        url = "https://renew-fukui.com/kanri/wp-content/uploads/2026/06/SNS-OGP_1200x675px.jpg"
+        html = f'<meta property="og:image" content="{url}">'
+        self.assertEqual(odekake.find_og_image(html, "https://renew-fukui.com/"), url)
+
+    def test_attach_thumbs_remembers_404_but_retries_5xx(self):
+        import urllib.error
+
+        def fake(url):
+            raise urllib.error.HTTPError(url, 404 if "gone" in url else 503, "x", {}, None)
+
+        items = [{"source": "https://ex.com/gone"}, {"source": "https://ex.com/busy"}]
+        prev = {}
+        odekake.attach_thumbs(items, prev, fetch=fake)
+        self.assertEqual(prev, {"https://ex.com/gone": None})
+        self.assertNotIn("image", items[1])
+
     def test_find_og_image_none(self):
         self.assertIsNone(odekake.find_og_image("<title>x</title>", "https://ex.com/"))
 

@@ -18,6 +18,7 @@ import argparse
 import json
 import re
 import sys
+import urllib.error
 import urllib.request
 from datetime import date
 from html import unescape
@@ -192,6 +193,17 @@ def build(md: str) -> dict:
 # サムネを取りに行かない出典。Instagram の画像 URL は期限付きですぐ切れる。
 NO_THUMB_HOSTS = ("instagram.com", "facebook.com", "x.com", "twitter.com", "threads.com", "threads.net")
 
+# サイト共通のロゴや既定の OG 画像。どの記事にも同じ絵が出るだけなので使わない。
+# WordPress の uploads に置かれたものは記事ごとの画像のことが多いので、ロゴ類だけ除く。
+GENERIC_IMAGE = re.compile(r"logo|cropped-|site[-_]?icon|no[-_]?image", re.I)
+GENERIC_OUTSIDE_UPLOADS = re.compile(r"ogp|og[-_]?im(age|g)|fb_ogp|/shared/|/common/|default", re.I)
+
+
+def is_generic_image(path: str) -> bool:
+    if GENERIC_IMAGE.search(path):
+        return True
+    return "/uploads/" not in path and bool(GENERIC_OUTSIDE_UPLOADS.search(path))
+
 _META = re.compile(r"<meta\b[^>]*>", re.I)
 _ATTR = re.compile(r"""([a-zA-Z:_-]+)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)""")
 
@@ -207,13 +219,16 @@ def find_og_image(html: str, page_url: str) -> str | None:
     for key in ("og:image:secure_url", "og:image", "og:image:url", "twitter:image"):
         if key in found:
             url = urljoin(page_url, found[key])
-            return url if url.startswith(("https://", "http://")) else None
+            if not url.startswith(("https://", "http://")):
+                return None
+            return None if is_generic_image(urlparse(url).path) else url
     return None
 
 
 def fetch_html(url: str, timeout: float = 15) -> str:
     req = urllib.request.Request(url, headers={
-        "User-Agent": "Mozilla/5.0 (compatible; fukui-odekake/1.0; +https://github.com/)",
+        # 独自の UA だと 403 を返す自治体サイトがあるので、ふつうのブラウザを名乗る
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
         "Accept-Language": "ja",
     })
     with urllib.request.urlopen(req, timeout=timeout) as res:
@@ -244,6 +259,13 @@ def attach_thumbs(items: list[dict], previous: dict[str, str | None], fetch=fetc
             continue
         try:
             it["image"] = find_og_image(fetch(src), src)
+        except urllib.error.HTTPError as e:
+            if not 400 <= e.code < 500:
+                print(f"  サムネ取得に失敗（次回また試す）: {src} — {e}", file=sys.stderr)
+                continue
+            # ページが無い・断られた：何度試しても同じなので、無しとして覚える
+            print(f"  サムネなし（{e.code}）: {src}", file=sys.stderr)
+            it["image"] = None
         except Exception as e:  # noqa: BLE001 — 1 件の失敗で全体を止めない
             print(f"  サムネ取得に失敗（次回また試す）: {src} — {e}", file=sys.stderr)
             continue  # image キーを付けない = 覚えない
