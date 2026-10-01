@@ -5,181 +5,213 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ふくいおでかけ帖</title>
 <meta name="description" content="@fukui._.fukui が集めた福井県内のイベント・新スポットのまとめ">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#1f7a57">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=M+PLUS+Rounded+1c:wght@800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #ffffff; --band: #f7f6f5; --fg: #333333; --fg2: #444444; --muted: #777777; --line: #dddddd; --line2: #d1d1d1;
-  --teal: #57bdcf; --teal2: #68c4d4; --teal-soft: #eaf7fa; --yellow: #fac400; --beige: #dfd4c0; --orange: #fa6c3a;
-  --event: #57bdcf; --spot: #fa6c3a; --topic: #9a8f80;
-  --hand: "Kalam", "MV Boli", "Comic Sans MS", cursive;
-  --round: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", sans-serif;
+  --bg: #f5f1e8; --surface: #ffffff; --ink: #22302a; --muted: #6d7570; --line: #e4ddcf;
+  --main: #1f7a57; --main-deep: #155b40; --main-soft: #e2f1e8; --accent: #ef7f3a; --accent-soft: #fdeadb;
+  --sat: #2f6fd0; --sun: #d9473a;
+  --event: #1f7a57; --spot: #e0692c; --topic: #8a7d6b;
+  --shadow: 0 1px 2px rgba(40, 50, 40, .06), 0 6px 18px rgba(40, 50, 40, .08);
+  --tabbar: 64px; --hd: #1f7a57; --hd-deep: #155b40;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #17191b; --band: #212427; --fg: #e9e9e9; --fg2: #f2f2f2; --muted: #a4a8ad; --line: #34383c; --line2: #3d4247;
-    --teal: #6fd0e0; --teal2: #6fd0e0; --teal-soft: #173039; --yellow: #ffcf26; --beige: #5a5245; --orange: #ff8a5c;
-    --event: #6fd0e0; --spot: #ff8a5c; --topic: #b4aa9c;
+    --bg: #141815; --surface: #1d231f; --ink: #e8eee9; --muted: #a2aba5; --line: #2e3631;
+    --main: #4cc292; --main-deep: #3aa679; --main-soft: #1b3428; --accent: #ff9a59; --accent-soft: #3d2618;
+    --sat: #7aa8f0; --sun: #f08174;
+    --event: #4cc292; --spot: #ff9a59; --topic: #b9ad9a;
+    --shadow: 0 6px 18px rgba(0, 0, 0, .35);
+    --hd: #17513b; --hd-deep: #0f3a2a;
   }
 }
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-body { margin: 0; background: var(--bg); color: var(--fg); line-height: 1.6; letter-spacing: .02em;
-  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", Meiryo, system-ui, sans-serif; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.65;
+  font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Hiragino Sans", system-ui, sans-serif; font-weight: 500;
+  padding-bottom: calc(var(--tabbar) + env(safe-area-inset-bottom)); }
 button { font: inherit; color: inherit; }
 a { color: inherit; }
-svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-.new { font-family: var(--hand); font-weight: 700; background: var(--yellow); color: #2b2100; line-height: 1; letter-spacing: .02em; }
+svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
 /* ── ヘッダー ── */
-.tagline { margin: 0; padding: 8px 16px 0; text-align: center; font-size: .72rem; color: var(--muted); }
-.bar { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; padding: 6px 12px 10px; }
-.logo { grid-column: 2; justify-self: center; display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--fg2); }
-.logo svg { width: 28px; height: 28px; color: var(--teal); stroke-width: 2.4; }
-.logo b { font-family: var(--round); font-weight: 800; font-size: 1.45rem; letter-spacing: .04em; }
-.logo small { font-family: var(--hand); color: var(--teal); font-size: .8rem; margin-left: 2px; align-self: flex-end; }
-.hd-btn { width: 44px; height: 44px; border: 0; background: none; color: var(--teal); display: grid; place-items: center; cursor: pointer; position: relative; border-radius: 12px; }
-.hd-btn svg { width: 30px; height: 30px; stroke-width: 2.2; }
-.hd-btn:hover, .hd-btn[aria-expanded="true"] { background: var(--teal-soft); }
-#btn-filter { grid-column: 1; grid-row: 1; }
-#btn-search { grid-column: 3; grid-row: 1; justify-self: end; }
-.hd-btn .cnt { position: absolute; top: 2px; right: 0; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--orange); color: #fff; font-size: .68rem; font-weight: 700; display: grid; place-items: center; }
+.hd { position: sticky; top: 0; z-index: 20; background: var(--hd); color: #fff; }
+.hd-in { max-width: 1160px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: auto; min-width: 0; }
+.emblem { width: 40px; height: 40px; border-radius: 50%; background: #fff; color: var(--hd); display: grid; place-items: center; flex: none; position: relative; }
+.emblem::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; border: 1.5px dashed currentColor; opacity: .5; }
+.emblem svg { width: 22px; height: 22px; stroke-width: 2.4; }
+.logo-t b { display: block; font-weight: 800; font-size: 1.12rem; letter-spacing: .06em; line-height: 1.2; white-space: nowrap; }
+.logo-t small { display: block; font-size: .62rem; letter-spacing: .22em; opacity: .8; line-height: 1.3; }
+.hd-btn { position: relative; height: 40px; min-width: 40px; padding: 0 12px; border-radius: 999px; border: 1.5px solid rgba(255,255,255,.45); background: rgba(255,255,255,.08); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font-size: .82rem; font-weight: 700; transition: background .15s; }
+.hd-btn:hover { background: rgba(255,255,255,.18); }
+.hd-btn[aria-expanded="true"] { background: #fff; color: var(--hd-deep); border-color: #fff; }
+.hd-btn svg { width: 20px; height: 20px; }
+.hd-btn .t { display: none; }
+.hd-btn .cnt { position: absolute; top: -5px; right: -5px; min-width: 19px; height: 19px; border-radius: 10px; padding: 0 5px; background: var(--accent); color: #fff; font-size: .68rem; display: grid; place-items: center; border: 2px solid var(--hd); }
 .hd-btn .cnt[hidden] { display: none; }
-.hd-btn .lbl { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); font-size: .58rem; font-weight: 700; white-space: nowrap; }
+.hd-search { display: none; }
+.hd-nav { display: none; }
 
-/* アイコンのメニュー（灰色の帯） */
-.nav-wrap { position: sticky; top: 0; z-index: 10; background: var(--band); border-bottom: 1px solid var(--line2); }
-.nav { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
-.nav button { position: relative; border: 0; background: none; cursor: pointer; padding: 14px 2px 8px; display: flex; flex-direction: column; align-items: center; gap: 3px;
-  font-size: .72rem; font-weight: 700; color: var(--muted); }
-.nav button svg { width: 30px; height: 30px; color: var(--teal); stroke-width: 1.8; transition: transform .15s; }
-.nav button:hover svg { transform: translateY(-2px); }
-.nav button[aria-pressed="true"] { color: var(--teal); }
-.nav button[aria-pressed="true"]::after { content: ""; position: absolute; left: 18%; right: 18%; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--teal); }
-.nav .new { position: absolute; top: 4px; left: 50%; margin-left: 2px; font-size: .74rem; padding: 3px 6px 2px; border-radius: 3px; }
-@media (min-width: 760px) {
-  .nav button { padding: 12px 4px 10px; font-size: .82rem; }
-  .nav button + button::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; border-left: 2px dotted var(--line2); }
+/* PC はヘッダーにメニューと検索欄を並べる */
+@media (min-width: 900px) {
+  body { padding-bottom: 0; }
+  .hd-in { gap: 14px; padding: 12px 24px; }
+  .logo { margin-right: 8px; }
+  .hd-nav { display: flex; gap: 4px; margin-right: auto; }
+  .hd-nav button { white-space: nowrap; flex: none; border: 0; background: none; color: rgba(255,255,255,.85); padding: 8px 14px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: .88rem; font-weight: 700; }
+  .hd-nav button:hover { background: rgba(255,255,255,.12); color: #fff; }
+  .hd-nav button[aria-pressed="true"] { background: #fff; color: var(--hd-deep); }
+  .hd-nav svg { width: 18px; height: 18px; }
+  .hd-search { display: flex; align-items: center; gap: 6px; width: 220px; flex: none; background: rgba(255,255,255,.14); border-radius: 999px; padding: 0 6px 0 14px; border: 1.5px solid transparent; transition: background .15s; }
+  .hd-search:focus-within { background: #fff; color: var(--ink); }
+  .hd-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: inherit; font: inherit; font-size: .9rem; padding: 9px 0; }
+  .hd-search input::placeholder { color: rgba(255,255,255,.75); }
+  .hd-search:focus-within input::placeholder { color: var(--muted); }
+  .hd-search svg { width: 18px; height: 18px; opacity: .85; }
+  #btn-search { display: none; }
+  .hd-btn .t { display: inline; white-space: nowrap; }
+  .tabbar { display: none !important; }
 }
+@media (min-width: 900px) and (max-width: 1180px) { .hd-nav button > span:not(.dot) { display: none; } .hd-nav button { padding: 9px 11px; } }
 
-/* ── 検索と絞り込み ── */
-.scrim { position: fixed; inset: 0; z-index: 30; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .2s; }
+/* スマホの下のタブバー */
+.tabbar { position: fixed; z-index: 20; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 16px rgba(0,0,0,.05); }
+.tabbar button { border: 0; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: .66rem; font-weight: 700; color: var(--muted); padding: 2px 0; position: relative; }
+.tabbar .ic { width: 52px; height: 30px; border-radius: 15px; display: grid; place-items: center; transition: background .15s; }
+.tabbar button[aria-pressed="true"] { color: var(--main); }
+.tabbar button[aria-pressed="true"] .ic { background: var(--main-soft); }
+.tabbar .dot, .hd-nav .dot { position: absolute; top: 2px; left: calc(50% + 10px); width: 8px; height: 8px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); }
+.hd-nav button { position: relative; }
+.hd-nav .dot { top: 4px; left: auto; right: 6px; border-color: var(--hd); }
+
+/* ── 検索・絞り込みのパネル ── */
+.scrim { position: fixed; inset: 0; z-index: 30; background: rgba(15, 25, 20, .4); opacity: 0; pointer-events: none; transition: opacity .2s; }
 .scrim.open { opacity: 1; pointer-events: auto; }
-.panel { position: fixed; z-index: 31; left: 0; right: 0; background: var(--bg); padding: 16px; transition: transform .25s cubic-bezier(.2,.8,.2,1); }
-.panel.from-top { top: 0; transform: translateY(-105%); box-shadow: 0 8px 30px rgba(0,0,0,.18); border-radius: 0 0 18px 18px; }
-.panel.from-bottom { bottom: 0; transform: translateY(105%); box-shadow: 0 -8px 30px rgba(0,0,0,.18); border-radius: 18px 18px 0 0; max-height: 82vh; overflow: auto; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+.panel { position: fixed; z-index: 31; left: 0; right: 0; background: var(--surface); padding: 18px 18px 20px; transition: transform .25s cubic-bezier(.2,.8,.2,1), opacity .2s; }
+.panel.from-top { top: 0; transform: translateY(-105%); border-radius: 0 0 22px 22px; }
+.panel.from-bottom { bottom: 0; transform: translateY(105%); border-radius: 22px 22px 0 0; max-height: 84vh; overflow: auto; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
 .panel.open { transform: none; }
-.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.panel-head .x { border: 0; background: var(--band); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
-.panel-head .x svg { width: 18px; height: 18px; }
-.side-ttl { margin: 0 0 12px; padding-bottom: 7px; font-size: .95rem; font-weight: 700; color: var(--fg2); background: repeating-linear-gradient(-45deg, var(--fg2) 0 1px, transparent 1px 4px) left bottom / 100% 4px no-repeat; }
-.panel-head .side-ttl { flex: 1; margin: 0 10px 0 0; }
-.side-sec { margin-top: 22px; }
-.field { display: flex; align-items: center; border: 1px solid var(--line2); border-radius: 999px; background: var(--bg); padding: 2px 4px 2px 16px; transition: border-color .15s, box-shadow .15s; }
-.field:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
-.field input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--fg); font: inherit; font-size: 16px; padding: 8px 0; }
-.field input::placeholder { color: #aaa; }
-.field input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
-.field .clear, .field .go { border: 0; background: none; width: 36px; height: 36px; display: grid; place-items: center; cursor: pointer; border-radius: 50%; }
-.field .clear { color: var(--muted); } .field .clear svg { width: 16px; height: 16px; }
-.field .go { color: var(--teal); }
-.radios { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin-top: 12px; padding: 0 8px; }
-.radios label { display: flex; align-items: center; gap: 8px; font-size: .85rem; cursor: pointer; }
-.radios input { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--line2); margin: 0; display: grid; place-items: center; background: var(--bg); }
-.radios input:checked { border-color: var(--teal); }
-.radios input:checked::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--teal); }
-.tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.tag { border: 1px solid var(--teal); background: var(--bg); color: var(--fg2); border-radius: 3px; padding: 3px 10px; font-size: .8rem; cursor: pointer; transition: background .12s, color .12s; }
-.tag::before { content: "# "; color: var(--teal); }
-.tag:hover { background: var(--teal-soft); }
-.tag[aria-pressed="true"] { background: var(--teal); color: #fff; }
-.tag[aria-pressed="true"]::before { color: #fff; }
-.tag.area::before { content: none; }
-.region { font-size: .74rem; color: var(--muted); font-weight: 700; margin: 12px 0 6px; }
-.region:first-child { margin-top: 0; }
-.panel-foot { margin-top: 18px; display: flex; gap: 10px; }
-.panel-foot button { flex: 1; padding: 11px; border-radius: 999px; font-weight: 700; cursor: pointer; border: 1px solid var(--line2); background: var(--bg); }
-.panel-foot .ok { border-color: var(--teal); background: var(--teal); color: #fff; }
+@media (min-width: 900px) {
+  .panel.from-bottom { left: auto; right: 24px; top: 74px; bottom: auto; width: 400px; border-radius: 20px; transform: translateY(-10px); opacity: 0; pointer-events: none; box-shadow: 0 16px 40px rgba(0,0,0,.18); }
+  .panel.from-bottom.open { transform: none; opacity: 1; pointer-events: auto; }
+  @media (min-width: 1208px) { .panel.from-bottom { right: calc((100vw - 1160px) / 2 + 24px); } }
+}
+.p-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.p-head h2 { margin: 0; font-size: 1.05rem; font-weight: 800; flex: 1; display: flex; align-items: center; gap: 8px; }
+.p-head h2 svg { color: var(--main); }
+.p-head .x { border: 0; background: var(--bg); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
+.p-head .x svg { width: 18px; height: 18px; }
+.p-label { font-size: .75rem; color: var(--muted); font-weight: 700; margin: 16px 0 8px; letter-spacing: .08em; }
+.field { display: flex; align-items: center; gap: 8px; border: 2px solid var(--main); border-radius: 14px; padding: 2px 6px 2px 12px; }
+.field svg { color: var(--main); }
+.field input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--ink); font: inherit; font-size: 16px; padding: 9px 0; }
+.field input::-webkit-search-cancel-button, .hd-search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+.field .clear { border: 0; background: var(--bg); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
+.field .clear svg { width: 14px; height: 14px; color: var(--muted); }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 5px 14px; font-size: .86rem; font-weight: 700; cursor: pointer; transition: border-color .12s, background .12s; }
+.pill:hover { border-color: var(--main); }
+.pill[aria-pressed="true"] { background: var(--main); border-color: var(--main); color: #fff; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--bg); border-radius: 12px; padding: 4px; gap: 4px; }
+.seg button { border: 0; background: none; border-radius: 9px; padding: 8px 4px; font-size: .86rem; font-weight: 700; cursor: pointer; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--main-deep); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.p-foot { display: flex; gap: 10px; margin-top: 22px; }
+.p-foot button { flex: 1; padding: 12px; border-radius: 14px; font-weight: 800; cursor: pointer; border: 1.5px solid var(--line); background: var(--surface); }
+.p-foot .ok { background: var(--main); border-color: var(--main); color: #fff; }
 
 /* ── 本文 ── */
-.layout { max-width: 1200px; margin: 0 auto; padding: 0 16px 40px; }
-.h-sec { position: relative; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 26px 0 16px; padding-bottom: 10px;
-  background: repeating-linear-gradient(-45deg, var(--fg2) 0 1px, transparent 1px 4px) left bottom / 100% 5px no-repeat; }
-.h-sec .bubble { position: relative; align-self: center; font-size: 1.05rem; padding: 5px 9px 4px; border-radius: 4px; }
-.h-sec .bubble::after { content: ""; position: absolute; left: 50%; bottom: -6px; margin-left: -6px; border: 6px solid transparent; border-bottom: 0; border-top-color: var(--yellow); }
-.h-sec h1 { margin: 0; font-size: clamp(1.25rem, 5vw, 1.6rem); font-weight: 700; color: var(--fg2); letter-spacing: .04em; }
-.h-sec .sub { color: var(--muted); font-size: .8rem; }
-.active { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 10px; }
-.active button { display: inline-flex; align-items: center; gap: 4px; border: 0; background: var(--teal); color: #fff; border-radius: 999px; padding: 3px 8px 3px 12px; font-size: .78rem; cursor: pointer; }
-.active svg { width: 14px; height: 14px; }
-.group { margin: 26px 0 12px; font-size: .95rem; font-weight: 700; color: var(--fg2); display: flex; align-items: center; gap: 8px; }
-.group svg { width: 20px; height: 20px; color: var(--teal); }
+main { max-width: 1160px; margin: 0 auto; padding: 18px 16px 40px; }
+@media (min-width: 900px) { main { padding: 26px 24px 64px; } }
+.today { font-size: .8rem; color: var(--muted); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.today b { color: var(--accent); }
+.ttl { display: flex; align-items: center; gap: 12px; margin: 6px 0 4px; }
+.ttl .ic { width: 44px; height: 44px; border-radius: 14px; background: var(--main); color: #fff; display: grid; place-items: center; flex: none; transform: rotate(-4deg); }
+.ttl h1 { margin: 0; font-size: clamp(1.05rem, 4.3vw, 1.7rem); font-weight: 800; line-height: 1.3; }
+.ttl .n { margin-left: auto; font-size: .82rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.ttl .n b { font-size: 1.3rem; color: var(--main); margin-right: 2px; }
+.route { height: 10px; margin: 8px 0 4px; background: radial-gradient(circle, var(--main) 2px, transparent 2.5px) 0 50% / 12px 10px repeat-x; opacity: .35; }
 
-/* カード：スマホは横並びのリスト、広い画面はグリッド */
-.list { list-style: none; margin: 0; padding: 0; }
-.card a.wrap { display: grid; grid-template-columns: 44% 1fr; gap: 6px 12px; padding: 14px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; }
-.list .card:first-child a.wrap { padding-top: 0; }
-.thumb { position: relative; aspect-ratio: 2 / 1.1; border: 1px solid var(--line); background: var(--band); overflow: hidden; grid-row: span 2; align-self: start; }
-.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
-.card a.wrap:hover .thumb img { transform: scale(1.04); }
-.ph { position: absolute; inset: 0; display: grid; place-items: center; }
-.ph svg { width: 40%; height: 60%; stroke-width: 1.3; color: #fff; }
-.ph.催し { background: var(--teal2); } .ph.スポット { background: #ff9a6e; } .ph.話題 { background: var(--beige); }
-.ph::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 20% 120%, rgba(255,255,255,.35) 0 30%, transparent 31%), radial-gradient(circle at 95% -10%, rgba(255,255,255,.25) 0 25%, transparent 26%); }
-.thumb .new { position: absolute; top: 0; left: 8px; font-size: .78rem; padding: 6px 6px 8px; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%); }
-.thumb .flag { position: absolute; right: 0; bottom: 0; color: #fff; font-size: .68rem; font-weight: 700; padding: 2px 7px; border-top-left-radius: 6px; }
-.flag.催し { background: var(--event); } .flag.スポット { background: var(--spot); } .flag.話題 { background: var(--topic); }
-.c-title { margin: 0; font-size: .95rem; font-weight: 700; line-height: 1.5; color: var(--fg2); }
-.c-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font-size: .75rem; color: var(--muted); }
-.c-meta .when { color: var(--orange); font-weight: 700; }
-.c-meta .soon { background: var(--orange); color: #fff; padding: 0 6px; border-radius: 3px; font-weight: 700; }
-.c-desc { grid-column: 1 / -1; margin: 4px 0 0; font-size: .8rem; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.c-tags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
-.c-tags span { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line2); border-radius: 3px; padding: 1px 8px; font-size: .72rem; color: var(--fg2); }
-.c-tags svg { width: 13px; height: 13px; color: var(--muted); }
-.c-tags .src { margin-left: auto; border: 0; padding: 1px 0; color: var(--teal); }
-@media (min-width: 640px) {
-  .list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px 24px; }
-  .card a.wrap { display: flex; flex-direction: column; gap: 6px; padding: 0; border: 0; }
-  .list .card:first-child a.wrap { padding-top: 0; }
-  .thumb { aspect-ratio: 2 / 1; margin-bottom: 4px; align-self: stretch; }
-  .thumb .new { left: 10px; font-size: .95rem; padding: 8px 8px 12px; }
-  .c-title { font-size: 1rem; }
-  .c-desc { margin: 0; }
-}
-@media (min-width: 1000px) { .list { grid-template-columns: repeat(3, 1fr); } }
+/* 日付のストリップ */
+.days { display: flex; gap: 8px; overflow-x: auto; padding: 10px 2px 12px; margin: 4px -16px 0; padding-left: 16px; padding-right: 16px; scrollbar-width: none; scroll-snap-type: x proximity; }
+.days::-webkit-scrollbar { display: none; }
+.day { flex: none; width: 54px; border: 1.5px solid var(--line); background: var(--surface); border-radius: 16px; padding: 6px 0 7px; display: flex; flex-direction: column; align-items: center; gap: 0; cursor: pointer; scroll-snap-align: start; transition: transform .12s, border-color .12s; }
+.day:hover { transform: translateY(-2px); border-color: var(--main); }
+.day .w { font-size: .68rem; font-weight: 700; color: var(--muted); }
+.day .d { font-size: 1.2rem; font-weight: 800; line-height: 1.25; }
+.day .c { font-size: .64rem; font-weight: 700; color: var(--main); min-height: 1em; }
+.day.sat .w, .day.sat .d { color: var(--sat); }
+.day.sun .w, .day.sun .d { color: var(--sun); }
+.day.today-d { border-color: var(--main); }
+.day.zero { opacity: .5; }
+.day[aria-pressed="true"] { background: var(--main); border-color: var(--main); }
+.day[aria-pressed="true"] .w, .day[aria-pressed="true"] .d, .day[aria-pressed="true"] .c { color: #fff; }
+@media (min-width: 900px) { .days { margin: 4px 0 0; padding-left: 2px; padding-right: 2px; } }
+
+.active { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+.active button { display: inline-flex; align-items: center; gap: 4px; border: 0; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 4px 8px 4px 12px; font-size: .78rem; font-weight: 700; cursor: pointer; }
+.active svg { width: 14px; height: 14px; }
+.group { margin: 26px 0 12px; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+.group::after { content: ""; flex: 1; height: 0; border-top: 2px dashed var(--line); }
+.group svg { color: var(--main); }
+
+/* チケット型のカード */
+.grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); }
+.ticket { --notch: 12px; position: relative; background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); transition: transform .15s; }
+.ticket:hover { transform: translateY(-3px) rotate(-.3deg); }
+.ticket > a, .ticket > div { display: flex; flex-direction: column; height: 100%; text-decoration: none; color: inherit; }
+.t-img { position: relative; aspect-ratio: 16 / 9; border-radius: 18px 18px 0 0; overflow: hidden; background: var(--main-soft); }
+.t-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ph { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; overflow: hidden; }
+.ph svg { width: 52px; height: 52px; stroke-width: 1.5; position: relative; }
+.ph.催し { background: linear-gradient(160deg, #2a9a6d, #1b6b4c); }
+.ph.スポット { background: linear-gradient(160deg, #f39a5b, #dc6327); }
+.ph.話題 { background: linear-gradient(160deg, #b5a68c, #8a7d6b); }
+.ph::before { content: ""; position: absolute; left: -10%; right: -10%; bottom: -35%; height: 70%; border-radius: 50%; background: rgba(255,255,255,.14); }
+.kind { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,.94); color: var(--ink); border-radius: 999px; padding: 2px 10px 2px 8px; font-size: .72rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; }
+.kind i { width: 8px; height: 8px; border-radius: 50%; }
+.kind.催し i { background: var(--event); } .kind.スポット i { background: var(--spot); } .kind.話題 i { background: var(--topic); }
+.new-dot { position: absolute; top: 10px; left: 10px; background: var(--accent); color: #fff; border-radius: 6px; padding: 1px 7px; font-size: .68rem; font-weight: 800; letter-spacing: .08em; }
+/* 切り取り線と左右の切り欠き */
+.perf { position: relative; height: 0; border-top: 2px dashed var(--line); margin: 0 14px; }
+.perf::before, .perf::after { content: ""; position: absolute; top: calc(var(--notch) * -1 - 1px); width: calc(var(--notch) * 2); height: calc(var(--notch) * 2); border-radius: 50%; background: var(--bg); }
+.perf::before { left: calc(-14px - var(--notch)); } .perf::after { right: calc(-14px - var(--notch)); }
+/* 日付のスタンプ */
+.stamp { position: absolute; left: 14px; bottom: -26px; z-index: 2; width: 62px; height: 62px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--accent); color: var(--accent);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; transform: rotate(-8deg); box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+.stamp .m { font-size: .62rem; font-weight: 800; }
+.stamp .dd { font-size: 1.15rem; font-weight: 800; }
+.stamp .wd { font-size: .58rem; font-weight: 700; }
+.stamp.spot { border-color: var(--spot); color: var(--spot); }
+.stamp.spot .dd { font-size: .78rem; letter-spacing: .04em; }
+.stamp.none { display: none; }
+.t-body { padding: 14px 16px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.t-body.has-stamp { padding-left: 88px; min-height: 64px; }
+.t-when { font-size: .78rem; font-weight: 800; color: var(--accent); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.t-when .soon { background: var(--accent); color: #fff; border-radius: 6px; padding: 0 7px; font-size: .7rem; }
+.t-title { margin: 0; font-size: 1rem; font-weight: 800; line-height: 1.45; }
+.t-note { margin: 2px 0 0; font-size: .84rem; color: var(--muted); grid-column: 1 / -1; }
+.t-foot { margin-top: auto; padding-top: 6px; display: flex; align-items: center; gap: 8px; font-size: .74rem; color: var(--muted); font-weight: 700; }
+.t-foot .area { display: inline-flex; align-items: center; gap: 3px; background: var(--main-soft); color: var(--main-deep); border-radius: 999px; padding: 2px 10px 2px 6px; }
+.t-foot .area svg { width: 14px; height: 14px; }
+.t-foot .src { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
+.t-foot .src svg { width: 13px; height: 13px; }
+@media (prefers-color-scheme: dark) { .t-foot .area { color: var(--main); } .kind { background: rgba(20,24,21,.88); } }
 
 .empty { text-align: center; padding: 50px 16px; color: var(--muted); }
-.empty svg { width: 48px; height: 48px; color: var(--line2); }
-footer { background: var(--band); color: var(--muted); font-size: .76rem; text-align: center; padding: 26px 16px 90px; border-top: 1px solid var(--line2); line-height: 1.8; }
-footer a { color: var(--teal); }
-footer .follow { font-family: var(--hand); color: var(--fg2); font-size: 1rem; margin-bottom: 4px; }
-.pagetop { position: fixed; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 9; width: 64px; height: 64px; border-radius: 50%; border: 0; background: var(--teal2); color: #fff; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; font-family: var(--hand); font-size: .66rem; box-shadow: 0 4px 12px rgba(0,0,0,.15);
-  opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s; }
-.pagetop.show { opacity: .95; transform: none; pointer-events: auto; }
-.pagetop svg { width: 24px; height: 24px; }
-
-.bar .pc-tag { display: none; }
-/* 広い画面：右にサイドバー（検索と絞り込みを常に出す） */
-@media (min-width: 1000px) {
-  .tagline { display: none; }
-  .bar { grid-template-columns: auto 1fr; padding: 16px 24px 14px; }
-  .logo { grid-column: 1; justify-self: start; }
-  .logo b { font-size: 1.7rem; }
-  .bar .pc-tag { display: block; grid-column: 2; grid-row: 1; font-size: .8rem; color: var(--muted); margin-left: 20px; }
-  .hd-btn { display: none; }
-  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; padding: 0 24px 60px; }
-  aside { padding-top: 26px; }
-  aside .sticky { position: sticky; top: 92px; }
-  .panel.from-top, .panel.from-bottom, .panel.open { position: static; transform: none; box-shadow: none; padding: 0; border-radius: 0; max-height: none; overflow: visible; background: none; }
-  .panel + .panel { margin-top: 24px; }
-  .panel-head .x, .panel-foot { display: none; }
-  .scrim { display: none; }
-}
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+.empty svg { width: 48px; height: 48px; color: var(--line); }
+footer { max-width: 1160px; margin: 0 auto; color: var(--muted); font-size: .76rem; text-align: center; padding: 22px 16px 28px; line-height: 1.9; border-top: 2px dashed var(--line); }
+footer a { color: var(--main); font-weight: 700; }
+.totop { position: fixed; right: 16px; bottom: calc(var(--tabbar) + 14px + env(safe-area-inset-bottom)); z-index: 15; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; display: grid; place-items: center;
+  opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .2s, transform .2s; }
+.totop.show { opacity: .85; transform: none; pointer-events: auto; }
+@media (min-width: 900px) { .totop { bottom: 24px; right: 24px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
@@ -187,84 +219,72 @@ footer .follow { font-family: var(--hand); color: var(--fg2); font-size: 1rem; m
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.6"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/></symbol>
   <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 6h11M18 6h3M3 12h3M10 12h11M3 18h13M20 18h1"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
-  <symbol id="i-weekend" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="m12 12.4 1 2 2.1.3-1.5 1.5.4 2.1-2-1-1.9 1 .4-2.1-1.5-1.5 2.1-.3Z"/></symbol>
-  <symbol id="i-party" viewBox="0 0 24 24"><path d="M3 5c3 2 6 2.6 9 2.6S18 7 21 5"/><path d="m6 6.3-.8 2.6M10 7.4 9.6 10M14 7.4l.4 2.6M18 6.3l.8 2.6"/><path d="M5 21 9 13l4 4-8 4Z"/><path d="M15 12.5c1-.8 2.4-.9 3.5-.2M14 15.5c.6-.3 1.4-.3 2 .1"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
+  <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4Z"/><path d="M14 6v12" stroke-dasharray="2 2.4"/></symbol>
   <symbol id="i-shop" viewBox="0 0 24 24"><path d="M4 9h16l-1.4-4.2A1 1 0 0 0 17.7 4H6.3a1 1 0 0 0-.9.8Z"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9"/><path d="M5.5 11.5V20h13v-8.5"/><path d="M10 20v-4.5h4V20"/></symbol>
-  <symbol id="i-food" viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M17 21V3c-2 1.5-3 4-3 7v3h3"/></symbol>
-  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
-  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></symbol>
+  <symbol id="i-food" viewBox="0 0 24 24"><path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M9 4c-1 1.2 1 2.2 0 3.5M13 4c-1 1.2 1 2.2 0 3.5M17 4c-1 1.2 1 2.2 0 3.5"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6Z"/><path d="M9 4v14M15 6v14"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
   <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z"/></symbol>
-  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M9 11V5a1.5 1.5 0 0 1 3 0v5"/><path d="M12 10V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 11a1.5 1.5 0 0 1 3 0v3a7 7 0 0 1-7 7h-.5a6 6 0 0 1-4.6-2.2L4 16.5a1.6 1.6 0 0 1 2.3-2.2L9 16"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
 </svg>
 
-<header>
-  <p class="tagline">福井のイベント・新スポットを毎朝まとめて更新！</p>
-  <div class="bar">
-    <button class="hd-btn" id="btn-filter" aria-label="絞り込み" aria-expanded="false" aria-controls="filter-panel">
-      <svg class="i"><use href="#i-filter"/></svg><span class="cnt" id="filter-cnt" hidden></span>
-    </button>
-    <a class="logo" href="./"><svg class="i"><use href="#i-pin"/></svg><b>ふくいおでかけ帖</b></a>
-    <span class="pc-tag">福井のイベント・新スポットを毎朝まとめて更新！</span>
-    <button class="hd-btn" id="btn-search" aria-label="キーワード検索" aria-expanded="false" aria-controls="search-panel">
+<header class="hd">
+  <div class="hd-in">
+    <a class="logo" href="./">
+      <span class="emblem"><svg class="i"><use href="#i-pin"/></svg></span>
+      <span class="logo-t"><small>FUKUI DAY OUT</small><b>ふくいおでかけ帖</b></span>
+    </a>
+    <nav class="hd-nav" aria-label="メニュー" data-nav></nav>
+    <label class="hd-search">
       <svg class="i"><use href="#i-search"/></svg>
-    </button>
+      <input type="search" id="q-pc" placeholder="キーワードで探す" aria-label="キーワード">
+    </label>
+    <button class="hd-btn" id="btn-search" aria-label="キーワードで探す" aria-expanded="false" aria-controls="search-panel"><svg class="i"><use href="#i-search"/></svg></button>
+    <button class="hd-btn" id="btn-filter" aria-label="絞り込み" aria-expanded="false" aria-controls="filter-panel"><svg class="i"><use href="#i-filter"/></svg><span class="t">絞り込み</span><span class="cnt" id="filter-cnt" hidden></span></button>
   </div>
 </header>
 
-<div class="nav-wrap">
-  <nav class="nav" aria-label="メニュー">
-    <button data-tab="weekend"><svg class="i"><use href="#i-weekend"/></svg>今週末</button>
-    <button data-tab="upcoming"><svg class="i"><use href="#i-party"/></svg>イベント</button>
-    <button data-tab="spot"><svg class="i"><use href="#i-shop"/></svg>新スポット</button>
-    <button data-tab="food"><svg class="i"><use href="#i-food"/></svg>グルメ</button>
-    <button data-tab="all"><svg class="i"><use href="#i-grid"/></svg>すべて</button>
-  </nav>
-</div>
+<div class="scrim" id="scrim"></div>
+<section class="panel from-top" id="search-panel" aria-label="キーワードで探す">
+  <div class="p-head"><h2><svg class="i"><use href="#i-search"/></svg>キーワードで探す</h2><button class="x" data-close aria-label="閉じる"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <form class="field" id="q-form" role="search">
+    <input type="search" id="q" placeholder="例：そば、子ども、美術館" enterkeyhint="search" aria-label="キーワード">
+    <button class="clear" id="q-clear" type="button" aria-label="消す" hidden><svg class="i"><use href="#i-x"/></svg></button>
+  </form>
+  <div class="p-label">よく探されること</div>
+  <div class="pills" id="suggest"></div>
+</section>
+<section class="panel from-bottom" id="filter-panel" aria-label="絞り込み">
+  <div class="p-head"><h2><svg class="i"><use href="#i-filter"/></svg>絞り込み</h2><button class="x" data-close aria-label="閉じる"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="p-label">地域</div>
+  <div class="seg" id="regions"></div>
+  <div class="p-label">市町</div>
+  <div class="pills" id="cities"></div>
+  <div class="p-label">種類</div>
+  <div class="pills" id="kinds"></div>
+  <div class="p-foot"><button id="reset">リセット</button><button class="ok" data-close id="ok">見る</button></div>
+</section>
 
-<div class="layout">
-  <main>
-    <div class="h-sec" id="hsec"></div>
-    <div class="active" id="active"></div>
-    <div id="out"></div>
-  </main>
-
-  <aside>
-    <div class="sticky">
-      <div class="scrim" id="scrim"></div>
-      <section class="panel from-top" id="search-panel" aria-label="キーワード検索">
-        <div class="panel-head"><h2 class="side-ttl">キーワード検索</h2><button class="x" data-close aria-label="閉じる"><svg class="i"><use href="#i-x"/></svg></button></div>
-        <form class="field" id="q-form" role="search">
-          <input type="search" id="q" placeholder="例：そば 坂井市" enterkeyhint="search" aria-label="キーワード">
-          <button class="clear" id="q-clear" type="button" aria-label="消す" hidden><svg class="i"><use href="#i-x"/></svg></button>
-          <button class="go" type="submit" aria-label="検索"><svg class="i"><use href="#i-search"/></svg></button>
-        </form>
-        <div class="radios" id="kinds" role="radiogroup" aria-label="種類"></div>
-        <div class="side-sec">
-          <h2 class="side-ttl">話題のキーワード</h2>
-          <div class="tags" id="suggest"></div>
-        </div>
-      </section>
-      <section class="panel from-bottom" id="filter-panel" aria-label="エリアで絞り込む">
-        <div class="panel-head"><h2 class="side-ttl">エリアで絞り込む</h2><button class="x" data-close aria-label="閉じる"><svg class="i"><use href="#i-x"/></svg></button></div>
-        <div id="areas"></div>
-        <div class="panel-foot">
-          <button id="reset">リセット</button>
-          <button class="ok" data-close id="ok">見る</button>
-        </div>
-      </section>
-    </div>
-  </aside>
-</div>
+<main>
+  <div class="today" id="today"></div>
+  <div class="ttl" id="ttl"></div>
+  <div class="route" aria-hidden="true"></div>
+  <div class="days" id="days" role="group" aria-label="日付で絞る"></div>
+  <div class="active" id="active"></div>
+  <div id="out"></div>
+</main>
 
 <footer>
-  <div class="follow">Follow us!</div>
-  Threads <a href="https://www.threads.com/@fukui._.fukui" target="_blank" rel="noopener">@fukui._.fukui</a> が集めた情報をまとめています。<span id="updated"></span><br>
+  Threads <a href="https://www.threads.com/@fukui._.fukui" target="_blank" rel="noopener">@fukui._.fukui</a> が集めた福井の情報をまとめています。<span id="updated"></span><br>
   日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・お店の公式）で必ず確かめてください。<br>
   サムネイル画像は各出典ページのものです。
 </footer>
-<button class="pagetop" id="pagetop" aria-label="ページの先頭へ"><svg class="i"><use href="#i-hand"/></svg>Page Top</button>
+
+<nav class="tabbar" aria-label="メニュー" data-nav></nav>
+<button class="totop" id="totop" aria-label="ページの先頭へ"><svg class="i"><use href="#i-up"/></svg></button>
 
 <script>
 (() => {
@@ -272,25 +292,25 @@ footer .follow { font-family: var(--hand); color: var(--fg2); font-size: 1rem; m
     "嶺北": ["福井市", "坂井市", "あわら市", "永平寺町", "鯖江市", "越前市", "越前町", "南越前町", "池田町", "大野市", "勝山市"],
     "嶺南": ["敦賀市", "美浜町", "若狭町", "小浜市", "おおい町", "高浜町"],
   };
-  const KINDS = [["", "すべて"], ["催し", "イベント"], ["スポット", "スポット"], ["話題", "話題"]];
   const KIND_LABEL = { "催し": "イベント", "スポット": "新スポット", "話題": "話題" };
-  const KIND_ICON = { "催し": "i-party", "スポット": "i-shop", "話題": "i-bulb" };
+  const KIND_ICON = { "催し": "i-ticket", "スポット": "i-shop", "話題": "i-bulb" };
   const FOOD = /グルメ|食|カフェ|珈琲|コーヒー|ランチ|スイーツ|菓子|パン|そば|ラーメン|カニ|ガニ|天ぷら|寿司|すし|米|酒|パティスリー|マルシェ|屋台|味/;
-  const TABS = {
-    weekend: { h: "今週末のおでかけ", en: "Weekend" },
-    upcoming: { h: "開催中・これからのイベント", en: "Event" },
-    spot: { h: "新しくできたスポット", en: "New Spot" },
-    food: { h: "グルメ・食のイベント", en: "Gourmet" },
-    all: { h: "すべての情報", en: "All" },
-  };
-  const SUGGEST = ["まつり", "新店", "子ども", "美術館", "カフェ", "温泉", "そば", "マルシェ"];
+  const TABS = [
+    ["weekend", "今週末", "i-sun", "今週末、どこ行く？"],
+    ["upcoming", "イベント", "i-ticket", "開催中・これからのイベント"],
+    ["spot", "新スポット", "i-shop", "新しくできた場所"],
+    ["food", "グルメ", "i-food", "食べに行きたいもの"],
+    ["all", "ぜんぶ", "i-map", "ぜんぶの情報"],
+  ];
+  const SUGGEST = ["まつり", "子ども", "美術館", "カフェ", "温泉", "そば", "マルシェ", "夜"];
   const WD = "日月火水木金土";
   const NEW_DAYS = 3;
+  const DAY_SPAN = 14;
 
-  const state = { tab: "upcoming", area: "", kind: "", q: "" };
+  const state = { tab: "upcoming", area: "", kind: "", q: "", day: "" };
   try {
     const saved = JSON.parse(localStorage.getItem("odekake") || "{}");
-    if (TABS[saved.tab]) state.tab = saved.tab;
+    if (TABS.some((t) => t[0] === saved.tab)) state.tab = saved.tab;
     if (typeof saved.area === "string") state.area = saved.area;
   } catch (_) {}
 
@@ -299,6 +319,7 @@ footer .follow { font-family: var(--hand); color: var(--fg2); font-size: 1rem; m
   const icon = (id) => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("class", "i");
     const u = document.createElementNS("http://www.w3.org/2000/svg", "use"); u.setAttribute("href", "#" + id); s.append(u); return s; };
   const pd = (s) => s ? new Date(s + "T00:00:00") : null;
+  const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
   const fmt = (d) => `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`;
@@ -307,8 +328,7 @@ footer .follow { font-family: var(--hand); color: var(--fg2); font-size: 1rem; m
   const sun = addDays(sat, 1);
 
   let items = [];
-  let newSince = null;   // これ以降に集めたものに「New」を付ける
-
+  let newSince = null;
   const isNew = (it) => newSince && pd(it.written) >= newSince;
 
   function titleOf(it) {
@@ -320,20 +340,33 @@ footer .follow { font-family: var(--hand); color: var(--fg2); font-size: 1rem; m
 
   function when(it) {
     const s = pd(it.start), e = pd(it.end);
-    if (!s) return "";
-    if (it.kind === "スポット") return `${s.getFullYear()}/${s.getMonth() + 1}/${s.getDate()} オープン`;
-    return +s === +e ? fmt(s) : `${fmt(s)}〜${fmt(e)}`;
+    if (!s) return it.kind === "スポット" ? "" : "日程は出典で";
+    if (it.kind === "スポット") return `${s.getFullYear()}年${s.getMonth() + 1}月${s.getDate()}日オープン`;
+    return +s === +e ? fmt(s) : `${fmt(s)} 〜 ${fmt(e)}`;
   }
 
   function soon(it) {
     const s = pd(it.start), e = pd(it.end);
     if (!s) return "";
-    if (it.kind === "スポット") return s > today ? "オープン予定" : "";
+    if (it.kind === "スポット") return s > today ? "まもなく" : "";
     if (s <= today && today <= e) return +s === +e ? "今日" : "開催中";
     if (s <= sun && e >= sat) return "今週末";
     const days = Math.round((s - today) / 864e5);
     if (days > 0 && days <= 7) return `あと${days}日`;
     return "";
+  }
+
+  // スタンプ：イベントは「次に行ける日」、スポットは OPEN
+  function stamp(it) {
+    const s = pd(it.start), e = pd(it.end);
+    if (!s) return null;
+    if (it.kind === "スポット") return { cls: "spot", m: `${s.getMonth() + 1}月`, dd: "OPEN", wd: "" };
+    // 日付を選んでいるときはその日、開催中なら今日、これからなら初日
+    const picked = state.day && pd(state.day);
+    const ongoing = s < today && e >= today;
+    const d = picked && s <= picked && picked <= e ? picked : ongoing ? today : s;
+    const label = d === picked ? WD[d.getDay()] + "曜" : ongoing ? "開催中" : WD[d.getDay()] + "曜";
+    return { cls: "", m: `${d.getMonth() + 1}月`, dd: String(d.getDate()), wd: label };
   }
 
   function inTab(it, tab = state.tab) {
@@ -348,11 +381,14 @@ footer .follow { font-family: var(--hand); color: var(--fg2); font-size: 1rem; m
   }
   const inArea = (it) => !state.area || it.area === state.area || it.region === state.area;
   const inKind = (it) => !state.kind || it.kind === state.kind;
+  const onDay = (it, day) => { const s = pd(it.start), e = pd(it.end), d = pd(day); return it.kind !== "スポット" && s && s <= d && d <= e; };
+  const inDay = (it) => !state.day || onDay(it, state.day);
   const inQ = (it) => {
     if (!state.q) return true;
     const hay = (it.text + it.note + (it.area || "") + (it.region || "")).toLowerCase();
     return state.q.toLowerCase().split(/\s+/).every((w) => hay.includes(w));
   };
+  const base = (it) => inArea(it) && inKind(it) && inQ(it);
 
   function sortKey(it) {
     if (state.tab === "spot" || it.kind === "スポット") return -(pd(it.start) || pd(it.written));
@@ -362,12 +398,12 @@ footer .follow { font-family: var(--hand); color: var(--fg2); font-size: 1rem; m
   }
 
   function groupOf(it) {
-    if (state.tab === "weekend" || state.tab === "spot") return "";
+    if (state.tab === "weekend" || state.tab === "spot" || state.day) return "";
     const s = pd(it.start);
-    if (it.kind === "スポット") return "新スポット";
+    if (it.kind === "スポット") return "新しくできた場所";
     if (!s) return "日程は出典で・随時";
     if (s <= today) return "いま開催中";
-    return `${s.getFullYear()}年${s.getMonth() + 1}月`;
+    return `${s.getMonth() + 1}月のおでかけ`;
   }
 
   function placeholder(it) {
@@ -377,136 +413,167 @@ footer .follow { font-family: var(--hand); color: var(--fg2); font-size: 1rem; m
   }
 
   function card(it) {
-    const li = el("li", "card");
-    const a = el(it.source ? "a" : "div", "wrap");
+    const li = el("li", "ticket");
+    const a = el(it.source ? "a" : "div");
     if (it.source) { a.href = it.source; a.target = "_blank"; a.rel = "noopener"; }
 
-    const th = el("div", "thumb");
+    const img = el("div", "t-img");
     if (it.image) {
-      const img = el("img");
-      img.loading = "lazy"; img.decoding = "async"; img.alt = ""; img.referrerPolicy = "no-referrer";
-      img.src = it.image;
-      img.onerror = () => img.replaceWith(placeholder(it));
-      th.append(img);
-    } else th.append(placeholder(it));
-    if (isNew(it)) th.append(el("span", "new", "New"));
-    th.append(el("span", `flag ${it.kind}`, KIND_LABEL[it.kind]));
-    a.append(th);
+      const im = el("img");
+      im.loading = "lazy"; im.decoding = "async"; im.alt = ""; im.referrerPolicy = "no-referrer";
+      im.src = it.image;
+      im.onerror = () => im.replaceWith(placeholder(it));
+      img.append(im);
+    } else img.append(placeholder(it));
+    if (isNew(it)) img.append(el("span", "new-dot", "NEW"));
+    const k = el("span", `kind ${it.kind}`); k.append(el("i"), KIND_LABEL[it.kind]); img.append(k);
+    a.append(img);
 
-    const meta = el("div", "c-meta");
-    const w = when(it); if (w) meta.append(el("span", "when", w));
-    const s = soon(it); if (s) meta.append(el("span", "soon", s));
-    a.append(el("h3", "c-title", titleOf(it)), meta);
-    a.append(el("p", "c-desc", it.note || it.text));
+    const st = stamp(it);
+    const wrap = el("div"); wrap.style.position = "relative";
+    const perf = el("div", "perf"); wrap.append(perf);
+    if (st) {
+      const s = el("div", "stamp " + st.cls);
+      s.append(el("span", "m", st.m), el("span", "dd", st.dd));
+      if (st.wd) s.append(el("span", "wd", st.wd));
+      wrap.append(s);
+    }
+    a.append(wrap);
 
-    const tags = el("div", "c-tags");
-    if (it.area) { const t = el("span"); t.append(icon("i-pin"), it.area); tags.append(t); }
-    { const t = el("span"); t.append(icon(KIND_ICON[it.kind] || "i-pin"), KIND_LABEL[it.kind]); tags.append(t); }
+    const body = el("div", "t-body" + (st ? " has-stamp" : ""));
+    const w = el("div", "t-when");
+    w.append(when(it));
+    const so = soon(it); if (so) w.append(el("span", "soon", so));
+    body.append(w, el("h3", "t-title", titleOf(it)));
+    if (it.note) body.append(el("p", "t-note", it.note));
+    const foot = el("div", "t-foot");
+    if (it.area) { const ar = el("span", "area"); ar.append(icon("i-pin"), it.area); foot.append(ar); }
     if (it.source) {
       let host = "出典";
       try { host = new URL(it.source).hostname.replace(/^www\./, ""); } catch (_) {}
-      const t = el("span", "src"); t.append(host, icon("i-out")); tags.append(t);
+      const sr = el("span", "src"); sr.append(host, icon("i-out")); foot.append(sr);
     }
-    a.append(tags);
+    body.append(foot);
+    a.append(body);
     li.append(a);
     return li;
   }
 
   function renderNav() {
-    document.querySelectorAll(".nav [data-tab]").forEach((b) => {
-      b.setAttribute("aria-pressed", b.dataset.tab === state.tab);
-      b.querySelector(".new")?.remove();
-      if (b.dataset.tab !== "all" && items.some((it) => isNew(it) && inTab(it, b.dataset.tab))) b.append(el("span", "new", "New"));
+    document.querySelectorAll("[data-nav]").forEach((nav) => {
+      nav.textContent = "";
+      const bar = nav.classList.contains("tabbar");
+      for (const [key, label, ic] of TABS) {
+        const b = el("button");
+        b.dataset.tab = key;
+        b.setAttribute("aria-pressed", state.tab === key);
+        if (bar) { const w = el("span", "ic"); w.append(icon(ic)); b.append(w, label); }
+        else { b.append(icon(ic), el("span", null, label)); }
+        if (key !== "all" && items.some((it) => isNew(it) && inTab(it, key))) b.append(el("span", "dot"));
+        nav.append(b);
+      }
     });
   }
 
-  function renderSide() {
-    const kinds = $("#kinds");
-    kinds.textContent = "";
-    KINDS.forEach(([k, label]) => {
-      const l = el("label"); const r = el("input"); r.type = "radio"; r.name = "kind"; r.value = k; r.checked = state.kind === k;
-      r.onchange = () => { state.kind = k; render(); };
-      l.append(r, label); kinds.append(l);
-    });
-    const sug = $("#suggest");
-    sug.textContent = "";
-    SUGGEST.forEach((w) => {
-      const b = el("button", "tag", w); b.type = "button"; b.setAttribute("aria-pressed", state.q === w);
-      b.onclick = () => { state.q = state.q === w ? "" : w; $("#q").value = state.q; syncClear(); render(); };
-      sug.append(b);
-    });
-    const present = new Set(items.flatMap((it) => [it.area, it.region]).filter(Boolean));
-    const box = $("#areas");
+  function renderDays() {
+    const box = $("#days");
     box.textContent = "";
-    const add = (wrap, val, label) => {
-      const b = el("button", "tag area", label); b.type = "button"; b.setAttribute("aria-pressed", state.area === val);
-      b.onclick = () => { state.area = state.area === val ? "" : val; render(); };
-      wrap.append(b);
-    };
-    const all = el("div", "tags"); add(all, "", "福井県ぜんぶ"); box.append(all);
-    for (const [region, cities] of Object.entries(AREAS)) {
-      if (!present.has(region)) continue;
-      box.append(el("div", "region", region));
-      const t = el("div", "tags");
-      add(t, region, region + "ぜんぶ");
-      cities.filter((c) => present.has(c)).forEach((c) => add(t, c, c));
-      box.append(t);
+    const show = state.tab !== "spot";
+    box.hidden = !show;
+    if (!show) return;
+    for (let i = 0; i < DAY_SPAN; i++) {
+      const d = addDays(today, i), key = iso(d);
+      const n = items.filter((it) => inTab(it) && base(it) && onDay(it, key)).length;
+      const b = el("button", "day" + (d.getDay() === 6 ? " sat" : d.getDay() === 0 ? " sun" : "") + (i === 0 ? " today-d" : "") + (n ? "" : " zero"));
+      b.dataset.day = key;
+      b.setAttribute("aria-pressed", state.day === key);
+      b.setAttribute("aria-label", `${fmt(d)} ${n}件`);
+      b.append(el("span", "w", i === 0 ? "今日" : WD[d.getDay()]), el("span", "d", String(d.getDate())), el("span", "c", n ? `${n}件` : ""));
+      box.append(b);
     }
+  }
+
+  function renderPanel() {
+    const regions = $("#regions"); regions.textContent = "";
+    const region = state.area in AREAS ? state.area : Object.keys(AREAS).find((r) => AREAS[r].includes(state.area)) || "";
+    [["", "福井県"], ["嶺北", "嶺北"], ["嶺南", "嶺南"]].forEach(([v, l]) => {
+      const b = el("button", null, l); b.setAttribute("aria-pressed", region === v && (v === "" ? !state.area : true));
+      b.onclick = () => { state.area = v; render(); }; regions.append(b);
+    });
+    const present = new Set(items.map((it) => it.area).filter(Boolean));
+    const cities = $("#cities"); cities.textContent = "";
+    const list = region ? AREAS[region] : [...AREAS["嶺北"], ...AREAS["嶺南"]];
+    list.filter((c) => present.has(c)).forEach((c) => {
+      const b = el("button", "pill", c); b.setAttribute("aria-pressed", state.area === c);
+      b.onclick = () => { state.area = state.area === c ? region : c; render(); }; cities.append(b);
+    });
+    const kinds = $("#kinds"); kinds.textContent = "";
+    [["", "ぜんぶ"], ["催し", "イベント"], ["スポット", "新スポット"], ["話題", "話題"]].forEach(([v, l]) => {
+      const b = el("button", "pill", l); b.setAttribute("aria-pressed", state.kind === v);
+      b.onclick = () => { state.kind = v; render(); }; kinds.append(b);
+    });
+    const sug = $("#suggest"); sug.textContent = "";
+    SUGGEST.forEach((w) => {
+      const b = el("button", "pill", w); b.type = "button"; b.setAttribute("aria-pressed", state.q === w);
+      b.onclick = () => { setQ(state.q === w ? "" : w); open(null); }; sug.append(b);
+    });
   }
 
   function render() {
     try { localStorage.setItem("odekake", JSON.stringify({ tab: state.tab, area: state.area })); } catch (_) {}
-    renderNav();
-    renderSide();
+    renderNav(); renderDays(); renderPanel();
 
     const n = (state.area ? 1 : 0) + (state.kind ? 1 : 0);
     $("#filter-cnt").hidden = !n; $("#filter-cnt").textContent = n;
 
-    const list = items.filter((it) => inTab(it) && inArea(it) && inKind(it) && inQ(it)).sort((a, b) => sortKey(a) - sortKey(b));
+    const list = items.filter((it) => inTab(it) && base(it) && inDay(it)).sort((a, b) => sortKey(a) - sortKey(b));
+    const tab = TABS.find((t) => t[0] === state.tab);
+    const ttl = $("#ttl"); ttl.textContent = "";
+    const ic = el("span", "ic"); ic.append(icon(tab[2]));
+    const cnt = el("span", "n"); cnt.append(el("b", null, String(list.length)), "件");
+    ttl.append(ic, el("h1", null, state.day ? `${fmt(pd(state.day))}のおでかけ` : tab[3]), cnt);
 
-    const hs = $("#hsec");
-    hs.textContent = "";
-    hs.append(el("span", "new bubble", TABS[state.tab].en), el("h1", null, TABS[state.tab].h),
-      el("span", "sub", state.tab === "weekend" ? `${fmt(sat)}・${fmt(sun)}　${list.length}件` : `${list.length}件`));
-
-    const active = $("#active");
-    active.textContent = "";
+    const active = $("#active"); active.textContent = "";
     const pill = (label, clear) => { const b = el("button"); b.append(label, icon("i-x")); b.setAttribute("aria-label", label + " を外す"); b.onclick = () => { clear(); render(); }; active.append(b); };
+    if (state.day) pill(fmt(pd(state.day)), () => (state.day = ""));
     if (state.area) pill(state.area, () => (state.area = ""));
     if (state.kind) pill(KIND_LABEL[state.kind], () => (state.kind = ""));
-    if (state.q) pill(`「${state.q}」`, () => { state.q = ""; $("#q").value = ""; syncClear(); });
-
+    if (state.q) pill(`「${state.q}」`, () => setQ("", true));
     $("#ok").textContent = `${list.length}件を見る`;
 
-    const out = $("#out");
-    out.textContent = "";
+    const out = $("#out"); out.textContent = "";
     if (!list.length) {
       const p = el("div", "empty");
-      p.append(icon("i-search"), el("p", null, "当てはまるものがありません。エリアやキーワードを変えてみてください。"));
-      out.append(p);
-      return;
+      p.append(icon("i-map"), el("p", null, "当てはまるものがありません。日付や地域、キーワードを変えてみてください。"));
+      out.append(p); return;
     }
     let cur = null, ul = null;
     for (const it of list) {
       const g = groupOf(it);
       if (g !== cur || !ul) {
         cur = g;
-        if (g) { const h = el("h2", "group"); h.append(icon(g === "いま開催中" ? "i-party" : "i-cal"), g); out.append(h); }
-        ul = el("ul", "list");
-        out.append(ul);
+        if (g) { const h = el("h2", "group"); h.append(icon(g === "いま開催中" ? "i-ticket" : g.startsWith("新") ? "i-shop" : "i-cal"), g); out.append(h); }
+        ul = el("ul", "grid"); out.append(ul);
       }
       ul.append(card(it));
     }
   }
 
-  // スマホ：検索は上から、絞り込みは下から出す
+  // 検索：スマホは上から出るパネル、PC はヘッダーの欄。どちらも同じ状態を使う
+  function setQ(v, silent) {
+    state.q = v.trim();
+    $("#q").value = v; $("#q-pc").value = v;
+    $("#q-clear").hidden = !v;
+    if (!silent) render();
+  }
+  $("#q").addEventListener("input", (e) => setQ(e.target.value));
+  $("#q-pc").addEventListener("input", (e) => setQ(e.target.value));
+  $("#q-form").addEventListener("submit", (e) => { e.preventDefault(); $("#q").blur(); open(null); });
+  $("#q-clear").onclick = () => { setQ(""); $("#q").focus(); };
+
   const panels = { search: [$("#search-panel"), $("#btn-search")], filter: [$("#filter-panel"), $("#btn-filter")] };
   function open(which) {
-    for (const [k, [p, b]] of Object.entries(panels)) {
-      const on = k === which;
-      p.classList.toggle("open", on);
-      b.setAttribute("aria-expanded", on);
-    }
+    for (const [k, [p, b]] of Object.entries(panels)) { p.classList.toggle("open", k === which); b.setAttribute("aria-expanded", k === which); }
     $("#scrim").classList.toggle("open", !!which);
     if (which === "search") setTimeout(() => $("#q").focus(), 200);
   }
@@ -517,22 +584,21 @@ footer .follow { font-family: var(--hand); color: var(--fg2); font-size: 1rem; m
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") open(null); });
   $("#reset").onclick = () => { state.area = ""; state.kind = ""; render(); };
 
-  const syncClear = () => { $("#q-clear").hidden = !$("#q").value; };
-  $("#q").addEventListener("input", (e) => { state.q = e.target.value.trim(); syncClear(); render(); });
-  $("#q-form").addEventListener("submit", (e) => { e.preventDefault(); $("#q").blur(); open(null); });
-  $("#q-clear").onclick = () => { $("#q").value = ""; state.q = ""; syncClear(); render(); $("#q").focus(); };
-
-  document.querySelector(".nav").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-tab]");
-    if (!b) return;
-    state.tab = b.dataset.tab;
-    render();
-    if (window.scrollY > 200) window.scrollTo({ top: 0 });
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-nav] [data-tab]");
+    if (t) { state.tab = t.dataset.tab; state.day = ""; render(); if (scrollY > 150) scrollTo({ top: 0 }); return; }
+    const d = e.target.closest("#days [data-day]");
+    if (d) { state.day = state.day === d.dataset.day ? "" : d.dataset.day; render(); }
   });
 
-  const pt = $("#pagetop");
-  pt.onclick = () => window.scrollTo({ top: 0 });
-  addEventListener("scroll", () => pt.classList.toggle("show", scrollY > 600), { passive: true });
+  const tt = $("#totop");
+  tt.onclick = () => scrollTo({ top: 0, behavior: "smooth" });
+  addEventListener("scroll", () => tt.classList.toggle("show", scrollY > 700), { passive: true });
+
+  const toSat = Math.round((sat - today) / 864e5);
+  $("#today").append(icon("i-cal"), `今日は ${fmt(today)}`);
+  if (toSat > 0) { const s = el("span"); s.append("・週末まであと", el("b", null, `${toSat}日`)); $("#today").append(s); }
+  else $("#today").append("・週末です！");
 
   fetch("data.json", { cache: "no-cache" })
     .then((r) => r.json())
