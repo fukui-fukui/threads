@@ -47,7 +47,7 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 
 /* ── ヘッダー ── */
 .hd { position: sticky; top: 0; z-index: 20; background: var(--hd); color: #fff; }
-.hd-in { max-width: 1160px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
+.hd-in { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
 .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: auto; min-width: 0; }
 .emblem { width: 40px; height: 40px; border-radius: 50%; background: #fff; color: var(--hd); display: grid; place-items: center; flex: none; position: relative; }
 .emblem { overflow: hidden; box-shadow: 0 0 0 2px #fff; }
@@ -69,13 +69,14 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 @media (min-width: 900px) {
   body { padding-bottom: 0; }
   .hd-in { gap: 14px; padding: 12px 24px; }
-  .logo { margin-right: 8px; }
-  .hd-nav { display: flex; gap: 4px; margin-right: auto; }
+  .logo { margin-right: 8px; flex: none; }
+  /* メニューは残りの幅に収める。入りきらないときは JS が compact を付けてアイコンだけにする */
+  .hd-nav { display: flex; gap: 4px; margin-right: auto; flex: 1 1 auto; min-width: 0; overflow: hidden; }
   .hd-nav button { white-space: nowrap; flex: none; border: 0; background: none; color: rgba(255,255,255,.85); padding: 8px 14px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: .88rem; font-weight: 700; }
   .hd-nav button:hover { background: rgba(255,255,255,.12); color: #fff; }
   .hd-nav button[aria-pressed="true"] { background: #fff; color: var(--hd-deep); }
   .hd-nav svg { width: 18px; height: 18px; }
-  .hd-search { display: flex; align-items: center; gap: 6px; width: 220px; flex: none; background: rgba(255,255,255,.14); border-radius: 999px; padding: 0 6px 0 14px; border: 1.5px solid transparent; transition: background .15s; }
+  .hd-search { display: flex; align-items: center; gap: 6px; flex: 0 1 220px; min-width: 150px; background: rgba(255,255,255,.14); border-radius: 999px; padding: 0 6px 0 14px; border: 1.5px solid transparent; transition: background .15s; }
   .hd-search:focus-within { background: #fff; color: var(--ink); }
   .hd-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: inherit; font: inherit; font-size: .9rem; padding: 9px 0; }
   .hd-search input::placeholder { color: rgba(255,255,255,.75); }
@@ -85,13 +86,14 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
   .hd-btn .t { display: inline; white-space: nowrap; }
   .tabbar { display: none !important; }
 }
-@media (min-width: 900px) and (max-width: 1180px) { .hd-nav button > span:not(.dot) { display: none; } .hd-nav button { padding: 9px 11px; } }
+.hd-nav.compact button > span:not(.dot) { display: none; }
+.hd-nav.compact button { padding: 9px 11px; }
 
 /* スマホの下のタブバー */
 .tabbar { position: fixed; z-index: 20; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line);
-  display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 16px rgba(0,0,0,.05); }
+  display: grid; grid-template-columns: repeat(6, 1fr); padding: 6px 2px calc(6px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 16px rgba(0,0,0,.05); }
 .tabbar button { border: 0; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: .66rem; font-weight: 700; color: var(--muted); padding: 2px 0; position: relative; }
-.tabbar .ic { width: 52px; height: 30px; border-radius: 15px; display: grid; place-items: center; transition: background .15s; }
+.tabbar .ic { width: 46px; height: 30px; border-radius: 15px; display: grid; place-items: center; transition: background .15s; }
 .tabbar button[aria-pressed="true"] { color: var(--main); }
 .tabbar button[aria-pressed="true"] .ic { background: var(--main-soft); }
 .tabbar .dot, .hd-nav .dot { position: absolute; top: 2px; left: calc(50% + 10px); width: 8px; height: 8px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); }
@@ -108,7 +110,7 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 @media (min-width: 900px) {
   .panel.from-bottom { left: auto; right: 24px; top: 74px; bottom: auto; width: 400px; border-radius: 20px; transform: translateY(-10px); opacity: 0; pointer-events: none; box-shadow: 0 16px 40px rgba(0,0,0,.18); }
   .panel.from-bottom.open { transform: none; opacity: 1; pointer-events: auto; }
-  @media (min-width: 1208px) { .panel.from-bottom { right: calc((100vw - 1160px) / 2 + 24px); } }
+  @media (min-width: 1328px) { .panel.from-bottom { right: calc((100vw - 1280px) / 2 + 24px); } }
 }
 .p-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .p-head h2 { margin: 0; font-size: 1.05rem; font-weight: 800; flex: 1; display: flex; align-items: center; gap: 8px; }
@@ -134,7 +136,7 @@ svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-widt
 .p-foot .ok { background: var(--main); border-color: var(--main); color: #fff; }
 
 /* ── 本文 ── */
-main { max-width: 1160px; margin: 0 auto; padding: 18px 16px 40px; }
+main { max-width: 1280px; margin: 0 auto; padding: 18px 16px 40px; }
 @media (min-width: 900px) { main { padding: 26px 24px 64px; } }
 .today { font-size: .8rem; color: var(--muted); font-weight: 700; display: flex; align-items: center; gap: 6px; }
 .today b { color: var(--accent); }
@@ -192,6 +194,31 @@ main { max-width: 1160px; margin: 0 auto; padding: 18px 16px 40px; }
 .t-tags .new { background: var(--accent); color: #fff; border-radius: 5px; padding: 0 6px; letter-spacing: .08em; }
 .t-tags .soon { background: var(--accent-soft); color: var(--accent); border-radius: 5px; padding: 0 6px; }
 .ticket.done { opacity: .72; }
+/* 泊まる */
+.pr-note { display: flex; gap: 8px; align-items: flex-start; font-size: .76rem; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; margin: 10px 0 4px; }
+.pr-note b { flex: none; background: var(--muted); color: var(--surface); border-radius: 4px; padding: 0 6px; font-size: .68rem; margin-top: 2px; }
+.feats { display: flex; gap: 8px; overflow-x: auto; padding: 10px 2px 6px; scrollbar-width: none; }
+.feats::-webkit-scrollbar { display: none; }
+.feats .pill { flex: none; }
+.hotel { background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; }
+.h-img { position: relative; aspect-ratio: 16 / 9; background: var(--main-soft); overflow: hidden; }
+.h-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.h-img .pr { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,.6); color: #fff; font-size: .66rem; font-weight: 800; border-radius: 4px; padding: 1px 6px; letter-spacing: .06em; }
+.h-img .rate { position: absolute; right: 10px; bottom: 10px; background: rgba(255,255,255,.95); color: #22302a; border-radius: 999px; padding: 2px 10px 2px 6px; font-size: .78rem; font-weight: 800; display: inline-flex; align-items: center; gap: 3px; }
+.h-img .rate svg { width: 15px; height: 15px; color: #f2a516; }
+.h-img .rate small { font-weight: 700; color: #6d7570; }
+.h-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 7px; flex: 1; }
+.h-name { margin: 0; font-size: 1rem; font-weight: 800; line-height: 1.45; }
+.h-text { margin: 0; font-size: .82rem; color: var(--muted); }
+.h-feats { display: flex; flex-wrap: wrap; gap: 5px; }
+.h-feats span { font-size: .7rem; font-weight: 800; color: var(--main-deep); background: var(--main-soft); border-radius: 6px; padding: 1px 7px; }
+.h-foot { margin-top: auto; padding-top: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.h-price { font-size: .72rem; color: var(--muted); font-weight: 700; line-height: 1.3; }
+.h-price b { display: block; font-size: 1.05rem; color: var(--accent); }
+.h-go { flex: none; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; background: #bf0000; color: #fff; border-radius: 999px; padding: 8px 14px; font-size: .8rem; font-weight: 800; }
+.h-go:hover { filter: brightness(1.08); }
+.h-go svg { width: 14px; height: 14px; }
+@media (prefers-color-scheme: dark) { .h-feats span { color: var(--main); } }
 .ended-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 420px; margin: 28px auto 0; padding: 12px 18px; border-radius: 14px;
   border: 1.5px dashed var(--line); background: var(--surface); color: var(--muted); font-weight: 800; font-size: .9rem; cursor: pointer; }
 .ended-toggle:hover { border-color: var(--main); color: var(--main); }
@@ -230,7 +257,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 18px 16px 40px; }
 
 .empty { text-align: center; padding: 50px 16px; color: var(--muted); }
 .empty svg { width: 48px; height: 48px; color: var(--line); }
-footer { max-width: 1160px; margin: 0 auto; color: var(--muted); font-size: .76rem; text-align: center; padding: 22px 16px 28px; line-height: 1.9; border-top: 2px dashed var(--line); }
+footer { max-width: 1280px; margin: 0 auto; color: var(--muted); font-size: .76rem; text-align: center; padding: 22px 16px 28px; line-height: 1.9; border-top: 2px dashed var(--line); }
 footer a { color: var(--main); font-weight: 700; }
 .totop { position: fixed; right: 16px; bottom: calc(var(--tabbar) + 14px + env(safe-area-inset-bottom)); z-index: 15; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; display: grid; place-items: center;
   opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .2s, transform .2s; }
@@ -254,6 +281,8 @@ footer a { color: var(--main); font-weight: 700; }
   <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
   <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z"/></symbol>
   <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+  <symbol id="i-bed" viewBox="0 0 24 24"><path d="M3 18V6M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="2"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8Z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-ig" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></symbol>
 </svg>
 
@@ -306,7 +335,9 @@ footer a { color: var(--main); font-weight: 700; }
 <footer>
   Threads <a href="https://www.threads.com/@fukui._.fukui" target="_blank" rel="noopener">@fukui._.fukui</a> が集めた福井の情報をまとめています。<span id="updated"></span><br>
   日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・お店の公式）で必ず確かめてください。<br>
-  出典のリンクカードには、各ページが共有用に公開している画像・タイトル・説明を表示しています。
+  出典のリンクカードには、各ページが共有用に公開している画像・タイトル・説明を表示しています。<br>
+  「泊まる」の宿の情報・写真は楽天トラベルのものです。宿へのリンクは楽天アフィリエイト（PR）です。<br>
+  <a href="https://webservice.rakuten.co.jp/" target="_blank" rel="noopener">Supported by Rakuten Developers</a>
 </footer>
 
 <nav class="tabbar" aria-label="メニュー" data-nav></nav>
@@ -326,6 +357,7 @@ footer a { color: var(--main); font-weight: 700; }
     ["upcoming", "イベント", "i-ticket", "開催中・これからのイベント"],
     ["spot", "新スポット", "i-shop", "新しくできた場所"],
     ["food", "グルメ", "i-food", "食べに行きたいもの"],
+    ["stay", "泊まる", "i-bed", "福井に泊まる"],
     ["all", "ぜんぶ", "i-map", "ぜんぶの情報"],
   ];
   const SUGGEST = ["まつり", "子ども", "美術館", "カフェ", "温泉", "そば", "マルシェ", "夜"];
@@ -376,7 +408,7 @@ footer a { color: var(--main); font-weight: 700; }
     if (!s) return "";
     if (it.kind === "スポット") return s > today ? "まもなく" : "";
     if (ended(it)) return "終了";
-    if (s <= today && today <= e) return +s === +e ? "今日" : "開催中";
+    if (s <= today && today <= e) return +s === +e ? "今日" : +e === +today ? "今日まで" : endsThisWeek(it) ? "今週末まで" : "開催中";
     if (s <= sun && e >= sat) return "今週末";
     const days = Math.round((s - today) / 864e5);
     if (days > 0 && days <= 7) return `あと${days}日`;
@@ -405,6 +437,7 @@ footer a { color: var(--main); font-weight: 700; }
       case "upcoming": return it.kind === "催し" && (!e || e >= today);
       case "spot": return it.kind === "スポット";
       case "food": return FOOD.test(it.text) && (it.kind === "スポット" || !e || e >= today);
+      case "stay": return false;   // 泊まるタブは hotels.json を出す
       default: return true;
     }
   }
@@ -423,14 +456,27 @@ footer a { color: var(--main); font-weight: 700; }
   //   0 話題・おすすめ（「ぜんぶ」だけ）→ 1 いま開催中 → 2 これから → 3 新しくできた場所
   //   → 4 日程未定の催し → 5 話題 → 6 終わったもの
   const ended = (it) => it.kind !== "スポット" && it.end && pd(it.end) < today;
+  // 会期が LONG_DAYS 日以上の催し（展示・フェア・スタンプラリーなど）は「期間中いつでも」として下げる。
+  // ずっと開催中のものが一覧の上に居座らないように（2026-10-02 代表指示）
+  const LONG_DAYS = 8;
+  const spanDays = (it) => it.start && it.end ? Math.round((pd(it.end) - pd(it.start)) / 864e5) + 1 : 1;
+  const isLong = (it) => it.kind !== "スポット" && spanDays(it) >= LONG_DAYS;
+  const started = (it) => it.start && pd(it.start) <= today && !ended(it);
+  // 今週末（日曜）までに終わる、開催中のもの。長期のものも含めて一番上に出す
+  const endsThisWeek = (it) => it.kind !== "スポット" && started(it) && pd(it.end) <= sun;
+
+  // 並びの段（小さいほど上）
+  //   0 話題・おすすめ（「ぜんぶ」だけ）→ 1 今週末まで → 2 いま開催中（短い催し）→ 3 これから
+  //   → 4 期間中いつでも（長期）→ 5 新しくできた場所 → 6 日程未定の催し → 7 話題 → 8 終わったもの
   function rankOf(it) {
     const s = pd(it.start);
-    // 「ぜんぶ」では、代表が足したもの（終わっていないもの）と日付の無い話題を一番上にまとめる
     if (state.tab === "all" && ((it.pick && !ended(it)) || (!s && it.kind === "話題"))) return 0;
-    if (it.kind === "スポット") return 3;
-    if (!s) return it.kind === "催し" ? 4 : 5;
-    if (ended(it)) return 6;
-    return s <= today ? 1 : 2;
+    if (it.kind === "スポット") return 5;
+    if (!s) return it.kind === "催し" ? 6 : 7;
+    if (ended(it)) return 8;
+    if (endsThisWeek(it)) return 1;
+    if (s > today) return 3;
+    return isLong(it) ? 4 : 2;
   }
   const FAR = 4e12; // 日時の数値（ミリ秒）より大きい値。新しい順にしたいときに引く
   function sortKey(it) {
@@ -440,10 +486,10 @@ footer a { color: var(--main); font-weight: 700; }
     const r = rankOf(it);
     // おすすめ：代表が足したものを先に、新しく集めた順。同じ日なら後から書いた行を先に
     const v = r === 0 ? (it.pick ? 0 : 1e12) + FAR / 2 - +w + 1e6 - it._i
-      : r === 1 ? +e                       // 開催中：終わりが近い順
-      : r === 2 ? +s                       // これから：始まりが近い順
-      : r === 3 ? FAR - +(s || w)          // 新しい場所：新しい順
-      : r === 6 ? FAR - +e                 // 終わったもの：最近終わった順
+      : r === 1 || r === 2 || r === 4 ? +e // 開催中：終わりが近い順
+      : r === 3 ? +s                       // これから：始まりが近い順
+      : r === 5 ? FAR - +(s || w)          // 新しい場所：新しい順
+      : r === 8 ? FAR - +e                 // 終わったもの：最近終わった順
       : FAR - +w;                          // 日付なし：最近集めた順
     return r * 1e13 + v;
   }
@@ -453,12 +499,14 @@ footer a { color: var(--main); font-weight: 700; }
     const s = pd(it.start);
     switch (rankOf(it)) {
       case 0: return "話題・おすすめ";
-      case 1: return "いま開催中";
-      case 2: return s.getFullYear() === today.getFullYear()
+      case 1: return "今週末まで";
+      case 2: return "いま開催中";
+      case 3: return s.getFullYear() === today.getFullYear()
         ? `${s.getMonth() + 1}月のおでかけ` : `${s.getFullYear()}年${s.getMonth() + 1}月のおでかけ`;
-      case 3: return "新しくできた場所";
-      case 4: return "日程は出典で・随時";
-      case 5: return "話題・おすすめ";
+      case 4: return "期間中いつでも";
+      case 5: return "新しくできた場所";
+      case 6: return "日程は出典で・随時";
+      case 7: return "話題・おすすめ";
       default: return "終わったもの";
     }
   }
@@ -575,6 +623,7 @@ footer a { color: var(--main); font-weight: 700; }
       for (const [key, label, ic] of TABS) {
         const b = el("button");
         b.dataset.tab = key;
+        b.title = label;
         b.setAttribute("aria-pressed", state.tab === key);
         if (bar) { const w = el("span", "ic"); w.append(icon(ic)); b.append(w, label); }
         else { b.append(icon(ic), el("span", null, label)); }
@@ -584,15 +633,27 @@ footer a { color: var(--main); font-weight: 700; }
     });
   }
 
+  // PC のメニュー：文字付きで入りきるかを実際に測り、入らなければアイコンだけにする
+  // （画面の幅だけで決めると、表示倍率やフォントの違いでロゴに重なることがある）
+  function fitNav() {
+    const nav = document.querySelector(".hd-nav");
+    if (!nav || getComputedStyle(nav).display === "none") return;
+    nav.classList.remove("compact");
+    if (nav.scrollWidth > nav.clientWidth + 1) nav.classList.add("compact");
+  }
+  addEventListener("resize", fitNav);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitNav);
+
   function renderDays() {
     const box = $("#days");
     box.textContent = "";
-    const show = state.tab !== "spot";
+    const show = state.tab !== "spot" && state.tab !== "stay";
     box.hidden = !show;
     if (!show) return;
     for (let i = 0; i < DAY_SPAN; i++) {
       const d = addDays(today, i), key = iso(d);
-      const n = items.filter((it) => inTab(it) && base(it) && onDay(it, key)).length;
+      // 長期の催しは毎日に数えると件数が横並びになるので、日ごとの件数には入れない
+      const n = items.filter((it) => inTab(it) && base(it) && onDay(it, key) && !isLong(it)).length;
       const b = el("button", "day" + (d.getDay() === 6 ? " sat" : d.getDay() === 0 ? " sun" : "") + (i === 0 ? " today-d" : "") + (n ? "" : " zero"));
       b.dataset.day = key;
       b.setAttribute("aria-pressed", state.day === key);
@@ -628,12 +689,90 @@ footer a { color: var(--main); font-weight: 700; }
     });
   }
 
+  // 泊まる：楽天トラベルの宿（hotels.json）。アフィリエイトなので「PR」と明記する
+  let hotels = [];
+  const STAY_FEATS = [["", "すべて"], ["温泉", "温泉"], ["露天風呂", "露天風呂"], ["サウナ", "サウナ"],
+    ["朝食バイキング", "朝食バイキング"], ["貸切", "一棟貸し・グランピング"]];
+  const hasFeat = (h, f) => !f || (f === "貸切" ? h.features.some((x) => x === "一棟貸し" || x === "グランピング") : h.features.includes(f));
+  const yen = (n) => n.toLocaleString("ja-JP");
+
+  function hotelCard(h) {
+    const li = el("li", "hotel");
+    const im = el("div", "h-img");
+    if (h.image) {
+      const img = el("img"); img.loading = "lazy"; img.decoding = "async"; img.alt = ""; img.src = h.image;
+      img.onerror = () => img.remove();
+      im.append(img);
+    }
+    im.append(el("span", "pr", "PR"));
+    if (h.rating) {
+      const r = el("span", "rate"); r.append(icon("i-star"), String(h.rating));
+      if (h.reviews) r.append(el("small", null, `（${yen(h.reviews)}件）`));
+      im.append(r);
+    }
+    li.append(im);
+    const b = el("div", "h-body");
+    const ar = el("span", "t-area"); ar.append(icon("i-pin"), h.city); b.append(ar);
+    b.append(el("h3", "h-name", h.name));
+    if (h.text) b.append(el("p", "h-text", h.text));
+    if (h.features.length) { const f = el("div", "h-feats"); h.features.forEach((x) => f.append(el("span", null, x))); b.append(f); }
+    const foot = el("div", "h-foot");
+    const pr = el("div", "h-price");
+    if (h.price) { pr.append("楽天トラベルの最安", el("b", null, `${yen(h.price)}円〜`)); }
+    foot.append(pr);
+    const go = el("a", "h-go"); go.href = h.url; go.target = "_blank"; go.rel = "sponsored noopener";
+    go.append("楽天トラベルで見る", icon("i-out"));
+    foot.append(go);
+    b.append(foot);
+    li.append(b);
+    return li;
+  }
+
+  function renderStay() {
+    const inArea2 = (h) => !state.area || h.city === state.area || h.region === state.area;
+    const inQ2 = (h) => !state.q || state.q.toLowerCase().split(/\s+/).every((w) =>
+      (h.name + h.text + h.city + h.area + h.features.join("")).toLowerCase().includes(w));
+    // おすすめ順：評価を口コミの数で割り引いて比べる（口コミ数件の満点が上に来すぎないように）。
+    // 口コミ 30 件ぶん、評価 4.0 があるものとして平均する。評価の無い宿は後ろ
+    const score = (h) => h.rating ? (h.rating * (h.reviews || 0) + 4.0 * 30) / ((h.reviews || 0) + 30) : 0;
+    const list = hotels.filter((h) => inArea2(h) && inQ2(h) && hasFeat(h, state.feat))
+      .sort((a, b) => score(b) - score(a) || (b.reviews || 0) - (a.reviews || 0));
+    const ttl = $("#ttl"); ttl.textContent = "";
+    const ic = el("span", "ic"); ic.append(icon("i-bed"));
+    const cnt = el("span", "n"); cnt.append(el("b", null, String(list.length)), "軒");
+    ttl.append(ic, el("h1", null, "福井に泊まる"), cnt);
+
+    const active = $("#active"); active.textContent = "";
+    const pill = (label, clear) => { const x = el("button"); x.append(label, icon("i-x")); x.onclick = () => { clear(); render(); }; active.append(x); };
+    if (state.area) pill(state.area, () => (state.area = ""));
+    if (state.q) pill(`「${state.q}」`, () => setQ("", true));
+    $("#ok").textContent = `${list.length}軒を見る`;
+
+    const out = $("#out"); out.textContent = "";
+    const note = el("div", "pr-note");
+    note.append(el("b", null, "PR"), "このタブは楽天トラベルのアフィリエイトリンクを含みます。");
+    out.append(note);
+    const feats = el("div", "feats");
+    STAY_FEATS.forEach(([v, l]) => {
+      const x = el("button", "pill", l); x.type = "button"; x.setAttribute("aria-pressed", (state.feat || "") === v);
+      x.onclick = () => { state.feat = v; render(); };
+      feats.append(x);
+    });
+    out.append(feats);
+    if (!list.length) {
+      const p = el("div", "empty"); p.append(icon("i-bed"), el("p", null, "当てはまる宿がありません。エリアや条件を変えてみてください。"));
+      out.append(p); return;
+    }
+    const ul = el("ul", "grid"); list.forEach((h) => ul.append(hotelCard(h))); out.append(ul);
+  }
+
   function render() {
     try { localStorage.setItem("odekake", JSON.stringify({ tab: state.tab, area: state.area })); } catch (_) {}
-    renderNav(); renderDays(); renderPanel();
+    renderNav(); fitNav(); renderDays(); renderPanel();
 
     const n = (state.area ? 1 : 0) + (state.kind ? 1 : 0);
     $("#filter-cnt").hidden = !n; $("#filter-cnt").textContent = n;
+    if (state.tab === "stay") { renderStay(); return; }
 
     const matched = items.filter((it) => inTab(it) && base(it) && inDay(it));
     // 終わったものは「ぜんぶ」タブにしか入らない。切り替えボタンで出し入れする
@@ -676,7 +815,7 @@ footer a { color: var(--main); font-weight: 700; }
       const g = groupOf(it);
       if (g !== cur || !ul) {
         cur = g;
-        if (g) { const h = el("h2", "group"); h.append(icon(g === "いま開催中" ? "i-ticket" : g.startsWith("新") ? "i-shop" : "i-cal"), g); out.append(h); }
+        if (g) { const h = el("h2", "group"); h.append(icon(g === "いま開催中" || g === "今週末まで" ? "i-ticket" : g.startsWith("新") ? "i-shop" : "i-cal"), g); out.append(h); }
         ul = el("ul", "grid"); out.append(ul);
       }
       ul.append(card(it));
@@ -711,7 +850,7 @@ footer a { color: var(--main); font-weight: 700; }
 
   document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-nav] [data-tab]");
-    if (t) { state.tab = t.dataset.tab; state.day = ""; state.showEnded = false; render(); if (scrollY > 150) scrollTo({ top: 0 }); return; }
+    if (t) { state.tab = t.dataset.tab; state.day = ""; state.showEnded = false; state.feat = ""; render(); if (scrollY > 150) scrollTo({ top: 0 }); return; }
     const d = e.target.closest("#days [data-day]");
     if (d) { state.day = state.day === d.dataset.day ? "" : d.dataset.day; render(); }
   });
@@ -724,6 +863,11 @@ footer a { color: var(--main); font-weight: 700; }
   $("#today").append(icon("i-cal"), `今日は ${fmt(today)}`);
   if (toSat > 0) { const s = el("span"); s.append("・週末まであと", el("b", null, `${toSat}日`)); $("#today").append(s); }
   else $("#today").append("・週末です！");
+
+  fetch("hotels.json", { cache: "no-cache" })
+    .then((r) => r.json())
+    .then((d) => { hotels = d.items || []; if (state.tab === "stay") render(); })
+    .catch(() => {});
 
   fetch("data.json", { cache: "no-cache" })
     .then((r) => r.json())

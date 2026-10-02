@@ -1,6 +1,44 @@
 {
- "updated": "2026-10-01",
+ "updated": "2026-10-02",
  "items": [
+  {
+   "text": "10/11(日)-12(月祝) 鯖江市の西山公園で音楽フェス「鯖江JAMフェスティバル2026」。高橋優、浅井健一、EGO-WRAPPIN'、氣志團、ストレイテナー、THE BAWDIESなどが出演。小学生以下（保護者同伴）と鯖江市在住の18歳以下は無料。雨天決行",
+   "note": "去年のジャズフェスがジャンルを広げ、西山公園が2日間の野外フェス会場になる",
+   "kind": "催し",
+   "area": "鯖江市",
+   "start": "2026-10-11",
+   "end": "2026-10-12",
+   "source": "https://sabaejam.jp/",
+   "instagram": null,
+   "written": "2026-10-02",
+   "pick": true,
+   "region": "嶺北",
+   "og": {
+    "image": "https://sabaejam.jp/images/opengraph-image.png",
+    "title": "鯖江JAMフェスティバル2026",
+    "description": "鯖江JAMフェスティバル2026は、福井県鯖江市のシンボルである西山公園を舞台に、これまでにない音楽体験をお届けする音楽フェスです。",
+    "site": "鯖江JAMフェスティバル"
+   }
+  },
+  {
+   "text": "10/10(土)-11(日) 大野市・六呂師高原で音楽とキャンプのフェス「Rockroshi Starry Music Festival 2026」。ACIDMAN、THE BACK HORN、MONGOL800、OKAMOTO'S、GLIM SPANKY、MONKEY MAJIK、yamaなどが出演。福井県民割チケットあり、小学生以下は無料（保護者同伴）",
+   "note": "星空保護区の高原で、2日間音楽と星空を楽しめる",
+   "kind": "催し",
+   "area": "大野市",
+   "start": "2026-10-10",
+   "end": "2026-10-11",
+   "source": "https://www.city.ono.fukui.jp/kanko/kanko-joho/kanko_event/rsm_fes.html",
+   "instagram": "https://www.instagram.com/rsm.fes/",
+   "written": "2026-10-02",
+   "pick": true,
+   "region": "嶺北",
+   "og": {
+    "image": "https://www.city.ono.fukui.jp/kanko/kanko-joho/kanko_event/rsm_fes.images/fes_chirashi_dai1dan.jpg",
+    "title": "Rockroshi Starry Music Festival 2026 大野市公式ウェブサイト",
+    "description": "「結の故郷 越前おおの」福井県大野市の公式ホームページです。",
+    "site": null
+   }
+  },
   {
    "text": "10/25(日)10時〜15時30分 福井市美山町のみやま木ごころ文化の郷で「第35回 そばまつり in みやま」。美山地区のそばの食べ比べ、そばの早食い大会、キッズダンス、越前みやま音頭の総踊り。入場無料",
    "note": "新そばの季節に、山あいの町が1日だけそばの食べ比べ会場になる",
@@ -52,6 +90,25 @@
    "pick": true,
    "region": "嶺北",
    "og": null
+  },
+  {
+   "text": "10/11(日)10時〜17時 福井駅前のFUKUMACHI TERRACE一帯で「越山若水 福井シェフズダイニング」。県内約25店舗のシェフが集まり、この日だけの一皿を出す。入場無料。10月中は県内の参加店で「今、食べるべき一皿」の秋のマンスリーフェアも",
+   "note": "県の食のプロジェクトのシェフたちが、1日だけ駅前に集まる",
+   "kind": "催し",
+   "area": "福井市",
+   "start": "2026-10-11",
+   "end": "2026-10-11",
+   "source": "https://www.fuku-e.com/event/detail_8404.html",
+   "instagram": "https://www.instagram.com/p/Dd8bpGnz444/",
+   "written": "2026-10-01",
+   "pick": true,
+   "region": "嶺北",
+   "og": {
+    "image": "https://www.fuku-e.com/lsc/upfile/spot/0000/8404/8404_1_l.png",
+    "title": "越山若水 福井シェフズダイニング｜イベント｜【公式】福井県 観光/旅行サイト ｜ ふくいドットコム",
+    "description": "秋空の下、県内約25店舗の名店のシェフが集結する【越山若水 福井シェフズダイニング】が開催されます。シェフ同士がタッグを組んで生み出すコラボメニューをはじめ、料理からスイーツまで、ここでしか味わえな…",
+    "site": "福井県観光情報ホームページ ふくいドットコム"
+   }
   },
   {
    "text": "あわら市温泉「あわら温泉屋台村 湯けむり横丁」に天ぷら店「天ぷら たかさか」が2026年1月26日オープン。三国産海鮮や地元野菜を使った天ぷらを提供",
@@ -927,25 +984,6 @@
     "title": "企画展「絵図から読み解く福井の風景」（郷土歴史博物館）",
     "description": "福井市立郷土歴史博物館では企画展「絵図から読み解く福井の風景」を開催します",
     "site": "福井市役所"
-   }
-  },
-  {
-   "text": "10/10-11 大野市・六呂師高原で音楽フェス「Rockroshi Starry Music Festival 2026」。福井県民割チケットあり",
-   "note": "星空保護区の高原が2日間、音楽イベント会場になる",
-   "kind": "催し",
-   "area": "大野市",
-   "start": "2026-10-10",
-   "end": "2026-10-11",
-   "source": "https://www.city.ono.fukui.jp/kanko/kanko-joho/kanko_event/rsm_fes.html",
-   "instagram": null,
-   "written": "2026-09-22",
-   "pick": false,
-   "region": "嶺北",
-   "og": {
-    "image": "https://www.city.ono.fukui.jp/kanko/kanko-joho/kanko_event/rsm_fes.images/fes_chirashi_dai1dan.jpg",
-    "title": "Rockroshi Starry Music Festival 2026 大野市公式ウェブサイト",
-    "description": "「結の故郷 越前おおの」福井県大野市の公式ホームページです。",
-    "site": null
    }
   },
   {

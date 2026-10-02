@@ -1,0 +1,230 @@
+{
+  "リポジトリ": "fukui-fukui/threads",
+  "作成時刻": "2026-10-03 01:45 JST",
+  "今日": "2026-10-03",
+  "状態": "ok",
+  "明日のキュー": {
+    "対象日": "2026-10-04",
+    "本数": 0,
+    "予定本数": 10,
+    "足りない": 10,
+    "時刻": [],
+    "同じ時刻が2本以上": [],
+    "読めない行": [],
+    "投稿": []
+  },
+  "ワークフロー": [
+    {
+      "名前": "残高チェック",
+      "ファイル": "balance-check.yml",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-10-03 01:20 JST",
+        "結果": "success",
+        "きっかけ": "schedule",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/37033286063"
+      },
+      "最後の成功": "2026-10-03 01:20 JST",
+      "今日走ったか": true,
+      "24時間の実行": 2,
+      "24時間の失敗": 0,
+      "最後の失敗": {
+        "時刻": "2026-09-29 19:47 JST",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/36557736203"
+      },
+      "判定": "成功"
+    },
+    {
+      "名前": "状態をまとめる",
+      "ファイル": "health-snapshot.yml",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-10-03 01:45 JST",
+        "結果": "in_progress",
+        "きっかけ": "schedule",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/37036048745"
+      },
+      "最後の成功": "2026-10-02 20:02 JST",
+      "今日走ったか": true,
+      "24時間の実行": 3,
+      "24時間の失敗": 0,
+      "判定": "実行中"
+    },
+    {
+      "名前": "ネタ帳を埋める",
+      "ファイル": "neta-collect.yml",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-10-02 10:12 JST",
+        "結果": "success",
+        "きっかけ": "schedule",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/36949850499"
+      },
+      "最後の成功": "2026-10-02 10:12 JST",
+      "今日走ったか": false,
+      "24時間の実行": 2,
+      "24時間の失敗": 0,
+      "判定": "成功"
+    },
+    {
+      "名前": "おでかけサイトの更新",
+      "ファイル": "odekake.yml",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-10-02 21:05 JST",
+        "結果": "success",
+        "きっかけ": "push",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/37004682389"
+      },
+      "最後の成功": "2026-10-02 21:05 JST",
+      "今日走ったか": false,
+      "24時間の実行": 2,
+      "24時間の失敗": 0,
+      "最後の失敗": {
+        "時刻": "2026-10-01 16:21 JST",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/36829826514"
+      },
+      "判定": "成功"
+    },
+    {
+      "名前": "楽天キーの確認だけ",
+      "ファイル": "rakuten-check.yml",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-09-23 18:24 JST",
+        "結果": "success",
+        "きっかけ": "repository_dispatch",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/35842760149"
+      },
+      "最後の成功": "2026-09-23 18:24 JST",
+      "今日走ったか": false,
+      "24時間の実行": 0,
+      "24時間の失敗": 0,
+      "判定": "成功"
+    },
+    {
+      "名前": "テスト",
+      "ファイル": "test.yml",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-10-02 21:22 JST",
+        "結果": "success",
+        "きっかけ": "push",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/37006268481"
+      },
+      "最後の成功": "2026-10-02 21:22 JST",
+      "今日走ったか": false,
+      "24時間の実行": 20,
+      "24時間の失敗": 0,
+      "判定": "成功"
+    },
+    {
+      "名前": "Threads 接続確認",
+      "ファイル": "threads-check.yml",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-08-30 13:32 JST",
+        "結果": "success",
+        "きっかけ": "workflow_dispatch",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/33292714683"
+      },
+      "最後の成功": "2026-08-30 13:32 JST",
+      "今日走ったか": false,
+      "24時間の実行": 0,
+      "24時間の失敗": 0,
+      "判定": "成功"
+    },
+    {
+      "名前": "Threads 翌日ぶんを作成",
+      "ファイル": "threads-compose.yml",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-10-02 20:00 JST",
+        "結果": "success",
+        "きっかけ": "repository_dispatch",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/36998620907"
+      },
+      "最後の成功": "2026-10-02 20:00 JST",
+      "今日走ったか": false,
+      "24時間の実行": 1,
+      "24時間の失敗": 0,
+      "最後の失敗": {
+        "時刻": "2026-09-30 06:42 JST",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/36635036241"
+      },
+      "判定": "成功"
+    },
+    {
+      "名前": "Threads 予約投稿",
+      "ファイル": "threads-post.yml",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-10-03 01:40 JST",
+        "結果": "success",
+        "きっかけ": "repository_dispatch",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/37035497847"
+      },
+      "最後の成功": "2026-10-03 01:40 JST",
+      "今日走ったか": true,
+      "24時間の実行": 100,
+      "24時間の失敗": 0,
+      "判定": "成功"
+    },
+    {
+      "名前": "Threads トークン更新",
+      "ファイル": "threads-refresh-token.yml",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-09-28 12:02 JST",
+        "結果": "success",
+        "きっかけ": "schedule",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/36372131902"
+      },
+      "最後の成功": "2026-09-28 12:02 JST",
+      "今日走ったか": false,
+      "24時間の実行": 0,
+      "24時間の失敗": 0,
+      "判定": "成功"
+    },
+    {
+      "名前": "Threads 日次レビュー",
+      "ファイル": "threads-review.yml",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-10-03 01:17 JST",
+        "結果": "success",
+        "きっかけ": "schedule",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/37032878341"
+      },
+      "最後の成功": "2026-10-03 01:17 JST",
+      "今日走ったか": true,
+      "24時間の実行": 3,
+      "24時間の失敗": 0,
+      "最後の失敗": {
+        "時刻": "2026-09-21 08:14 JST",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/35544037944"
+      },
+      "判定": "成功"
+    },
+    {
+      "名前": "pages-build-deployment",
+      "ファイル": "pages-build-deployment",
+      "有効": true,
+      "最後の実行": {
+        "時刻": "2026-10-03 01:20 JST",
+        "結果": "success",
+        "きっかけ": "dynamic",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/37033313434"
+      },
+      "最後の成功": "2026-10-03 01:20 JST",
+      "今日走ったか": true,
+      "24時間の実行": 24,
+      "24時間の失敗": 0,
+      "最後の失敗": {
+        "時刻": "2026-09-30 08:08 JST",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/36643541045"
+      },
+      "判定": "成功"
+    }
+  ]
+}
