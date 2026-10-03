@@ -1,7 +1,7 @@
 """おでかけサイトの「泊まる」タブのデータを作る。
 
 宿のリストは Threads の宿紹介と同じもの（scripts/宿.py が読む neta/宿.jsonl）を使い、
-docs/odekake/hotels.json に書き出す。リンクは楽天トラベルのアフィリエイトリンク
+docs/hotels.json に書き出す。リンクは楽天トラベルのアフィリエイトリンク
 （短縮があればそちら）。サイトでは「PR」と明記して出す。
 
     python scripts/おでかけ_宿.py            # 書き出す
@@ -23,7 +23,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "docs" / "odekake" / "hotels.json"
+OUT = ROOT / "docs" / "hotels.json"
 
 _spec = importlib.util.spec_from_file_location("宿", ROOT / "scripts" / "宿.py")
 宿 = importlib.util.module_from_spec(_spec)

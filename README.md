@@ -26,7 +26,7 @@
 
 ## 1. Web アプリで予約する
 
-`https://<owner>.github.io/<repo>/`
+`https://odekake.fukui-fukui.com/yoyaku/`（独自ドメインにする前は `https://<owner>.github.io/<repo>/yoyaku/`）
 
 本文を書いて日時を選び、「キューに入れる」を押すと `posts/queue.jsonl` が更新されます。
 スマホからも使えます。できることは次のとおりです。
@@ -236,8 +236,8 @@ Web アプリを使わず、`posts/queue.jsonl` に 1 行 1 投稿の JSON を�
 ### 4.3 GitHub Pages を有効にする
 
 **Settings → Pages → Source: Deploy from a branch** で、ブランチを選び
-**フォルダに `/docs`** を指定します。数分後に `https://<owner>.github.io/<repo>/` で
-画面が開きます。
+**フォルダに `/docs`** を指定します。数分後に `https://<owner>.github.io/<repo>/` でおでかけサイト、`/yoyaku/` で予約画面が開きます。
+独自ドメインは `docs/CNAME`（`odekake.fukui-fukui.com`）で設定します。
 
 ## 5. トークンの期限切れを防ぐ
 
@@ -314,7 +314,8 @@ pyproject.toml                 パッケージ定義（`pip install -e .` 用。
 
 ## おでかけサイト（ふくいおでかけ帖）
 
-`https://<owner>.github.io/<repo>/odekake/`
+`https://odekake.fukui-fukui.com/`（グルメサイト `ekimae.fukui-fukui.com` とそろえたサブドメイン。
+前の `/odekake/` の URL はトップへ転送する）
 
 ネタ帳（`neta/ネタ帳.md`）に集まった福井のイベント・新スポットを、見る人向けに
 まとめたページです。「今週末」「イベント」「新スポット」「グルメ」の切り替え、
@@ -322,7 +323,7 @@ pyproject.toml                 パッケージ定義（`pip install -e .` 用。
 市町）と種類での絞り込み、キーワード検索ができます。カードは日付のスタンプ付きの
 チケットの形です。
 
-- データは `scripts/おでかけ.py` がネタ帳から作る `docs/odekake/data.json` だけ
+- データは `scripts/おでかけ.py` がネタ帳から作る `docs/data.json` だけ
 - 毎朝のネタ収集（`neta-collect.yml`）のあとに自動で作り直す。予約画面や手で
   ネタ帳を直したときは `odekake.yml` が作り直す
 - 出典は、カードの半券の部分に SNS のリンクプレビューと同じ形（OG の画像・タイトル・
@@ -341,7 +342,7 @@ pyproject.toml                 パッケージ定義（`pip install -e .` 用。
   「日付なし・随時」に出る。出典は箇条書きと出典の数が合うときだけ結び付ける
 
 「泊まる」タブ：Threads の宿紹介と同じ宿のリスト（`scripts/宿.py` が読む `neta/宿.jsonl`）
-から、`scripts/おでかけ_宿.py` が `docs/odekake/hotels.json` を作る。リンクは楽天トラベルの
+から、`scripts/おでかけ_宿.py` が `docs/hotels.json` を作る。リンクは楽天トラベルの
 アフィリエイト（短縮があればそちら）。サイトでは「PR」と明記し、フッターに楽天のクレジットを
 出す。特徴の印（温泉・サウナなど）は宿.py の切り口と同じ判定で、当てはまったものだけ付ける。
 並びは、評価を口コミの数で割り引いたおすすめ順。毎朝の収集のあとに作り直す。
