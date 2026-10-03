@@ -1,6 +1,139 @@
 {
- "updated": "2026-10-03",
+ "updated": "2026-10-04",
  "items": [
+  {
+   "text": "10/4 福井市中央公園で「わんぷくまるしぇ」開催。わんこのおやつやグッズ、キッチンカー、ドッグランが並ぶ犬連れ向けマルシェ",
+   "note": "飼い主も愛犬も一緒に楽しめる、秋の公園マルシェ",
+   "kind": "催し",
+   "area": "福井市",
+   "start": "2026-10-04",
+   "end": "2026-10-04",
+   "source": "https://fupo.jp/event/wanpukumarche1004/",
+   "instagram": null,
+   "written": "2026-10-04",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://fupo.jp/wp-content/uploads/2026/09/13.jpg",
+    "title": "わんぷくまるしぇ",
+    "description": null,
+    "site": "ふーぽ"
+   }
+  },
+  {
+   "text": "10/4 坂井市で「ふくい健康長寿祭2026」開催（主催：坂井市）。昨年同時開催のシニア応援文化祭は12/5に開催予定",
+   "note": "高齢者向けの催しが秋のこの日にまとまっている",
+   "kind": "催し",
+   "area": "坂井市",
+   "start": "2026-10-04",
+   "end": "2026-12-05",
+   "source": "https://www.city.fukui-sakai.lg.jp/kourei/kenko/fukushi/koreisha/ikigai/kenkochojusai2026.html",
+   "instagram": null,
+   "written": "2026-10-04",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "ふくい健康長寿祭2026",
+    "description": null,
+    "site": "福井県坂井市"
+   }
+  },
+  {
+   "text": "10/17-18 鯖江市西山公園一円で「めがねのまちさばえミライフェス2026」開催。ものづくり産業や市民の取り組みを紹介する約40のブースが並ぶ",
+   "note": "めがねフェスに続く産業ロケが、10月中旬にもう一度見られる",
+   "kind": "催し",
+   "area": "鯖江市",
+   "start": "2026-10-17",
+   "end": "2026-10-18",
+   "source": "https://www.fuku-e.com/event/detail_7638.html",
+   "instagram": null,
+   "written": "2026-10-04",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://www.fuku-e.com/lsc/upfile/spot/0000/7638/7638_1_l.png",
+    "title": "めがねのまちさばえミライフェス2026｜イベント｜【公式】福井県 観光/旅行サイト ｜ ふくいドットコム",
+    "description": "みんなでつくる、さばえのミライSDGsだけでなく、ものづくりや市民主役など、鯖江の「宝」をミライへつないでいく。そんな想いから、昨年度まで開催されていたイベント名「SDGsフェス」から「ミライフェス…",
+    "site": "福井県観光情報ホームページ ふくいドットコム"
+   }
+  },
+  {
+   "text": "10/4 若狭町・熊川宿で「第27回 熊川いっぷく時代村」開催。ブリキの金魚レースや射的・縁日、ステージ演目などを実施",
+   "note": "鯖街道の宿場町全体が、一日だけ縁日の舞台になる",
+   "kind": "催し",
+   "area": "若狭町",
+   "start": "2026-10-04",
+   "end": "2026-10-04",
+   "source": "https://fupo.jp/event/26_kumagawaoppukujidaimura/",
+   "instagram": null,
+   "written": "2026-10-04",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": "https://fupo.jp/wp-content/uploads/2025/09/89f663640d03c8fff3469b5ff96f697c.jpg",
+    "title": "第27回 熊川いっぷく時代村",
+    "description": "福井県三方上中郡若狭町にある鯖街道熊川宿で「第27回 熊川いっぷく時代村」が開催。",
+    "site": "ふーぽ"
+   }
+  },
+  {
+   "text": "福井市中央1丁目MARUNOUCHI FUKURA内に「CAFE CON TE」が2026年5月14日オープン。人気パン屋「アヴォロンテ」2号店に併設した、焼きたてパンとコーヒーのカフェ",
+   "note": "福井駅近くに、パン屋併設の気軽なコーヒースタンドができた",
+   "kind": "スポット",
+   "area": "福井市",
+   "start": "2026-05-14",
+   "end": "2026-05-14",
+   "source": "https://fupo.jp/article/newopenlist/",
+   "instagram": null,
+   "written": "2026-10-04",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://fupo.jp/wp-content/uploads/2023/09/2a3a863037d164884e8e59e652482b73.jpg",
+    "title": "《ほぼ毎週更新》福井の新店速報【～2026年9月】",
+    "description": "福井県内にオープンしたお店情報をURL付きで一覧で紹介。随時更新。",
+    "site": "ふーぽ"
+   }
+  },
+  {
+   "text": "福井市順化のフォレスト片町1Fに和食店「師門」が2026年5月28日オープン。旬の厳選食材を使った和食を提供",
+   "note": "片町エリアに、本格和食の新しい選択肢が増えた",
+   "kind": "スポット",
+   "area": "福井市",
+   "start": "2026-05-28",
+   "end": "2026-05-28",
+   "source": "https://fupo.jp/article/newopenlist/",
+   "instagram": null,
+   "written": "2026-10-04",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://fupo.jp/wp-content/uploads/2023/09/2a3a863037d164884e8e59e652482b73.jpg",
+    "title": "《ほぼ毎週更新》福井の新店速報【～2026年9月】",
+    "description": "福井県内にオープンしたお店情報をURL付きで一覧で紹介。随時更新。",
+    "site": "ふーぽ"
+   }
+  },
+  {
+   "text": "高浜町で「青葉山ループバス」運行開始。若狭高浜観光協会が告知",
+   "note": "青葉山周辺を巡る新しい移動手段ができた",
+   "kind": "話題",
+   "area": "高浜町",
+   "start": null,
+   "end": null,
+   "source": "https://wakasa-takahama.jp/20261013276/",
+   "instagram": null,
+   "written": "2026-10-04",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": "https://wakasa-takahama.jp/wp-content/uploads/2026/09/roopbustirashi.jpg",
+    "title": "青葉山ループバス運行！ | 若狭高浜観光協会公式ホームページ",
+    "description": "青葉山ハーバルビレッジ（中山口）と、熊野神社（今寺口）と、松尾寺（松尾寺口）をつなぐループバスです。 2府県をまたぐ山「青葉山」の縦走登山が気軽にできる4日間！利用料は無料です！この機会に別名「若狭…",
+    "site": "若狭高浜観光協会公式ホームページ"
+   }
+  },
   {
    "text": "10/3 美浜町のエネルギー科学館「きいぱす」で「2026きいぱすあきまつり」開催。中高校生の体験ブースや企業のおもしろ体験・展示が並ぶ",
    "note": "エネルギー・科学の体験が1日で楽しめる",
