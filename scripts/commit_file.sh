@@ -25,9 +25,10 @@ git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 git add "${TARGET}"
 git commit -m "${MESSAGE}"
 
-# 画面や他のワークフローからの編集と衝突しうるので、rebase してから push する
+# 画面や他のワークフローからの編集と衝突しうるので、rebase してから push する。
+# 同じ実行で作った別のファイル（まだコミットしていないもの）があっても止まらないよう --autostash を付ける
 for attempt in 1 2 3 4; do
-  if git pull --rebase origin "${GITHUB_REF_NAME}" && git push; then
+  if git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push; then
     exit 0
   fi
   wait=$((2 ** attempt))
