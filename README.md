@@ -312,7 +312,7 @@ pyproject.toml                 パッケージ定義（`pip install -e .` 用。
   test.yml                     テスト
 ```
 
-## おでかけサイト（ふくいおでかけ帖）
+## おでかけサイト（ふくいおでかけ）
 
 `https://odekake.fukui-fukui.com/`（グルメサイト `ekimae.fukui-fukui.com` とそろえたサブドメイン。
 前の `/odekake/` の URL はトップへ転送する）
