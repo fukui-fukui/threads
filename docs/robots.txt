@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /yoyaku/
+
+Sitemap: https://odekake.fukui-fukui.com/sitemap.xml

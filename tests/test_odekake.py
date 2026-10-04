@@ -213,5 +213,25 @@ class ThumbTest(unittest.TestCase):
         self.assertNotIn("og", items[3])  # 失敗は覚えない
         self.assertNotIn("https://c.example/3", prev)
 
+
+class PrerenderTest(unittest.TestCase):
+    def test_prerender_lists_only_alive_events_and_escapes(self):
+        data = {"items": [
+            {"text": "10/10 坂井市で「祭り<1>」開催", "note": "ひとこと", "kind": "催し", "area": "坂井市",
+             "start": "2026-10-10", "end": "2026-10-10", "source": "https://ex.jp/a?x=1&y=2"},
+            {"text": "9/1 終わった「古い催し」", "note": "", "kind": "催し", "area": None,
+             "start": "2026-09-01", "end": "2026-09-01", "source": None},
+            {"text": "福井市に「新店」がオープン", "note": "", "kind": "スポット", "area": "福井市",
+             "start": "2026-09-20", "end": "2026-09-20", "source": None},
+        ]}
+        html = odekake.prerender(data, date(2026, 10, 4))
+        self.assertTrue(html.startswith(odekake.MARK_START) and html.endswith(odekake.MARK_END))
+        self.assertIn("祭り&lt;1&gt;", html)
+        self.assertIn("10月10日（土）", html)
+        self.assertIn("x=1&amp;y=2", html)
+        self.assertNotIn("古い催し", html)
+        self.assertIn("2026年9月20日オープン", html)
+
+
 if __name__ == "__main__":
     unittest.main()
