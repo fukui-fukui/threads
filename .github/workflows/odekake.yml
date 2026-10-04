@@ -1,6 +1,6 @@
 name: おでかけサイトの更新
 
-# ネタ帳が予約画面や手で直されたとき、おでかけサイト（docs/odekake/）のデータを作り直す。
+# ネタ帳が予約画面や手で直されたとき、おでかけサイト（docs/ のトップ）のデータを作り直す。
 # 毎朝の収集ぶんは neta-collect.yml の中で続けて行う（GITHUB_TOKEN のコミットでは
 # このワークフローが起動しないため）。
 
@@ -35,5 +35,5 @@ jobs:
         run: python scripts/おでかけ_宿.py --images
       - name: コミットする
         run: |
-          ./scripts/commit_file.sh docs/odekake/data.json "chore(odekake): ネタ帳からサイトのデータを更新"
-          ./scripts/commit_file.sh docs/odekake/hotels.json "chore(odekake): 宿のデータを更新"
+          ./scripts/commit_file.sh docs/data.json "chore(odekake): ネタ帳からサイトのデータを更新"
+          ./scripts/commit_file.sh docs/hotels.json "chore(odekake): 宿のデータを更新"

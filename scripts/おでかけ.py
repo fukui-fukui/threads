@@ -1,8 +1,8 @@
 """ネタ帳から、おでかけサイト用のデータを作る。
 
 neta/ネタ帳.md の「書き足す場所」にある箇条書きを 1 件ずつ読み、
-日付・エリア・種類・出典を取り出して docs/odekake/data.json に書き出す。
-サイト（docs/odekake/index.html）はこの JSON を読むだけ。
+日付・エリア・種類・出典を取り出して docs/data.json に書き出す。
+サイト（docs/index.html）はこの JSON を読むだけ。
 
     python scripts/おでかけ.py            # 書き出す
     python scripts/おでかけ.py --thumbs   # 出典ページのリンクカード（OG）も取りに行く
@@ -27,7 +27,7 @@ from urllib.parse import urljoin, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 NETA = ROOT / "neta" / "ネタ帳.md"
-OUT = ROOT / "docs" / "odekake" / "data.json"
+OUT = ROOT / "docs" / "data.json"
 
 # 地名・施設名 → 市町。本文の中でいちばん前に出てくるものを採る。
 AREAS = [

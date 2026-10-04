@@ -74,13 +74,13 @@ jobs:
           done
           exit 1
 
-      # ネタ帳からおでかけサイト（docs/odekake/）のデータを作り直す。
+      # ネタ帳からおでかけサイト（docs/ のトップ）のデータを作り直す。
       # 上のコミットは GITHUB_TOKEN なので odekake.yml は起動しない。ここで続けて行う。
       - name: おでかけサイトを更新する
         if: ${{ !inputs.dry_run }}
         run: |
           python3 scripts/おでかけ.py --thumbs
-          ./scripts/commit_file.sh docs/odekake/data.json "chore(odekake): ネタ帳からサイトのデータを更新"
+          ./scripts/commit_file.sh docs/data.json "chore(odekake): ネタ帳からサイトのデータを更新"
           # 宿のリストは X のリポジトリで更新されるので、毎朝ここで取り直す
           python3 scripts/おでかけ_宿.py --images
-          ./scripts/commit_file.sh docs/odekake/hotels.json "chore(odekake): 宿のデータを更新"
+          ./scripts/commit_file.sh docs/hotels.json "chore(odekake): 宿のデータを更新"
