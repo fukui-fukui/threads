@@ -356,7 +356,11 @@ WD = "月火水木金土日"
 
 def _title(it: dict) -> str:
     m = re.search(r"「([^」]{2,40})」", it["text"])
-    return m.group(1) if m else it["text"].split("。")[0][:44]
+    if m:
+        return m.group(1)
+    # 「」が無いときは、先頭の日付（10/3-4 など）を外した最初の一文
+    head = re.sub(r"^\s*" + _MD + r"(?:\s*[-〜～－–]\s*(?:\d{1,2}/)?\d{1,2})?\s*", "", it["text"])
+    return head.split("。")[0][:44]
 
 
 def _when(it: dict) -> str:
@@ -401,16 +405,207 @@ def prerender(data: dict, today: date, limit_events: int = 40, limit_spots: int 
     return "\n".join(parts)
 
 
+# ---- 月別ページ（2026-10-04 SEO 第2段階） ----
+# 「福井 イベント 10月」のような検索を受けるページ。中身の薄いページを量産しないよう、
+# 今月以降で、短い催しが MONTH_MIN 件以上ある月だけ作る。過ぎた月のページは消す。
+MONTH_DIR = ROOT / "docs" / "month"
+MONTH_MIN = 5
+MONTHS_MARK = ("<!--months:start-->", "<!--months:end-->")
+CF_BEACON = ('<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" '
+             'data-cf-beacon=\'{"token": "9e64b6e539884a02b525b311b2a2eb15"}\'></script>')
+# 月ごとの冒頭の一言（手で書いたもの。年をまたいでも使える季節の話だけにする）
+MONTH_NOTE = {
+    1: "雪の季節。屋内の展示や、冬ならではの味覚の催しが中心になります。",
+    2: "まだ雪の残る時期。冬の祭りや、春を待つ催しが少しずつ始まります。",
+    3: "雪がとけて、外の催しが戻ってくる季節。年度替わりの新しいお店も増えます。",
+    4: "桜の季節。足羽川の桜並木をはじめ、花見に合わせた催しが県内各地で開かれます。",
+    5: "新緑の行楽シーズン。連休のイベントや、外で楽しむマルシェが増えます。",
+    6: "梅雨入りの時期。屋内の展示や、初夏の味覚を楽しむ催しが中心になります。",
+    7: "夏祭りと海開きの季節。花火大会や海辺のイベントが続きます。",
+    8: "夏祭り・花火大会の本番。お盆の帰省に合わせた催しも多い月です。",
+    9: "暑さがやわらぎ、秋の祭りやフェスが増えてくる季節です。",
+    10: "行楽の秋。新そばや秋の味覚の催し、音楽フェスやマルシェが週末ごとに続きます。",
+    11: "紅葉と冬の味覚の季節。越前がにの解禁を待つ時期で、食の催しが増えます。",
+    12: "冬のはじまり。クリスマスや年末の催し、イルミネーションが中心になります。",
+}
+
+
+def _span(it: dict) -> tuple[date, date] | None:
+    if it["kind"] != "催し" or not it.get("start"):
+        return None
+    s = date.fromisoformat(it["start"])
+    return s, date.fromisoformat(it["end"]) if it.get("end") else s
+
+
+def _is_long(sp: tuple[date, date]) -> bool:
+    return (sp[1] - sp[0]).days >= 7
+
+
+def month_pages(data: dict, today: date) -> dict[str, dict]:
+    """作る月 → {"short": [...], "long": [...]}。今月以降で短い催しが MONTH_MIN 件以上の月だけ。"""
+    out: dict[str, dict] = {}
+    for it in data["items"]:
+        sp = _span(it)
+        if not sp:
+            continue
+        y, m = sp[0].year, sp[0].month
+        while (y, m) <= (sp[1].year, sp[1].month):
+            if (y, m) >= (today.year, today.month):
+                b = out.setdefault(f"{y}-{m:02d}", {"short": [], "long": []})
+                b["long" if _is_long(sp) else "short"].append(it)
+            y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+    return {k: v for k, v in sorted(out.items()) if len(v["short"]) >= MONTH_MIN}
+
+
+def _month_label(key: str) -> str:
+    y, m = key.split("-")
+    return f"{int(y)}年{int(m)}月"
+
+
+def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
+    from collections import Counter
+    from html import escape as h
+    y, m = map(int, key.split("-"))
+    label = _month_label(key)
+    first = date(y, m, 1)
+    short = sorted(b["short"], key=lambda it: (it["start"], _title(it)))
+    long_ = sorted(b["long"], key=lambda it: it["end"])
+    areas = Counter(it.get("area") for it in short + long_ if it.get("area")).most_common(3)
+    area_txt = "、".join(f"{a}（{n}件）" for a, n in areas)
+    url = f"{SITE}/month/{key}/"
+    title = f"福井のイベント {label}｜ふくいおでかけ帖"
+    desc = (f"{label}に福井県内で開かれるイベント・祭り・マルシェ・展示を日付順にまとめました。"
+            f"全{len(short) + len(long_)}件、主催者や自治体などの出典つき。")
+
+    def card(it: dict) -> str:
+        sp = _span(it)
+        ended = sp[1] < today
+        meta = "・".join(x for x in (_when(it), it.get("area") or "") if x)
+        site = (it.get("og") or {}).get("site") or "出典"
+        cls = ' class="ended"' if ended else ""
+        mark = "<small>終了</small>" if ended else ""
+        out = [f"<article{cls}><h3>{h(_title(it))}{mark}</h3>"]
+        if meta:
+            out.append(f'<p class="meta">{h(meta)}</p>')
+        out.append(f"<p>{h(it['text'])}</p>")
+        if it.get("note"):
+            out.append(f'<p class="note">{h(it["note"])}</p>')
+        if it.get("source"):
+            out.append(f'<p class="src"><a href="{h(it["source"])}" rel="noopener" target="_blank">{h(site)}で詳しく見る</a></p>')
+        out.append("</article>")
+        return "".join(out)
+
+    body = []
+    days: dict[date, list] = {}
+    for it in short:
+        days.setdefault(max(_span(it)[0], first), []).append(it)
+    for d, its in days.items():
+        head = f"{d.month}月{d.day}日（{WD[d.weekday()]}）"
+        if d == first and any(_span(i)[0] < first for i in its):
+            head += "〜 先月から続く催しを含む"
+        body.append(f"<h2>{h(head)}</h2>" + "".join(card(i) for i in its))
+    if long_:
+        body.append(f"<h2>{m}月の期間中に行ける展示・フェア</h2>"
+                    "<p class=\"muted\">1週間以上つづく催しです。期間中の好きな日に行けます。</p>"
+                    + "".join(card(i) for i in long_))
+    nav = " ・ ".join(f'<a href="../{k}/">{_month_label(k)}</a>' if k != key else f"<b>{_month_label(k)}</b>" for k in keys)
+    ld = json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "ふくいおでかけ帖", "item": f"{SITE}/"},
+        {"@type": "ListItem", "position": 2, "name": f"福井のイベント {label}", "item": url}]}, ensure_ascii=False)
+    return f"""<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{h(title)}</title>
+<meta name="description" content="{h(desc)}">
+<link rel="canonical" href="{url}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="{h(title)}">
+<meta property="og:description" content="{h(desc)}">
+<meta property="og:url" content="{url}">
+<meta property="og:site_name" content="ふくいおでかけ帖">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="{SITE}/icon-192.png">
+<link rel="icon" href="../../favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<meta name="theme-color" content="#1f7a57">
+<script type="application/ld+json">{ld}</script>
+<style>
+:root {{ --bg: #f5f1e8; --surface: #fff; --ink: #22302a; --muted: #6d7570; --main: #1f7a57; --line: #e4ddcf; }}
+@media (prefers-color-scheme: dark) {{ :root {{ --bg: #141815; --surface: #1d231f; --ink: #e8eee9; --muted: #a2aba5; --main: #4cc292; --line: #2e3631; }} }}
+* {{ box-sizing: border-box; }}
+body {{ margin: 0; background: var(--bg); color: var(--ink); font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; line-height: 1.8; }}
+header {{ background: #1f7a57; color: #fff; padding: 14px 16px; }}
+header a {{ color: #fff; text-decoration: none; font-weight: 700; }}
+main {{ max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }}
+h1 {{ font-size: 1.5rem; margin: 0 0 8px; }}
+h2 {{ font-size: 1.05rem; margin: 30px 0 10px; padding-bottom: 6px; border-bottom: 2px dashed var(--line); }}
+article {{ background: var(--surface); border-radius: 14px; padding: 12px 16px; margin: 10px 0; }}
+article h3 {{ font-size: 1rem; margin: 0 0 4px; }}
+article h3 small {{ margin-left: 8px; font-size: .72rem; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 1px 8px; }}
+article.ended {{ opacity: .6; }}
+article p {{ margin: 4px 0; font-size: .92rem; }}
+.meta {{ color: var(--main); font-weight: 700; font-size: .85rem; }}
+.note, .muted {{ color: var(--muted); font-size: .85rem; }}
+.src a {{ font-size: .85rem; }}
+a {{ color: var(--main); }}
+.lead {{ background: var(--surface); border-radius: 14px; padding: 12px 16px; }}
+nav.months {{ margin-top: 36px; font-size: .9rem; }}
+footer {{ color: var(--muted); font-size: .78rem; text-align: center; padding: 0 16px 32px; }}
+</style>
+</head>
+<body>
+<header><a href="../../">← ふくいおでかけ帖</a></header>
+<main>
+<h1>福井のイベント {h(label)}</h1>
+<div class="lead">
+<p>{h(MONTH_NOTE[m])}</p>
+<p>{h(label)}に福井県内で開かれるイベントを、日付順にまとめました。1日〜数日の催しが{len(short)}件、期間中いつでも行ける展示・フェアが{len(long_)}件です。{h(f"多いのは{area_txt}。") if area_txt else ""}</p>
+<p class="muted">日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・自治体などの公式）で必ず確かめてください。最終更新：{today.year}年{today.month}月{today.day}日</p>
+</div>
+{"".join(body)}
+<nav class="months">月別：{nav}</nav>
+<p><a href="../../">今週末のイベント・新しいお店を見る（ふくいおでかけ帖）</a></p>
+</main>
+<footer>Threads <a href="https://www.threads.com/@fukui._.fukui" rel="noopener">@fukui._.fukui</a> が集めた福井の情報をまとめています。<br><a href="../../about/">運営者情報・編集方針・プライバシー</a></footer>
+{CF_BEACON}
+</body>
+</html>
+"""
+
+
+def write_months(data: dict, today: date) -> list[str]:
+    pages = month_pages(data, today)
+    keys = list(pages)
+    if MONTH_DIR.exists():
+        for d in MONTH_DIR.iterdir():
+            if d.is_dir() and d.name not in pages:
+                for f in d.iterdir():
+                    f.unlink()
+                d.rmdir()
+    for k, b in pages.items():
+        (MONTH_DIR / k).mkdir(parents=True, exist_ok=True)
+        (MONTH_DIR / k / "index.html").write_text(render_month(k, b, keys, today), encoding="utf-8")
+    return keys
+
+
 def write_static(data: dict, today: date) -> None:
+    months = write_months(data, today)
     html_text = INDEX.read_text(encoding="utf-8")
     a, b = html_text.find(MARK_START), html_text.find(MARK_END)
     if a < 0 or b < 0:
         print("::warning::index.html に prerender の目印がありません。静的な中身は書きません。")
     else:
         html_text = html_text[:a] + prerender(data, today) + html_text[b + len(MARK_END):]
-        INDEX.write_text(html_text, encoding="utf-8")
+    ma, mb = html_text.find(MONTHS_MARK[0]), html_text.find(MONTHS_MARK[1])
+    if ma >= 0 and mb >= 0:
+        links = "".join(f'<a href="./month/{k}/">{_month_label(k)}のイベント</a><br>' for k in months)
+        html_text = html_text[:ma] + MONTHS_MARK[0] + links + html_text[mb:]
+    INDEX.write_text(html_text, encoding="utf-8")
     lastmod = data.get("updated") or today.isoformat()
     urls = [(f"{SITE}/", lastmod, "daily"), (f"{SITE}/about/", "2026-10-04", "monthly")]
+    urls += [(f"{SITE}/month/{k}/", lastmod, "daily") for k in months]
     SITEMAP.write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -448,7 +643,7 @@ def main(argv: list[str] | None = None) -> int:
         # 日本時間の今日で、終わった催しを外す
         from datetime import datetime, timedelta, timezone
         write_static(data, datetime.now(timezone(timedelta(hours=9))).date())
-        print("→ docs/index.html（静的な中身）・docs/sitemap.xml")
+        print("→ docs/index.html（静的な中身）・docs/month/（月別ページ）・docs/sitemap.xml")
     return 0
 
 

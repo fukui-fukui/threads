@@ -233,5 +233,31 @@ class PrerenderTest(unittest.TestCase):
         self.assertIn("2026年9月20日オープン", html)
 
 
+class MonthPageTest(unittest.TestCase):
+    def _ev(self, start, end, area="福井市", text="「テスト祭」開催"):
+        return {"kind": "催し", "start": start, "end": end, "area": area, "text": text, "note": "", "source": None}
+
+    def test_only_current_and_later_months_with_enough_short_events(self):
+        items = [self._ev(f"2026-10-{d:02d}", f"2026-10-{d:02d}") for d in range(1, 6)]
+        items += [self._ev("2026-11-01", "2026-11-01")] * 3
+        items += [self._ev("2026-09-01", "2026-09-01")] * 6
+        items.append(self._ev("2026-09-01", "2026-12-31"))  # 長いものは件数に数えない
+        pages = odekake.month_pages({"items": items}, date(2026, 10, 4))
+        self.assertEqual(list(pages), ["2026-10"])
+        self.assertEqual(len(pages["2026-10"]["short"]), 5)
+        self.assertEqual(len(pages["2026-10"]["long"]), 1)
+
+    def test_render_month_escapes_and_marks_ended(self):
+        b = {"short": [self._ev("2026-10-01", "2026-10-01", text="「<b>祭</b>」開催")], "long": []}
+        html = odekake.render_month("2026-10", b, ["2026-10"], date(2026, 10, 4))
+        self.assertIn("福井のイベント 2026年10月", html)
+        self.assertIn("&lt;b&gt;祭&lt;/b&gt;", html)
+        self.assertIn("<small>終了</small>", html)
+        self.assertIn('<link rel="canonical" href="https://odekake.fukui-fukui.com/month/2026-10/">', html)
+
+    def test_title_drops_leading_date(self):
+        self.assertEqual(odekake._title({"text": "10/3-4 越前陶芸村で陶芸祭。前回は1万人"}), "越前陶芸村で陶芸祭")
+
+
 if __name__ == "__main__":
     unittest.main()
