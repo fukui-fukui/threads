@@ -473,7 +473,7 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
     areas = Counter(it.get("area") for it in short + long_ if it.get("area")).most_common(3)
     area_txt = "、".join(f"{a}（{n}件）" for a, n in areas)
     url = f"{SITE}/month/{key}/"
-    title = f"福井のイベント {label}｜ふくいおでかけ帖"
+    title = f"福井のイベント {label}｜ふくいおでかけ"
     desc = (f"{label}に福井県内で開かれるイベント・祭り・マルシェ・展示を日付順にまとめました。"
             f"全{len(short) + len(long_)}件、主催者や自治体などの出典つき。")
 
@@ -510,7 +510,7 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
                     + "".join(card(i) for i in long_))
     nav = " ・ ".join(f'<a href="../{k}/">{_month_label(k)}</a>' if k != key else f"<b>{_month_label(k)}</b>" for k in keys)
     ld = json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "ふくいおでかけ帖", "item": f"{SITE}/"},
+        {"@type": "ListItem", "position": 1, "name": "ふくいおでかけ", "item": f"{SITE}/"},
         {"@type": "ListItem", "position": 2, "name": f"福井のイベント {label}", "item": url}]}, ensure_ascii=False)
     return f"""<!doctype html>
 <html lang="ja">
@@ -524,7 +524,7 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
 <meta property="og:title" content="{h(title)}">
 <meta property="og:description" content="{h(desc)}">
 <meta property="og:url" content="{url}">
-<meta property="og:site_name" content="ふくいおでかけ帖">
+<meta property="og:site_name" content="ふくいおでかけ">
 <meta property="og:locale" content="ja_JP">
 <meta property="og:image" content="{SITE}/icon-192.png">
 <link rel="icon" href="../../favicon.ico" sizes="any">
@@ -556,7 +556,7 @@ footer {{ color: var(--muted); font-size: .78rem; text-align: center; padding: 0
 </style>
 </head>
 <body>
-<header><a href="../../">← ふくいおでかけ帖</a></header>
+<header><a href="../../">← ふくいおでかけ</a></header>
 <main>
 <h1>福井のイベント {h(label)}</h1>
 <div class="lead">
@@ -566,7 +566,7 @@ footer {{ color: var(--muted); font-size: .78rem; text-align: center; padding: 0
 </div>
 {"".join(body)}
 <nav class="months">月別：{nav}</nav>
-<p><a href="../../">今週末のイベント・新しいお店を見る（ふくいおでかけ帖）</a></p>
+<p><a href="../../">今週末のイベント・新しいお店を見る（ふくいおでかけ）</a></p>
 </main>
 <footer>Threads <a href="https://www.threads.com/@fukui._.fukui" rel="noopener">@fukui._.fukui</a> が集めた福井の情報をまとめています。<br><a href="../../about/">運営者情報・編集方針・プライバシー</a></footer>
 {CF_BEACON}
