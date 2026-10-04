@@ -343,6 +343,81 @@ def load_previous_og(path: Path) -> dict[str, dict | None]:
             if it.get("source") and "og" in it}
 
 
+# ---- 検索エンジン向けの静的な中身（2026-10-04 SEO 第1段階） ----
+# サイトは JavaScript で描くので、HTML だけを読む検索エンジンには中身が見えない。
+# index.html の目印のあいだに、これからの催しと新しい場所を素の HTML で書き込む
+# （ブラウザでは JavaScript がこの部分を描き直す）。sitemap.xml もここで作る。
+SITE = "https://odekake.fukui-fukui.com"
+INDEX = ROOT / "docs" / "index.html"
+SITEMAP = ROOT / "docs" / "sitemap.xml"
+MARK_START, MARK_END = "<!--prerender:start-->", "<!--prerender:end-->"
+WD = "月火水木金土日"
+
+
+def _title(it: dict) -> str:
+    m = re.search(r"「([^」]{2,40})」", it["text"])
+    return m.group(1) if m else it["text"].split("。")[0][:44]
+
+
+def _when(it: dict) -> str:
+    if not it.get("start"):
+        return ""
+    s = date.fromisoformat(it["start"])
+    e = date.fromisoformat(it["end"]) if it.get("end") else s
+    f = lambda d: f"{d.month}月{d.day}日（{WD[d.weekday()]}）"
+    if it["kind"] == "スポット":
+        return f"{s.year}年{s.month}月{s.day}日オープン"
+    return f(s) if s == e else f"{f(s)}〜{f(e)}"
+
+
+def _card(it: dict) -> str:
+    from html import escape as h
+    meta = "・".join(x for x in (_when(it), it.get("area") or "") if x)
+    out = [f'<article><h3>{h(_title(it))}</h3>']
+    if meta:
+        out.append(f"<p>{h(meta)}</p>")
+    out.append(f"<p>{h(it['text'])}</p>")
+    if it.get("note"):
+        out.append(f"<p>{h(it['note'])}</p>")
+    if it.get("source"):
+        out.append(f'<p><a href="{h(it["source"])}" rel="noopener">出典</a></p>')
+    out.append("</article>")
+    return "".join(out)
+
+
+def prerender(data: dict, today: date, limit_events: int = 40, limit_spots: int = 15) -> str:
+    items = data["items"]
+    alive = lambda it: it.get("end") and date.fromisoformat(it["end"]) >= today
+    events = sorted((it for it in items if it["kind"] == "催し" and alive(it)), key=lambda it: it["start"])
+    spots = sorted((it for it in items if it["kind"] == "スポット" and it.get("start")),
+                   key=lambda it: it["start"], reverse=True)
+    parts = [MARK_START, '<div class="prerender">']
+    parts.append(f"<h2>開催中・これからの福井のイベント（{today.month}月{today.day}日時点）</h2>")
+    parts += [_card(it) for it in events[:limit_events]]
+    parts.append("<h2>福井に新しくできたお店・スポット</h2>")
+    parts += [_card(it) for it in spots[:limit_spots]]
+    parts.append("</div>")
+    parts.append(MARK_END)
+    return "\n".join(parts)
+
+
+def write_static(data: dict, today: date) -> None:
+    html_text = INDEX.read_text(encoding="utf-8")
+    a, b = html_text.find(MARK_START), html_text.find(MARK_END)
+    if a < 0 or b < 0:
+        print("::warning::index.html に prerender の目印がありません。静的な中身は書きません。")
+    else:
+        html_text = html_text[:a] + prerender(data, today) + html_text[b + len(MARK_END):]
+        INDEX.write_text(html_text, encoding="utf-8")
+    lastmod = data.get("updated") or today.isoformat()
+    urls = [(f"{SITE}/", lastmod, "daily"), (f"{SITE}/about/", "2026-10-04", "monthly")]
+    SITEMAP.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "".join(f"  <url><loc>{u}</loc><lastmod>{m}</lastmod><changefreq>{c}</changefreq></url>\n" for u, m, c in urls)
+        + "</urlset>\n", encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true", help="書き出さずに件数だけ表示する")
@@ -370,6 +445,10 @@ def main(argv: list[str] | None = None) -> int:
         OUT.parent.mkdir(parents=True, exist_ok=True)
         OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         print(f"→ {OUT.relative_to(ROOT)}")
+        # 日本時間の今日で、終わった催しを外す
+        from datetime import datetime, timedelta, timezone
+        write_static(data, datetime.now(timezone(timedelta(hours=9))).date())
+        print("→ docs/index.html（静的な中身）・docs/sitemap.xml")
     return 0
 
 

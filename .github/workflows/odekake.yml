@@ -36,4 +36,6 @@ jobs:
       - name: コミットする
         run: |
           ./scripts/commit_file.sh docs/data.json "chore(odekake): ネタ帳からサイトのデータを更新"
+          ./scripts/commit_file.sh docs/index.html "chore(odekake): 検索向けの静的な中身を更新"
+          ./scripts/commit_file.sh docs/sitemap.xml "chore(odekake): サイトマップを更新"
           ./scripts/commit_file.sh docs/hotels.json "chore(odekake): 宿のデータを更新"
