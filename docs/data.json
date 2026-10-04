@@ -1,6 +1,120 @@
 {
- "updated": "2026-10-04",
+ "updated": "2026-10-05",
  "items": [
+  {
+   "text": "10/1 おおい町名田庄三重に全天候型施設「子どもの遊び場」が正式オープン。旧・農業体験施設さきやま会館を改修し、ボールプールや3on3バスケコートなどを整備",
+   "note": "雨でも遊べる屋内外の子どもの遊び場が、名田庄地区に新しくできた",
+   "kind": "スポット",
+   "area": "おおい町",
+   "start": "2026-10-01",
+   "end": "2026-10-01",
+   "source": "http://www.town.ohi.fukui.jp/kosodate/purpose/purpose06/p25821.html",
+   "instagram": null,
+   "written": "2026-10-05",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": null,
+    "title": "おおい町こどもの遊び場オープン！！ | おおい町公式ホームページ",
+    "description": null,
+    "site": null
+   }
+  },
+  {
+   "text": "11/3 敦賀市の人道の港 敦賀ムゼウムで「リニューアルオープン6周年記念イベント」開催",
+   "note": "リニューアルから丸6年の節目を、来場者向けの記念イベントで振り返る日",
+   "kind": "催し",
+   "area": "敦賀市",
+   "start": "2026-11-03",
+   "end": "2026-11-03",
+   "source": "https://www.city.tsuruga.lg.jp/page/26521.html",
+   "instagram": null,
+   "written": "2026-10-05",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": null,
+    "title": "【人道の港 敦賀ムゼウム】リニューアルオープン6周年記念イベントを開催します！",
+    "description": null,
+    "site": "敦賀市ホームページ"
+   }
+  },
+  {
+   "text": "10/31 敦賀市の人道の港 敦賀ムゼウムで企画展関連イベント「おちゃっとサロン特別編」開催",
+   "note": "企画展にあわせた交流イベントが、月末の一日だけ開かれる",
+   "kind": "催し",
+   "area": "敦賀市",
+   "start": "2026-10-31",
+   "end": "2026-10-31",
+   "source": "https://www.city.tsuruga.lg.jp/page/26470.html",
+   "instagram": null,
+   "written": "2026-10-05",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": null,
+    "title": "【人道の港 敦賀ムゼウム】企画展関連イベント おちゃっとサロン特別編＠敦賀ムゼウム",
+    "description": null,
+    "site": "敦賀市ホームページ"
+   }
+  },
+  {
+   "text": "10/17 敦賀市のこどもの国で天体観望会を開催",
+   "note": "子ども向け施設で、秋の夜空を観察できる1日限定の企画",
+   "kind": "催し",
+   "area": "敦賀市",
+   "start": "2026-10-17",
+   "end": "2026-10-17",
+   "source": "https://www.city.tsuruga.lg.jp/site/tsurugakodomonokuni/3950.html",
+   "instagram": null,
+   "written": "2026-10-05",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": null,
+    "title": "こどもの国 10月17日天体観望会",
+    "description": null,
+    "site": "敦賀市ホームページ"
+   }
+  },
+  {
+   "text": "越前町樫津に、土蔵をリノベーションしたカフェ「農家民宿&ベジカフェ U」が2026年3月29日オープン。里山の野草や地元野菜を使ったランチを提供",
+   "note": "産地の土蔵が、野草料理を味わえるカフェに生まれ変わった",
+   "kind": "スポット",
+   "area": "越前町",
+   "start": "2026-03-29",
+   "end": "2026-03-29",
+   "source": "https://urala.today/256725/",
+   "instagram": null,
+   "written": "2026-10-05",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://urala.today/wp-content/uploads/2026/04/a11b4bb3ba448d1fa402ac3dc62cc91f-2.jpg",
+    "title": "農家民宿&ベジカフェ U｜里山の野草と野菜を楽しむベジランチ 。体の内側から整う贅沢ごはん。 | 日々URALA（ウララ）福井県のおすすめ情報",
+    "description": null,
+    "site": "日々URALA"
+   }
+  },
+  {
+   "text": "坂井市のゆりの里公園内、長年空き店舗だった交流促進施設が、就労継続支援B型事業所のカフェ「ICHIGOOOJI」としてオープン。農業と福祉を結ぶ「農福連携」の場に",
+   "note": "公園の空きスペースが、農福連携カフェという新しい形で生まれ変わった",
+   "kind": "スポット",
+   "area": "坂井市",
+   "start": null,
+   "end": null,
+   "source": "https://urala.today/256506/",
+   "instagram": null,
+   "written": "2026-10-05",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://urala.today/wp-content/uploads/2026/03/b0ecdfda877f03fc871a3d80cb5947ba.jpg",
+    "title": "福井県内 2026年オープンのお店をご紹介！vol.1 | 日々URALA（ウララ）福井県のおすすめ情報",
+    "description": null,
+    "site": "日々URALA"
+   }
+  },
   {
    "text": "10/4 福井市中央公園で「わんぷくまるしぇ」開催。わんこのおやつやグッズ、キッチンカー、ドッグランが並ぶ犬連れ向けマルシェ",
    "note": "飼い主も愛犬も一緒に楽しめる、秋の公園マルシェ",
