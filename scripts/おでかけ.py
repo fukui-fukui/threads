@@ -412,7 +412,10 @@ MONTH_DIR = ROOT / "docs" / "month"
 MONTH_MIN = 5
 MONTHS_MARK = ("<!--months:start-->", "<!--months:end-->")
 CF_BEACON = ('<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" '
-             'data-cf-beacon=\'{"token": "9e64b6e539884a02b525b311b2a2eb15"}\'></script>')
+             'data-cf-beacon=\'{"token": "9e64b6e539884a02b525b311b2a2eb15"}\'></script>'
+             '<script async src="https://www.googletagmanager.com/gtag/js?id=G-13WG76PCKH"></script>'
+             '<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}'
+             'gtag("js",new Date());gtag("config","G-13WG76PCKH");</script>')
 # 月ごとの冒頭の一言（手で書いたもの。年をまたいでも使える季節の話だけにする）
 MONTH_NOTE = {
     1: "雪の季節。屋内の展示や、冬ならではの味覚の催しが中心になります。",
