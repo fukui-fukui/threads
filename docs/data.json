@@ -1,6 +1,129 @@
 {
- "updated": "2026-10-06",
+ "updated": "2026-10-07",
  "items": [
+  {
+   "text": "10/10(土) 福井市・日野川河川敷で「日野川大花火2026」開催。花火約5000発に加え、グルメフェス・クラフトマーケット・はたらくくるま体験も同時開催",
+   "note": "昼のマルシェ取材から夜の花火まで、1日通して撮れる秋のロケ",
+   "kind": "催し",
+   "area": "福井市",
+   "start": "2026-10-10",
+   "end": "2026-10-10",
+   "source": "https://fuku-iro.jp/event/detail_12052.html",
+   "instagram": null,
+   "written": "2026-10-07",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://fuku-iro.jp/lsc/upfile/spot/0001/2052/12052_9_l.jpg",
+    "title": "日野川大花火2026｜イベント｜福いろ|福井市公式観光サイト 名所/グルメ/お土産/イベント",
+    "description": "日野川河川敷を舞台に、流域４地区のボランティアスタッフによって開催される花火大会です。地域の自治会や高校等の協力の基、運営されています。コロナ禍に初開催され、2026年で7回目という新しい花火大会で…",
+    "site": "福井市観光公式サイト【福いろ】"
+   }
+  },
+  {
+   "text": "10/9-11/8 越前市・武生中央公園で「第75回2026たけふ菊人形」開催。今年のテーマは「越前妖怪物語」で妖怪モチーフの菊人形を展示、10/17は「ナイト菊人形」でライトアップも実施",
+   "note": "昼の菊人形と夜のライトアップで、1か月撮れる長期ロケが増える",
+   "kind": "催し",
+   "area": "越前市",
+   "start": "2026-10-09",
+   "end": "2026-11-08",
+   "source": "https://www.city.echizen.lg.jp/office/060/nigiwai/2026kiku.html",
+   "instagram": null,
+   "written": "2026-10-07",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "第75回2026たけふ菊人形開催！",
+    "description": "第75回2026たけふ菊人形開催！",
+    "site": "越前市ウェブサイト"
+   }
+  },
+  {
+   "text": "坂井市・福井県総合グリーンセンターの花の展示温室が「ハロウィンガーデン」としてオレンジ・紫の花で模様替え中、10/31まで開催",
+   "note": "無料の屋内フォトスポットが、ハロウィン月いっぱい使える",
+   "kind": "催し",
+   "area": "坂井市",
+   "start": "2026-10-31",
+   "end": "2026-10-31",
+   "source": "https://www.pref.fukui.lg.jp/doc/moridukurika/hanadayori-meiboku/haroulin_ga-den.html",
+   "instagram": null,
+   "written": "2026-10-07",
+   "pick": false,
+   "region": "嶺北",
+   "og": null
+  },
+  {
+   "text": "大野市の「御清水ライトアップ」が10/12(月・祝)まで開催中。名水百選「御清水」の水面に和紙提灯が浮かぶ夜間演出、18:00-21:00・入場無料",
+   "note": "今月中旬までの夜間フォトスポットロケが、あと1回分撮れる",
+   "kind": "催し",
+   "area": "大野市",
+   "start": "2026-10-12",
+   "end": "2026-10-12",
+   "source": "https://www.ono-kankou.jp/event/%E5%BE%A1%E6%B8%85%E6%B0%B4%E3%83%A9%E3%82%A4%E3%83%88%E3%82%A2%E3%83%83%E3%83%97/",
+   "instagram": null,
+   "written": "2026-10-07",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://www.ono-kankou.jp/wp-content/uploads/2026/01/654_spot_photo1_210604090133.jpg",
+    "title": "御清水ライトアップ - 越前おおの観光ガイド",
+    "description": "環境省の名水百選にも選ばれてた「御清水」が和紙でできたカラフルな提灯（ちょうちん）でライトアップされます。水面にはライトアップされた提灯が浮かび上がり幻想的な世界を楽しむことができます。 実施期間…",
+    "site": "越前おおの観光ガイド"
+   }
+  },
+  {
+   "text": "福井市西開発に炭火焼肉割烹「士士(とと)」が2026年4月オープン。割烹で修業した店主が、若狭牛など厳選和牛を炭火と和の技で仕立てる",
+   "note": "焼肉と割烹、両方の技を一軒で味わえる店ができた",
+   "kind": "スポット",
+   "area": "福井市",
+   "start": null,
+   "end": null,
+   "source": "https://fupo.jp/article/kappoutoto/",
+   "instagram": "https://www.instagram.com/yakiniku_kappo_toto/",
+   "written": "2026-10-07",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://fupo.jp/wp-content/uploads/2026/06/toto_8534-1.jpg",
+    "title": "【新店】福井市西開発に「炭火焼肉 割烹士士(かっぽうとと)」誕生。極上和牛を、炭火と和の技で味わう。",
+    "description": "福井市西開発に、「炭火焼肉 割烹士士(かっぽうとと)」 がオープン。さっそく食べてきました～！",
+    "site": "ふーぽ"
+   }
+  },
+  {
+   "text": "越前市幸町に焼肉店「焼肉とんきち」が2026年6月4日オープン",
+   "note": "産地の焼肉店が集まる越前市に、新しい一軒が加わった",
+   "kind": "スポット",
+   "area": "越前市",
+   "start": "2026-06-04",
+   "end": "2026-06-04",
+   "source": "https://fupo.jp/article/newopenlist/",
+   "instagram": null,
+   "written": "2026-10-07",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://fupo.jp/wp-content/uploads/2023/09/2a3a863037d164884e8e59e652482b73.jpg",
+    "title": "《ほぼ毎週更新》福井の新店速報【～2026年9月】",
+    "description": "福井県内にオープンしたお店情報をURL付きで一覧で紹介。随時更新。",
+    "site": "ふーぽ"
+   }
+  },
+  {
+   "text": "鯖江市船津町に手打ちそば店「手打蕎麦処 近藤」が2025年9月20日オープン",
+   "note": "鯖江にもう一軒、こだわりの手打ちそばを選べる店ができた",
+   "kind": "スポット",
+   "area": "鯖江市",
+   "start": "2025-09-20",
+   "end": "2025-09-20",
+   "source": "https://tabelog.com/fukui/C18207/rstLst/cond16-00-00/",
+   "instagram": null,
+   "written": "2026-10-07",
+   "pick": false,
+   "region": "嶺北",
+   "og": null
+  },
   {
    "text": "越前市今立の工芸宿「SUKU」に新客室棟「SUKU hanare」が2026年10月1日オープン。和紙を生かした壁紙・家具を備えた、キッチン付き2部屋の古民家改修宿",
    "note": "和紙産地に、長期滞在もできる2棟目の宿ができた",
