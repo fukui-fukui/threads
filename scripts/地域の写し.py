@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -196,8 +197,12 @@ def 写す(地のフォルダ: Path, 出力: Path) -> list[str]:
     新リポジトリ = 地.get("リポジトリ", "fukui-fukui/odekake-" + 地のフォルダ.name)
     出力.mkdir(parents=True, exist_ok=True)
     書いた = []
-    for 元 in sorted(ROOT.rglob("*")):
-        相対 = 元.relative_to(ROOT).as_posix()
+    # git に入っているファイルだけを写す（手元だけの設定や作業中のファイルを持ち出さない）
+    入っている = subprocess.run(["git", "ls-files", "-z"], cwd=ROOT, capture_output=True, check=True).stdout
+    for 相対 in sorted(x.decode("utf-8") for x in 入っている.split(b"\0") if x):
+        元 = ROOT / 相対
+        if not 元.exists():
+            continue
         if any(相対 == s or 相対.startswith(s + "/") for s in SKIP) or 相対.startswith(SKIP_PREFIX):
             continue
         if any(p == "__pycache__" for p in 元.parts):
