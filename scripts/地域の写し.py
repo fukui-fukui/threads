@@ -270,6 +270,9 @@ def 写す(地のフォルダ: Path, 出力: Path) -> list[str]:
     if 設定.get("宿の集めかた"):
         shutil.copy2(ROOT / "regions" / "_共通" / "hotel-collect.yml", 出力 / ".github" / "workflows" / "hotel-collect.yml")
         書いた.append(".github/workflows/hotel-collect.yml")
+    if 設定.get("ふるさと納税の集めかた"):
+        shutil.copy2(ROOT / "regions" / "_共通" / "furusato-collect.yml", 出力 / ".github" / "workflows" / "furusato-collect.yml")
+        書いた.append(".github/workflows/furusato-collect.yml")
     # 空のネタ帳・投稿の置き場（仕組みが最初の日に読めるように）
     ネタ帳 = 出力 / "neta" / "ネタ帳.md"
     if not ネタ帳.exists():
