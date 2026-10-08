@@ -80,7 +80,7 @@ async function RSSを読む(先, 境目, 上限, 捨てる語 = []) {
   let 捨てた = 0;
   for (const b of 塊) {
     const タイトル = 中身(b, 'title');
-    const url = リンク(b);
+    const url = リンク(b, 先.url);
     const 日付 = 日付を読む(b);
     if (!タイトル || !url) continue;
     if (捨てるか(タイトル, 捨てる語)) {
@@ -106,7 +106,18 @@ function 中身(塊, タグ) {
   return m ? ほぐす(m[1]) : '';
 }
 
-function リンク(塊) {
+function リンク(塊, 元url = '') {
+  // かほく市のように <link>/001/…html</link> と相対で書く RSS もあるので、RSS の URL を元に直す
+  const 直す = (u) => {
+    if (!u) return '';
+    if (/^https?:\/\//.test(u)) return u;
+    if (!元url || !/^\/|^\.\.?\//.test(u)) return '';
+    try {
+      return new URL(u, 元url).toString();
+    } catch {
+      return '';
+    }
+  };
   // Atom は <link href="..."/>。alternate を優先する
   const atom = [...塊.matchAll(/<link\b([^>]*)\/?>/gi)]
     .map((m) => m[1])
@@ -114,10 +125,13 @@ function リンク(塊) {
   if (atom.length) {
     const 本命 = atom.find((a) => /rel\s*=\s*["']?alternate/i.test(a)) ?? atom.find((a) => !/rel\s*=/.test(a)) ?? atom[0];
     const m = 本命.match(/href\s*=\s*["']([^"']+)["']/i);
-    if (m) return m[1].trim();
+    if (m) return 直す(m[1].trim()) || m[1].trim();
   }
   const text = 中身(塊, 'link');
-  if (text && /^https?:\/\//.test(text)) return text;
+  if (text) {
+    const u = 直す(text.trim());
+    if (u) return u;
+  }
   // RSS 1.0（RDF）は item の rdf:about に入っていることがある
   const about = 塊.match(/rdf:about\s*=\s*["']([^"']+)["']/i);
   if (about) return about[1].trim();
