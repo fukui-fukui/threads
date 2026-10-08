@@ -104,6 +104,11 @@ def 返信(宿: list[dict], style: str) -> str:
 
 
 def main() -> None:
+    # 県ごとの設定（region.json）でクーポンを使わないなら何もしない（石川版の立ち上げ時など）
+    地域 = Path("region.json")
+    if 地域.exists() and json.loads(地域.read_text(encoding="utf-8")).get("使う", {}).get("クーポン") is False:
+        print("クーポンは使わない設定です（region.json）。何もしません。")
+        return
     hour = int(os.environ.get("COUPON_HOUR") or 19)
     style = os.environ.get("COUPON_STYLE", "yu").strip()
     指定 = os.environ.get("TARGET_DATE", "").strip()

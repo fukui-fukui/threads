@@ -1,3 +1,8 @@
+import os
+from pathlib import Path as _P
+
+# 福井のデータで書いたテストなので、どの県のリポジトリでも福井の設定で走らせる
+os.environ["REGION_FILE"] = str(_P(__file__).resolve().parent / "region_fukui.json")
 import importlib.util
 import unittest
 from pathlib import Path
