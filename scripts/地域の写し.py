@@ -29,6 +29,8 @@ SKIP = {
     "neta/ふるさと納税_リンク.jsonl", "neta/ふるさと納税_切り口リンク.jsonl",
     "docs/data.json", "docs/hotels.json", "docs/month", "docs/sitemap.xml", "docs/CNAME",
     "scripts/_アーカイブ", "scripts/地域の写し.py",
+    # 予算の見張りは福井のリポジトリでまとめて行う（石川の分も足す）
+    "予算.json", "scripts/予算.mjs", ".github/workflows/budget-check.yml",
 }
 SKIP_PREFIX = ("neta/_ネタ帳",)
 
