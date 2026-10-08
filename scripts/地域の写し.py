@@ -171,6 +171,12 @@ def ワークフロー(相対: str, 文: str, 地: dict) -> str | None:
         文 = 置く(文, "jobs:\n  post:\n    runs-on: ubuntu-latest\n",
                  "jobs:\n  post:\n    # 試運転のあいだは投稿しない。公開の日に、リポジトリの変数 POST_ENABLED を true にする\n"
                  "    if: ${{ vars.POST_ENABLED == 'true' }}\n    runs-on: ubuntu-latest\n", 1)
+    if 相対.endswith("threads-compose.yml"):
+        # 写し先には外部の cron（cron-job.org）がまだ無いので、GitHub の schedule で毎晩 20:00 JST に作る
+        文 = 置く(文, "  repository_dispatch:\n    types: [threads-compose]\n",
+                 "  repository_dispatch:\n    types: [threads-compose]\n"
+                 "  # 外部 cron が無いあいだの起動（20:00 JST。少し遅れることがある）\n"
+                 "  schedule:\n    - cron: \"0 11 * * *\"\n", 1)
     if 相対.endswith("threads-compose.yml") and not 使う.get("クーポン", True):
         文 = 正規(文, r"\n      # 楽天トラベルの40%OFF以上のクーポン.*?run: python \"scripts/クーポンの投稿.py\"\n", "\n")
     return 文
