@@ -262,6 +262,10 @@ def 写す(地のフォルダ: Path, 出力: Path) -> list[str]:
         書いた.append("neta/ネタ帳.md")
     (出力 / "posts").mkdir(exist_ok=True)
     (出力 / "posts" / "queue.jsonl").touch()
+    # 投稿済みの記録は最初から置いておく（無いと初めての投稿の記録が残らず、二重投稿になりうる）
+    (出力 / "state").mkdir(exist_ok=True)
+    if not (出力 / "state" / "posted.json").exists():
+        (出力 / "state" / "posted.json").write_text('{\n  "posted": {},\n  "version": 1\n}\n', encoding="utf-8")
     # 独自ドメインのときだけ CNAME を置く（github.io のあいだは置かない）
     host = re.sub(r"^https?://", "", 地["サイトURL"]).split("/")[0]
     if not host.endswith("github.io"):
