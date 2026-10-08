@@ -251,6 +251,14 @@ def 写す(地のフォルダ: Path, 出力: Path) -> list[str]:
                 shutil.copy2(元, 出力 / 相対)
                 if 相対 not in 書いた:
                     書いた.append(相対)
+        # ブラウザは前のアイコンを長く覚えているので、県のアイコンを使うページはアドレスに印を付けて読み直させる
+        印 = "?v=" + 地のフォルダ.name
+        for 名 in ("docs/index.html", "docs/about/index.html"):
+            if (出力 / 名).exists():
+                文 = (出力 / 名).read_text(encoding="utf-8")
+                文 = re.sub(r'href="((?:\.\./)*(?:favicon\.ico|favicon-32\.png|icon-192\.png|apple-touch-icon\.png|logo\.jpg))"', rf'href="\1{印}"', 文)
+                文 = re.sub(r'src="((?:\.\./)*logo\.jpg)"', rf'src="\1{印}"', 文)
+                (出力 / 名).write_text(文, encoding="utf-8")
     (出力 / "neta").mkdir(exist_ok=True)
     for 名 in ("巡回先.json", "設定.json"):
         shutil.copy2(地のフォルダ / 名, 出力 / "neta" / 名)
