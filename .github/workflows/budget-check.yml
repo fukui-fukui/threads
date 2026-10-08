@@ -1,0 +1,32 @@
+name: 予算の見張り
+
+# AI の使用量（福井＋石川）を月ごとに足し、想定予算の60%を超えたら Issue を立てる。
+# 代表の指示（2026-10-08）「想定予算の60％超えたら教えて」。予算・割合は 予算.json。
+on:
+  schedule:
+    - cron: "30 12 * * *"   # 21:30 JST（翌日ぶんの作成のあと）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: budget-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: 使用量を足して、予算と比べる
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/予算.mjs
+      - name: まとめをコミットする
+        run: |
+          ./scripts/commit_file.sh state/usage-summary.json "chore(usage): AI の使用量のまとめ"
