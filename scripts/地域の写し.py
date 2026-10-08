@@ -242,6 +242,15 @@ def 写す(地のフォルダ: Path, 出力: Path) -> list[str]:
         書いた.append(相対)
     # 県ごとの設定
     shutil.copy2(地のフォルダ / "region.json", 出力 / "region.json")
+    # 県ごとのアイコン・ロゴ（regions/<県>/docs/ に置いたもの）で、福井のものを置きかえる
+    if (地のフォルダ / "docs").is_dir():
+        for 元 in sorted((地のフォルダ / "docs").rglob("*")):
+            if 元.is_file():
+                相対 = "docs/" + 元.relative_to(地のフォルダ / "docs").as_posix()
+                (出力 / 相対).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(元, 出力 / 相対)
+                if 相対 not in 書いた:
+                    書いた.append(相対)
     (出力 / "neta").mkdir(exist_ok=True)
     for 名 in ("巡回先.json", "設定.json"):
         shutil.copy2(地のフォルダ / 名, 出力 / "neta" / 名)
