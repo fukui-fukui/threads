@@ -25,6 +25,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "hotels.json"
 
+sys.path.insert(0, str(ROOT / "scripts"))
+import 地域  # noqa: E402  どの県のおでかけか（region.json）
+
 _spec = importlib.util.spec_from_file_location("宿", ROOT / "scripts" / "宿.py")
 宿 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(宿)
@@ -41,9 +44,6 @@ FEATURES = [
     ("朝食バイキング", "朝食バイキングある？"),
     ("チェックアウト遅め", "チェックアウト何時？"),
 ]
-
-REINAN = {"敦賀市", "小浜市", "美浜町", "若狭町", "高浜町", "おおい町"}
-
 
 def _切り口(名: str) -> dict:
     return next(k for k in 宿.切り口たち if k["名"] == 名)
@@ -77,7 +77,7 @@ def build(hotels: list[dict], 短縮: dict[int, str]) -> list[dict]:
             "name": 宿.見せる名(h),
             "city": city,
             "area": str(h.get("エリア") or ""),
-            "region": "嶺南" if city in REINAN else "嶺北",
+            "region": 地域.地区(city),
             "rating": _num(h.get("評価")),
             "reviews": _num(h.get("レビュー数")),
             "price": _num(h.get("最安")),
@@ -106,6 +106,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--images", action="store_true", help="写真があるかを確かめる")
     args = ap.parse_args(argv)
 
+    if not 地域.使う("宿"):
+        # 宿のリストがまだ無い県（石川版の立ち上げ時など）。サイトの「泊まる」は空にする
+        OUT.parent.mkdir(parents=True, exist_ok=True)
+        OUT.write_text(json.dumps({"items": []}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        print("宿は使わない設定です（region.json）。hotels.json は空にします。")
+        return 0
     hotels = 宿.読む()
     if not hotels:
         # 読めなかった日は、前の hotels.json をそのまま残す（空にしない）

@@ -26,28 +26,18 @@ from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import 地域  # noqa: E402  どの県のおでかけか（region.json）
+
+KEN = 地域.県名
+SITE_NAME = 地域.地域["サイト名"]
+ACCOUNT = 地域.地域["アカウント"]
 NETA = ROOT / "neta" / "ネタ帳.md"
 OUT = ROOT / "docs" / "data.json"
 
-# 地名・施設名 → 市町。本文の中でいちばん前に出てくるものを採る。
-AREAS = [
-    ("県立美術館", "福井市"), ("ふくい工芸舎", "福井市"), ("自然保護センター", "大野市"),
-    ("恐竜博物館", "勝山市"), ("ディノパーク", "勝山市"), ("県立歴史博物館", "福井市"),
-    ("フェニックスプラザ", "福井市"), ("フェアモール", "福井市"), ("サンドーム", "鯖江市"),
-    ("越前陶芸村", "越前町"), ("道の駅越前", "越前町"),
-    ("三国", "坂井市"), ("丸岡", "坂井市"), ("春江", "坂井市"),
-    ("美山", "福井市"), ("一乗谷", "福井市"), ("ハピテラス", "福井市"),
-    ("福井駅", "福井市"), ("足羽山", "福井市"), ("越前海岸", "越前町"),
-    ("南越前町", "南越前町"), ("越前町", "越前町"), ("永平寺町", "永平寺町"),
-    ("永平寺", "永平寺町"), ("池田町", "池田町"), ("美浜町", "美浜町"),
-    ("若狭町", "若狭町"), ("高浜町", "高浜町"), ("おおい町", "おおい町"),
-    ("福井市", "福井市"), ("坂井市", "坂井市"), ("あわら", "あわら市"),
-    ("大野", "大野市"), ("勝山", "勝山市"), ("鯖江", "鯖江市"),
-    ("越前市", "越前市"), ("敦賀", "敦賀市"), ("小浜", "小浜市"),
-]
-
-# 嶺北・嶺南の区分（サイトの絞り込みで使う）
-REINAN = {"敦賀市", "小浜市", "美浜町", "若狭町", "高浜町", "おおい町"}
+# 地名・施設名 → 市町。本文の中でいちばん前に出てくるものを採る（region.json の「地名」）。
+AREAS = [tuple(x) for x in 地域.地域["地名"]]
 
 SPOT_WORDS = ("オープン", "開業", "新店", "グランドオープン", "リニューアル", "出店")
 EVENT_WORDS = ("開催", "まつり", "祭", "フェス", "展", "イベント", "マルシェ",
@@ -205,7 +195,7 @@ def parse_neta(md: str) -> list[dict]:
 def build(md: str) -> dict:
     items = parse_neta(md)
     for it in items:
-        it["region"] = ("嶺南" if it["area"] in REINAN else "嶺北") if it["area"] else None
+        it["region"] = 地域.地区(it["area"])
     # 実行日ではなくネタの最新日にする（中身が同じなら毎日コミットが出ないように）
     updated = max((it["written"] for it in items), default=None)
     return {"updated": updated, "items": items}
@@ -347,7 +337,7 @@ def load_previous_og(path: Path) -> dict[str, dict | None]:
 # サイトは JavaScript で描くので、HTML だけを読む検索エンジンには中身が見えない。
 # index.html の目印のあいだに、これからの催しと新しい場所を素の HTML で書き込む
 # （ブラウザでは JavaScript がこの部分を描き直す）。sitemap.xml もここで作る。
-SITE = "https://odekake.fukui-fukui.com"
+SITE = 地域.サイトURL
 INDEX = ROOT / "docs" / "index.html"
 SITEMAP = ROOT / "docs" / "sitemap.xml"
 MARK_START, MARK_END = "<!--prerender:start-->", "<!--prerender:end-->"
@@ -396,9 +386,9 @@ def prerender(data: dict, today: date, limit_events: int = 40, limit_spots: int 
     spots = sorted((it for it in items if it["kind"] == "スポット" and it.get("start")),
                    key=lambda it: it["start"], reverse=True)
     parts = [MARK_START, '<div class="prerender">']
-    parts.append(f"<h2>開催中・これからの福井のイベント（{today.month}月{today.day}日時点）</h2>")
+    parts.append(f"<h2>開催中・これからの{KEN}のイベント（{today.month}月{today.day}日時点）</h2>")
     parts += [_card(it) for it in events[:limit_events]]
-    parts.append("<h2>福井に新しくできたお店・スポット</h2>")
+    parts.append(f"<h2>{KEN}に新しくできたお店・スポット</h2>")
     parts += [_card(it) for it in spots[:limit_spots]]
     parts.append("</div>")
     parts.append(MARK_END)
@@ -411,11 +401,13 @@ def prerender(data: dict, today: date, limit_events: int = 40, limit_spots: int 
 MONTH_DIR = ROOT / "docs" / "month"
 MONTH_MIN = 5
 MONTHS_MARK = ("<!--months:start-->", "<!--months:end-->")
-CF_BEACON = ('<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" '
-             'data-cf-beacon=\'{"token": "9e64b6e539884a02b525b311b2a2eb15"}\'></script>'
-             '<script async src="https://www.googletagmanager.com/gtag/js?id=G-13WG76PCKH"></script>'
-             '<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}'
-             'gtag("js",new Date());gtag("config","G-13WG76PCKH");</script>')
+_CF = 地域.地域.get("Cloudflare", "")
+_GA = 地域.地域.get("GA", "")
+CF_BEACON = ((('<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" '
+              f'data-cf-beacon=\'{{"token": "{_CF}"}}\'></script>') if _CF else "")
+             + ((f'<script async src="https://www.googletagmanager.com/gtag/js?id={_GA}"></script>'
+                 '<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}'
+                 f'gtag("js",new Date());gtag("config","{_GA}");</script>') if _GA else ""))
 # 月ごとの冒頭の一言（手で書いたもの。年をまたいでも使える季節の話だけにする）
 MONTH_NOTE = {
     1: "雪の季節。屋内の展示や、冬ならではの味覚の催しが中心になります。",
@@ -431,6 +423,8 @@ MONTH_NOTE = {
     11: "紅葉と冬の味覚の季節。越前がにの解禁を待つ時期で、食の催しが増えます。",
     12: "冬のはじまり。クリスマスや年末の催し、イルミネーションが中心になります。",
 }
+# 県ごとの一言があれば、そちらを使う（region.json の「月の一言」。キーは "1"〜"12"）
+MONTH_NOTE.update({int(k): v for k, v in 地域.地域.get("月の一言", {}).items()})
 
 
 def _span(it: dict) -> tuple[date, date] | None:
@@ -476,8 +470,8 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
     areas = Counter(it.get("area") for it in short + long_ if it.get("area")).most_common(3)
     area_txt = "、".join(f"{a}（{n}件）" for a, n in areas)
     url = f"{SITE}/month/{key}/"
-    title = f"福井のイベント {label}｜ふくいおでかけ"
-    desc = (f"{label}に福井県内で開かれるイベント・祭り・マルシェ・展示を日付順にまとめました。"
+    title = f"{KEN}のイベント {label}｜{SITE_NAME}"
+    desc = (f"{label}に{KEN}県内で開かれるイベント・祭り・マルシェ・展示を日付順にまとめました。"
             f"全{len(short) + len(long_)}件、主催者や自治体などの出典つき。")
 
     def card(it: dict) -> str:
@@ -513,8 +507,8 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
                     + "".join(card(i) for i in long_))
     nav = " ・ ".join(f'<a href="../{k}/">{_month_label(k)}</a>' if k != key else f"<b>{_month_label(k)}</b>" for k in keys)
     ld = json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "ふくいおでかけ", "item": f"{SITE}/"},
-        {"@type": "ListItem", "position": 2, "name": f"福井のイベント {label}", "item": url}]}, ensure_ascii=False)
+        {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": f"{SITE}/"},
+        {"@type": "ListItem", "position": 2, "name": f"{KEN}のイベント {label}", "item": url}]}, ensure_ascii=False)
     return f"""<!doctype html>
 <html lang="ja">
 <head>
@@ -527,7 +521,7 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
 <meta property="og:title" content="{h(title)}">
 <meta property="og:description" content="{h(desc)}">
 <meta property="og:url" content="{url}">
-<meta property="og:site_name" content="ふくいおでかけ">
+<meta property="og:site_name" content="{h(SITE_NAME)}">
 <meta property="og:locale" content="ja_JP">
 <meta property="og:image" content="{SITE}/icon-192.png">
 <link rel="icon" href="../../favicon.ico" sizes="any">
@@ -559,19 +553,19 @@ footer {{ color: var(--muted); font-size: .78rem; text-align: center; padding: 0
 </style>
 </head>
 <body>
-<header><a href="../../">← ふくいおでかけ</a></header>
+<header><a href="../../">← {h(SITE_NAME)}</a></header>
 <main>
-<h1>福井のイベント {h(label)}</h1>
+<h1>{h(KEN)}のイベント {h(label)}</h1>
 <div class="lead">
 <p>{h(MONTH_NOTE[m])}</p>
-<p>{h(label)}に福井県内で開かれるイベントを、日付順にまとめました。1日〜数日の催しが{len(short)}件、期間中いつでも行ける展示・フェアが{len(long_)}件です。{h(f"多いのは{area_txt}。") if area_txt else ""}</p>
+<p>{h(label)}に{h(KEN)}県内で開かれるイベントを、日付順にまとめました。1日〜数日の催しが{len(short)}件、期間中いつでも行ける展示・フェアが{len(long_)}件です。{h(f"多いのは{area_txt}。") if area_txt else ""}</p>
 <p class="muted">日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・自治体などの公式）で必ず確かめてください。最終更新：{today.year}年{today.month}月{today.day}日</p>
 </div>
 {"".join(body)}
 <nav class="months">月別：{nav}</nav>
-<p><a href="../../">今週末のイベント・新しいお店を見る（ふくいおでかけ）</a></p>
+<p><a href="../../">今週末のイベント・新しいお店を見る（{h(SITE_NAME)}）</a></p>
 </main>
-<footer>Threads <a href="https://www.threads.com/@fukui._.fukui" rel="noopener">@fukui._.fukui</a> が集めた福井の情報をまとめています。<br><a href="../../about/">運営者情報・編集方針・プライバシー</a></footer>
+<footer>Threads <a href="https://www.threads.com/@{h(ACCOUNT)}" rel="noopener">@{h(ACCOUNT)}</a> が集めた{h(KEN)}の情報をまとめています。<br><a href="../../about/">運営者情報・編集方針・プライバシー</a></footer>
 {CF_BEACON}
 </body>
 </html>

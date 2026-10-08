@@ -34,6 +34,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import お得日
+import 地域  # どの県のおでかけか（region.json）。福井版は今までと同じ
 import ふるさと納税
 import 宿
 
@@ -108,6 +109,14 @@ SLOTS = [
     (21, "近い予定の紹介", "F（紹介型）", "夜、この先の予定を決める人に読まれる。4日後〜13日後の催しを1件紹介する。プロフィールで毎日21時と約束している枠"),
     (23, "福井の話題紹介", "F（紹介型）", "寝る前。明日・週末に行けるところ"),
 ]
+
+# 宿・ふるさと納税を使わない県（石川版の立ち上げ時など）では、15時もふつうの紹介枠にする
+PR枠がある = 地域.使う("宿") or 地域.使う("ふるさと納税")
+if not PR枠がある:
+    SLOTS = [
+        (15, f"{地域.県名}の話題紹介", "F（紹介型）", "おやつどき。今日・週末に行けるところ") if slot[0] == 15 else slot
+        for slot in SLOTS
+    ]
 
 MODEL_PREFERENCE = ("opus", "sonnet", "haiku")
 
@@ -637,14 +646,20 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "## ネタ帳（担当者本人が書いた生の材料。最優先で使う）",
         neta or "（空です）",
         "",
-        "## URALAサイトの新着記事（記事紹介枠の材料。タイトルと概要の範囲で紹介し、内容を創作しない）",
-        articles or "（取得できませんでした）",
-        "",
-        "## 制作実績（urala-design.jp。紹介枠の材料に使ってよい）",
-        "**自分が関わった仕事として、一人称で書きます。** 会社名や「弊社の実績」という書き方はしない。",
-        "例：× 弊社が制作した福井の◯◯様のサイト ／ ○ 福井の◯◯さんのサイトを作ったとき、",
-        works or "（取得できませんでした）",
-        "",
+        *(
+            [
+                "## URALAサイトの新着記事（記事紹介枠の材料。タイトルと概要の範囲で紹介し、内容を創作しない）",
+                articles or "（取得できませんでした）",
+                "",
+                "## 制作実績（urala-design.jp。紹介枠の材料に使ってよい）",
+                "**自分が関わった仕事として、一人称で書きます。** 会社名や「弊社の実績」という書き方はしない。",
+                "例：× 弊社が制作した福井の◯◯様のサイト ／ ○ 福井の◯◯さんのサイトを作ったとき、",
+                works or "（取得できませんでした）",
+                "",
+            ]
+            if 地域.使う("URALA")
+            else []
+        ),
         "## 同じネタ・同じ投稿の使い回し（2026-09-18 代表指示）",
         "",
         "同じネタを何度使ってもかまいません。**同じ日に重ねないことだけ守ってください。**",
@@ -791,7 +806,8 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
             "宿の名前を出して良さを伝える書き方をしない。予約をすすめる書き方をしない。",
             "",
         ]
-    return "\n".join(sections)
+    # 石川版などでは、福井だけの言い回し（例文・地名）を region.json の「言いかえ」で置きかえる
+    return 地域.直す("\n".join(sections))
 
 
 def parse_posts(text: str) -> list[dict]:
@@ -931,7 +947,7 @@ def source_urls(text: str, thread: list[str]) -> set[str]:
 # 3アカウントとも同じリスト・同じ計算なので、同じ日には同じ内容になる。
 # 本文の末尾に必ず入れる語（2026-09-25 代表指示）。
 # Threads の検索で引っかかるようにするため。PR の枠には付けない。
-検索語 = "福井イベント"
+検索語 = 地域.地域["検索語"]
 
 # 1本のまとめに何軒並べるか。
 # 何件見せるかは日によって 3〜5 と変わる（2026-09-26 代表指示）。
@@ -1540,7 +1556,7 @@ def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出�
     """空いた枠を予備で埋める。15時（PR）は埋めない。使ったものは予備から消す。"""
     予備 = 予備を読む()
     残す, 行 = [], []
-    空き = [h for h in 空き if h != HOTEL_HOUR]
+    空き = [h for h in 空き if h != HOTEL_HOUR or not PR枠がある]
     now_jst = datetime.now(JST)
     空き = [h for h in 空き if datetime(target_date.year, target_date.month, target_date.day, h, tzinfo=JST) > now_jst]
     for x in 予備:
@@ -1684,13 +1700,13 @@ def main() -> None:
 
     board = fetch_doc(os.environ.get("BOARD_DOC_ID", "").strip(), "運用ボード")
     neta = read_neta()
-    articles = fetch_urala_articles()
-    works = fetch_urala_design_works()
+    articles = fetch_urala_articles() if 地域.使う("URALA") else ""
+    works = fetch_urala_design_works() if 地域.使う("URALA") else ""
 
     # 宿のまとめ枠（2026-09-23 代表指示）。毎日 1 本、HOTEL_HOUR の枠だけ。
     # どの切り口で何軒並べるかは scripts/宿.py が日付から決める。
     # 3アカウントとも同じリスト・同じ計算なので、同じ日には同じ宿が並ぶ。
-    宿たち = 宿.読む()
+    宿たち = 宿.読む() if 地域.使う("宿") else []
     hotel = None
     if 宿たち and any(hour == HOTEL_HOUR for hour, *_ in needed):
         まとめ = 宿.今日のまとめ(target_date, 宿たち, いくつ=宿.今日の件数(target_date))
@@ -1715,7 +1731,7 @@ def main() -> None:
 
     # ふるさと納税の枠（2026-09-25 代表指示）。15:00 で宿と日替わり。
     kifu = None
-    if 宿の型(target_date) == "ふるさと納税" and any(hour == HOTEL_HOUR for hour, *_ in needed):
+    if 地域.使う("ふるさと納税") and 宿の型(target_date) == "ふるさと納税" and any(hour == HOTEL_HOUR for hour, *_ in needed):
         品たち = ふるさと納税.読む()
         まとめ = ふるさと納税.今日のまとめ(target_date, 品たち, いくつ=宿.今日の件数(target_date)) if 品たち else None
         if まとめ:
@@ -1826,7 +1842,7 @@ def main() -> None:
                 落とす(f"{hour}:00 の本文が空です。")
             # 検索で引っかかるように、本文の最後に語を足す。
             # AI が自分で書いていたら二重にしない。PR の枠には付けない。
-            if hour != HOTEL_HOUR and 検索語 not in text:
+            if (hour != HOTEL_HOUR or not PR枠がある) and 検索語 not in text:
                 text = text.rstrip() + "\n\n" + 検索語
             thread = [t.strip() for t in (post.get("thread") or []) if t and t.strip()]
             for part in [text, *thread]:
@@ -1895,8 +1911,8 @@ def main() -> None:
                     落とす(f"{hour}:00 の見出しが空です。")
                 if URL_IN_TEXT.search(見出し):
                     落とす(f"{hour}:00 の見出しに URL が入っています。")
-                if "福井" not in 見出し:
-                    落とす(f"{hour}:00 の見出しに「福井」が入っていません（{見出し!r}）。")
+                if 地域.県名 not in 見出し:
+                    落とす(f"{hour}:00 の見出しに「{地域.県名}」が入っていません（{見出し!r}）。")
                 if len(見出し) > 34:
                     落とす(f"{hour}:00 の見出しが長すぎます（{len(見出し)} 字）: {見出し!r}")
                 for 罠, わけ in (
@@ -1922,8 +1938,8 @@ def main() -> None:
                         f"{hour}:00 の見出しが【PR】で始まっています。"
                         "1本目にはリンクを入れないので、PR は返信の末尾に付けます。"
                     )
-                if "福井" not in 見出し:
-                    落とす(f"{hour}:00 の見出しに「福井」が入っていません（{見出し!r}）。")
+                if 地域.県名 not in 見出し:
+                    落とす(f"{hour}:00 の見出しに「{地域.県名}」が入っていません（{見出し!r}）。")
                 if len(見出し) > 34:
                     落とす(f"{hour}:00 の見出しが長すぎます（{len(見出し)} 字）: {見出し!r}")
                 泊 = STAYED_VOICE.search(見出し)
