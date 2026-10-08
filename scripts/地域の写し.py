@@ -246,6 +246,11 @@ def 写す(地のフォルダ: Path, 出力: Path) -> list[str]:
     for 名 in ("巡回先.json", "設定.json"):
         shutil.copy2(地のフォルダ / 名, 出力 / "neta" / 名)
     書いた += ["region.json", "neta/巡回先.json", "neta/設定.json"]
+    # 宿を集める県には、楽天トラベルから宿のリストを作るワークフローを置く
+    設定 = json.loads((地のフォルダ / "設定.json").read_text(encoding="utf-8"))
+    if 設定.get("宿の集めかた"):
+        shutil.copy2(ROOT / "regions" / "_共通" / "hotel-collect.yml", 出力 / ".github" / "workflows" / "hotel-collect.yml")
+        書いた.append(".github/workflows/hotel-collect.yml")
     # 空のネタ帳・投稿の置き場（仕組みが最初の日に読めるように）
     ネタ帳 = 出力 / "neta" / "ネタ帳.md"
     if not ネタ帳.exists():
