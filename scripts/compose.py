@@ -29,7 +29,7 @@ import sys
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -124,6 +124,41 @@ MODEL_PREFERENCE = ("opus", "sonnet", "haiku")
 
 LEARNINGS_PATH = Path("insights/learnings.md")
 
+
+
+# 祝日と連休（代表 10/8「今週末は3連休、10/12（月）は祝日です。」）。年が変わる前に足す
+HOLIDAYS = {
+    date(2026, 10, 12): "スポーツの日", date(2026, 11, 3): "文化の日", date(2026, 11, 23): "勤労感謝の日",
+    date(2027, 1, 1): "元日", date(2027, 1, 11): "成人の日", date(2027, 2, 11): "建国記念の日",
+    date(2027, 2, 23): "天皇誕生日", date(2027, 3, 22): "振替休日", date(2027, 4, 29): "昭和の日",
+    date(2027, 5, 3): "憲法記念日", date(2027, 5, 4): "みどりの日", date(2027, 5, 5): "こどもの日",
+    date(2027, 7, 19): "海の日", date(2027, 8, 11): "山の日", date(2027, 9, 20): "敬老の日",
+    date(2027, 9, 23): "秋分の日", date(2027, 10, 11): "スポーツの日", date(2027, 11, 3): "文化の日",
+    date(2027, 11, 23): "勤労感謝の日",
+}
+
+
+def _休み(d: date) -> bool:
+    return d.weekday() >= 5 or d in HOLIDAYS
+
+
+def holiday_note(target_date: date) -> str:
+    """投稿する日が祝日か、7日以内に3日以上の連休があれば、そのことを1行で返す。なければ空。"""
+    notes = []
+    if target_date in HOLIDAYS:
+        notes.append(f"この日は祝日（{HOLIDAYS[target_date]}）です。")
+    for start in (target_date + timedelta(days=i) for i in range(-2, 8)):
+        if not _休み(start) or _休み(start - timedelta(days=1)):
+            continue
+        end = start
+        while _休み(end + timedelta(days=1)):
+            end += timedelta(days=1)
+        if (end - start).days >= 2 and end >= target_date:
+            w = "月火水木金土日"
+            notes.append(f"{start.month}/{start.day}（{w[start.weekday()]}）〜{end.month}/{end.day}（{w[end.weekday()]}）は"
+                         f"{(end - start).days + 1}連休です。連休に行ける催し・場所を選ぶときの手がかりにしてよい（事実として連休を書くのは可）。")
+            break
+    return "".join(notes)
 
 def learning_section() -> list[str]:
     """検証チーム（scripts/review.py）が毎日更新する指示を読む。無ければ何も足さない。"""
@@ -378,6 +413,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
 
     slot_lines = "\n".join(_枠の行(*x) for x in needed)
     weekday = "月火水木金土日"[target_date.weekday()]
+    休みの案内 = holiday_note(target_date)
     hours = "、".join(f"{hour}:00" for hour, *_ in needed)
     hour_choices = "／".join(str(hour) for hour, *_ in SLOTS)
     already = describe_filled(filled)
@@ -414,6 +450,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         ),
         "材料として日々URALA などのメディア記事を使いますが、自分が取材したようには書かず、出典を付けます。",
         f"{target_date.isoformat()}（{weekday}）の {hours} に投稿する {len(needed)} 本を書いてください。",
+        *([休みの案内] if 休みの案内 else []),
         "",
         "## 枠と役割",
         slot_lines,
