@@ -143,7 +143,7 @@ print(json.dumps({"URL": f.リストのURL, "切り口": 名, "決まり": 決�
                 self.assertIn(地["見出しの頭"], 結果["決まり"])
 
     def test_furusato_noto_rules(self):
-        """石川：切り口は上から順、札は写さない、能登だけの日を作らない、1/1・9/21の前後は能登の切り口を使わない。"""
+        """石川：切り口は上から順、札は写さない、能登だけの日も立つ（2026-10-09 代表）、1/1・9/21の前後は能登の切り口を使わない。"""
         設定 = ROOT / "regions" / "ishikawa" / "region.json"
         if not 設定.exists():
             設定 = ROOT / "region.json"
@@ -173,9 +173,9 @@ print(json.dumps(出, ensure_ascii=False))
         self.assertEqual(結果["香箱"], "香箱ガニ")
         self.assertEqual(結果["加能"], ["2", "3", "4"])
         self.assertEqual(結果["札"], "能登の干物")
-        # 能登の品しか無い「能登の海と浜のもの」は立たない
-        self.assertEqual(結果["切り口"], ["加能ガニ"])
-        self.assertIn("金沢市", 結果["地区"])
+        # 能登の品しか無い「能登の海と浜のもの」も立つ（2026-10-09 代表「能登の品だけで1日の投稿を作ってOK」）
+        self.assertEqual(結果["切り口"], ["加能ガニ", "能登の海と浜のもの"])
+        self.assertEqual(len(結果["地区"]), 3)
 
     def test_furusato_avoid_days(self):
         設定 = ROOT / "regions" / "ishikawa" / "region.json"
