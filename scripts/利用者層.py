@@ -52,7 +52,7 @@ def main() -> None:
     fc = get(f"{uid}/threads_insights", metric="followers_count")
     followers = next((i.get("total_value", {}).get("value") for i in fc.get("data", [])), None)
     today = datetime.now(JST).date().isoformat()
-    lines = [f"# 利用者層 @{name}（{today}）", "", f"フォロワー数: {followers if followers is not None else '取れませんでした'}", ""]
+    lines = [f"# フォロワーの内訳 @{name}（{today}）", "", "アプリのインサイトの「フォロワー」のグラフの下にある利用者層データと同じ数字。閲覧者（フォロワー以外も含む）の内訳は API では取れない。", "", f"フォロワー数: {followers if followers is not None else '取れませんでした'}", ""]
     for kind, label in NAMES.items():
         rows = breakdown(uid, kind)
         lines += [f"## {label}", ""]
