@@ -139,7 +139,7 @@ def 運営者情報(文: str, 地: dict) -> str:
         文 = 置く(文, "<li>楽天トラベルのリンクを押すと、楽天のサイトで Cookie が使われることがあります。</li>\n", "", 1)
     計測 = [n for n, k in (("Cloudflare Web Analytics", "Cloudflare"), ("Google アナリティクス", "GA")) if 地.get(k)]
     if 計測:
-        文 = 置く(文, "Cloudflare Web Analytics と Google アナリティクスを使っています", f"{'と '.join(計測)}を使っています", 1)
+        文 = 置く(文, "Cloudflare Web Analytics と Google アナリティクスを使っています", f"{' と '.join(計測)}を使っています", 1)
     else:
         文 = 正規(文, r"<li>訪問数やよく見られているページを把握するため、.*?</li>\n", "")
     if not 地.get("GA"):
