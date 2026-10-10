@@ -94,7 +94,7 @@ jobs:
           git commit -m "chore(neta): $(TZ=Asia/Tokyo date +%F) のぶんを追記"
           # 予約画面からの記録と衝突しうるので、rebase してから push する
           for attempt in 1 2 3 4; do
-            if git pull --rebase origin "${GITHUB_REF_NAME}" && git push; then
+            if git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push; then
               exit 0
             fi
             wait=$((2 ** attempt))
