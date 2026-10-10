@@ -2,7 +2,7 @@
   "説明": "いしかわおでかけ（石川県版）の巡回先の下書き。新しいリポジトリを作るときに neta/巡回先.json として持っていく。2026-10-08 調査で、RSS は中身（件数・新しい日付）を、HTML は催しのリンクが並ぶことを確かめた。福井版の仕組みはまだこのファイルを読まない。",
   "何日前まで": 10,
   "1つの巡回先から渡す最大件数": 6,
-  "AIに渡す最大件数": 80,
+  "AIに渡す最大件数": 120,
   "_AIに渡す最大件数の注": "ネタ帳に無い候補がこれより多い日は、巡回先ごとに新しい順で1件ずつ順に取って、この件数で止める（2026-10-08 代表「候補が多すぎる場合は自分で上限決めて進めて」）。",
   "RSS": [
     {
@@ -69,6 +69,76 @@
       "名前": "金沢経済新聞",
       "区分": "地元メディア",
       "url": "https://kanazawa.keizai.biz/rss.xml"
+    },
+    {
+      "名前": "金沢市（新着）",
+      "区分": "市町",
+      "url": "https://www4.city.kanazawa.lg.jp/cgi-bin/feed.php?siteNew=1"
+    },
+    {
+      "名前": "白山市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.hakusan.lg.jp/news.rss"
+    },
+    {
+      "名前": "加賀市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.kaga.ishikawa.jp/cgi-bin/feed.php?siteNew=1"
+    },
+    {
+      "名前": "羽咋市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.hakui.lg.jp/cgi-bin/feed.php?siteNew=1"
+    },
+    {
+      "名前": "津幡町（新着）",
+      "区分": "市町",
+      "url": "https://www.town.tsubata.lg.jp/rss/10/list1.xml"
+    },
+    {
+      "名前": "内灘町（新着）",
+      "区分": "市町",
+      "url": "https://www.town.uchinada.lg.jp/rss/10/list1.xml"
+    },
+    {
+      "名前": "宝達志水町（新着）",
+      "区分": "市町",
+      "url": "https://www.hodatsushimizu.jp/cgi-bin/feed.php?siteNew=1"
+    },
+    {
+      "名前": "志賀町（新着）",
+      "区分": "能登",
+      "url": "https://www.town.shika.lg.jp/rss/10/list1.xml"
+    },
+    {
+      "名前": "中能登町（新着）",
+      "区分": "能登",
+      "url": "https://www.town.nakanoto.ishikawa.jp/cgi-bin/feed.php?siteNew=1"
+    },
+    {
+      "名前": "穴水町（新着）",
+      "区分": "能登",
+      "url": "https://www.town.anamizu.lg.jp/rss/10/list1.xml"
+    },
+    {
+      "名前": "のとじま（能登島観光）",
+      "区分": "能登",
+      "url": "https://www.notojima.org/event/feed/"
+    },
+    {
+      "名前": "山代温泉",
+      "区分": "観光協会",
+      "url": "https://yamashiro-spa.or.jp/feed/"
+    },
+    {
+      "名前": "山中温泉（イベント）",
+      "区分": "観光協会",
+      "url": "https://www.yamanaka-spa.or.jp/event/feed/"
+    },
+    {
+      "名前": "片山津温泉（イベント）",
+      "区分": "観光協会",
+      "url": "https://katayamazu-spa.or.jp/event/feed/"
     }
   ],
   "HTML": [
@@ -103,14 +173,12 @@
     }
   ],
   "RSSが無いので検索で補うもの": [
-    "加賀市（お知らせ一覧）https://www.city.kaga.ishikawa.jp/news_list.html ※ 一覧のリンクが JavaScript で出るので、今の拾い方では読めない",
-    "七尾市 観光イベント https://www.city.nanao.lg.jp/kanko/event/index.html と ななおイベント https://nanao-event.com/",
-    "羽咋市 https://www.city.hakui.lg.jp/ ※ トップにお知らせのリンクが見つからない。要調べ"
+    "七尾市 観光イベント https://www.city.nanao.lg.jp/kanko/event/index.html と ななおイベント https://nanao-event.com/"
   ],
   "まだ調べること": [
     "新店の情報源（福井の URALA・ふーぽ にあたる石川の地元メディア）",
-    "白山市（RSS の一覧ページ https://www.city.hakusan.lg.jp/about/site/rss.html から選ぶ）、羽咋市、残りの町",
-    "能登の扱い：輪島・珠洲・能登町の新着には、復旧や支援のお知らせが多い。言葉づかいの決まりは運用部・石川担当が作る（連絡/ に置く予定）"
+    "能登の扱い：輪島・珠洲・能登町の新着には、復旧や支援のお知らせが多い。言葉づかいの決まりは運用部・石川担当が作る（連絡/ に置く予定）",
+    "七尾市（RSS が見つからない。観光イベントの一覧 https://www.city.nanao.lg.jp/kanko/event/index.html を HTML で読めるか）、川北町"
   ],
   "見出しに入っていたら捨てる": [
     "入札",
@@ -124,5 +192,6 @@
   ],
   "_注": "能登の市町の新着は、被災や支援の行政のお知らせが多いので、捨てる語を福井より増やした。営業再開や催しの再開は、事実として拾う。",
   "_最大件数の注": "2026-10-08：催し一覧を40件ずつ渡すと候補が130件になり、AI の返しが途中で切れた。15件ずつにした。",
-  "_地元メディアの注": "2026-10-08 運用部・石川担当の調べ・代表了承。Favo石川版は更新が2024年12月で止まっているので外した。HOKUROKU は403で読めない。"
+  "_地元メディアの注": "2026-10-08 運用部・石川担当の調べ・代表了承。Favo石川版は更新が2024年12月で止まっているので外した。HOKUROKU は403で読めない。",
+  "_追加の注": "2026-10-10 代表「いしかわは福井よりもサイトの件数が少ない」。福井は RSS 39、石川は 13 だったので、RSS のある市町（金沢・白山・加賀・羽咋・津幡・内灘・宝達志水・志賀・中能登・穴水）と温泉地・能登島の観光協会を足した（どれも中身と新しい日付を確かめた）。"
 }
