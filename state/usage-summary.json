@@ -1,13 +1,14 @@
 {
   "月": "2026-10",
-  "合計ドル": 0.79,
+  "合計ドル": 2.59,
   "予算ドル": 50,
-  "割合": "1.6%",
+  "割合": "5.2%",
   "内訳": {
-    "fukui-fukui/threads｜翌日ぶんの作成": 0.4547,
-    "fukui-fukui/threads｜日次レビュー": 0.009,
-    "yu-fukui/odekake-ishikawa｜日次レビュー": 0.0078,
-    "yu-fukui/odekake-ishikawa｜翌日ぶんの作成": 0.3229
+    "fukui-fukui/threads｜翌日ぶんの作成": 0.9365,
+    "fukui-fukui/threads｜日次レビュー": 0.0181,
+    "fukui-fukui/threads｜情報集め": 0.9587,
+    "yu-fukui/ishikawa-odekake｜日次レビュー": 0.0163,
+    "yu-fukui/ishikawa-odekake｜翌日ぶんの作成": 0.6565
   },
-  "作成": "2026-10-10 03:27 JST"
+  "作成": "2026-10-11 02:25 JST"
 }
