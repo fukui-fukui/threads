@@ -295,12 +295,15 @@ if (!書かない && インスタを渡した.length) {
   const 全部 = [...new Set([...前, ...インスタを渡した.map((c) => c.url)])].slice(-2000);
   mkdirSync('state', { recursive: true });
   writeFileSync(インスタ既読パス, JSON.stringify(全部, null, 0) + '\n', 'utf8');
-  // 今回初めて見た投稿の一覧。Claude の定期のお知らせ（引用の候補）がここを読む（2026-10-10 代表）
+  console.log(`インスタ: ${インスタを渡した.length}件を読んだものとして覚えました（${インスタ既読パス}）`);
+}
+// 今回初めて見た投稿の一覧（無ければ空）。Claude の定期のお知らせ（引用の候補）がここを読む（2026-10-10 代表）
+if (!書かない) {
+  mkdirSync('state', { recursive: true });
   writeFileSync('state/インスタ新着.json', JSON.stringify({
     集めた日: 今日,
     投稿: インスタを渡した.map((c) => ({ アカウント: c.名前, 日付: c.日付, 本文: c.タイトル, url: c.url })),
   }, null, 1) + '\n', 'utf8');
-  console.log(`インスタ: ${インスタを渡した.length}件を読んだものとして覚えました（${インスタ既読パス}）`);
 }
 
 // ==================================================================
