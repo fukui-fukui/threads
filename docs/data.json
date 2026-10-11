@@ -1,6 +1,362 @@
 {
- "updated": "2026-10-09",
+ "updated": "2026-10-12",
  "items": [
+  {
+   "text": "おおい町成海のSEE SEA PARK WEST内に「CAFE Felice〜フェリーチェ〜」が2026年6月8日オープン。地元食材を使った、美容と健康を取り入れたランチの店",
+   "note": "海辺の複合スポットに、地元食材のヘルシーランチが食べられる店が加わった",
+   "kind": "スポット",
+   "area": "おおい町",
+   "start": "2026-06-08",
+   "end": "2026-06-08",
+   "source": "https://fupo.jp/article/newopenlist/",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": "https://fupo.jp/wp-content/uploads/2023/09/2a3a863037d164884e8e59e652482b73.jpg",
+    "title": "《ほぼ毎週更新》福井の新店速報【～2026年9月】",
+    "description": "福井県内にオープンしたお店情報をURL付きで一覧で紹介。随時更新。",
+    "site": "ふーぽ"
+   }
+  },
+  {
+   "text": "10/19(月) 福井市のハピリンホールで「コンテンツツーリズムと地域文化の未来」を開催",
+   "note": "駅前のホールが、地域文化とコンテンツをテーマにした催しの会場になる日",
+   "kind": "催し",
+   "area": "福井市",
+   "start": "2026-10-19",
+   "end": "2026-10-19",
+   "source": "https://nigiwai.ftmo.co.jp/archives/event/4657",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "10月19日（月）ハピリンホールで「コンテンツツーリズムと地域文化の未来」を開催！ – 福井市にぎわい交流施設 ハピリンホール ハピテラス",
+    "description": null,
+    "site": null
+   }
+  },
+  {
+   "text": "10/14(水) 福井市のハピリンホールで「令和8年度 全国文化的景観地区連絡協議会 福井大会」を開催",
+   "note": "全国の文化的景観の関係者が、福井駅前に集まる日",
+   "kind": "催し",
+   "area": "福井市",
+   "start": "2026-10-14",
+   "end": "2026-10-14",
+   "source": "https://nigiwai.ftmo.co.jp/archives/event/4629",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "10月14日（水）ハピリンホールで「令和8年度 全国文化的景観地区連絡協議会 福井大会」を開催！ – 福井市にぎわい交流施設 ハピリンホール ハピテラス",
+    "description": null,
+    "site": null
+   }
+  },
+  {
+   "text": "11/28 福井市のフェニックスプラザで「福井市立図書館開館50周年記念講演会」を開催（福井市の発表）",
+   "note": "市立図書館の開館50年の節目に、講演会が開かれる",
+   "kind": "催し",
+   "area": "福井市",
+   "start": "2026-11-28",
+   "end": "2026-11-28",
+   "source": "https://www.city.fukui.lg.jp/kyoiku/library/oshirase/p073245.html",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://www.city.fukui.lg.jp/kyoiku/library/oshirase/p073245_d/img/004.jpg",
+    "title": "福井市立図書館開館50周年記念講演会を開催します 11月28日 フェニックスプラザ",
+    "description": "福井市立図書館開館50周年記念講演会 海堂尊氏 角鹿尚計氏",
+    "site": "福井市役所"
+   }
+  },
+  {
+   "text": "坂井市で「三国湊かに祭り2026」を開催（さかい旅ナビのイベント情報）",
+   "note": "三国のカニの季節に合わせた祭りの告知が出ている",
+   "kind": "催し",
+   "area": "坂井市",
+   "start": null,
+   "end": null,
+   "source": "https://kanko-sakai.com/event/7590/",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://kanko-sakai.com/kanko-sakai/wp-content/uploads/【DMO】カニ祭り2026-チラシ-最終案_page-0001.jpg",
+    "title": "三国湊かに祭り2026 | イベント・トピックス | 福井県坂井市公式観光ガイド さかい旅ナビ",
+    "description": "福井県坂井市の公式観光サイト。越前がにやふくい甘えびなどの海の幸、東尋坊や丸岡城などの名所、そして豊かな自然がいっぱい。坂井市の観光・宿泊・温泉・グルメ・イベント情報を紹介します。",
+    "site": null
+   }
+  },
+  {
+   "text": "坂井市で「松島アクアナイト」が、松島アクアナイト実行委員会と株式会社リンクバルの共催で開催。前回は550名で完売し、今回はバージョンアップして登場",
+   "note": "前回完売の夜のイベントが、パワーアップして戻ってくる",
+   "kind": "催し",
+   "area": "坂井市",
+   "start": null,
+   "end": null,
+   "source": "https://kanko-sakai.com/event/7579/",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://kanko-sakai.com/kanko-sakai/wp-content/uploads/見出し.jpg",
+    "title": "【前回550名完売！】「松島アクアナイト」が、松島アクアナイト実行委員会と株式会社リンクバルの共催により、さらにバージョンアップして登場！ | イベント・トピ…",
+    "description": "福井県坂井市の公式観光サイト。越前がにやふくい甘えびなどの海の幸、東尋坊や丸岡城などの名所、そして豊かな自然がいっぱい。坂井市の観光・宿泊・温泉・グルメ・イベント情報を紹介します。",
+    "site": null
+   }
+  },
+  {
+   "text": "永平寺町で「ブドウ園のナイトダイニング ～永平寺町の地酒と食を楽しむ夜～」を開催（永平寺町の発表）",
+   "note": "町の地酒と食を、夜のブドウ園で味わう企画",
+   "kind": "催し",
+   "area": "永平寺町",
+   "start": null,
+   "end": null,
+   "source": "http://www.town.eiheiji.lg.jp/500/506/p012115.html",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "ブドウ園のナイトダイニング ～永平寺町の地酒と食を楽しむ夜～ | 永平寺町",
+    "description": "福井県永平寺町の公式ホームページです。暮らしや手続きに関する情報や災害時の緊急情報、町政に関する情報、町内のイベント情報などを発信しています。",
+    "site": "永平寺町ホームページ"
+   }
+  },
+  {
+   "text": "永平寺町の道の駅 禅の里を会場に「食の体験フェア」を開催（永平寺町の発表）",
+   "note": "町の食を、道の駅で体験できる催し",
+   "kind": "催し",
+   "area": "永平寺町",
+   "start": null,
+   "end": null,
+   "source": "http://www.town.eiheiji.lg.jp/500/506/p012114.html",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "道の駅 禅の里を会場に「食の体験フェア」を開催 | 永平寺町",
+    "description": "福井県永平寺町の公式ホームページです。暮らしや手続きに関する情報や災害時の緊急情報、町政に関する情報、町内のイベント情報などを発信しています。",
+    "site": "永平寺町ホームページ"
+   }
+  },
+  {
+   "text": "福井市が「越美北線で行く 東郷フォトウォークツアー」の参加者を募集中",
+   "note": "越美北線に乗って、東郷の町を撮り歩くツアーに参加できる",
+   "kind": "催し",
+   "area": "福井市",
+   "start": null,
+   "end": null,
+   "source": "https://www.city.fukui.lg.jp/kankou/osirase/bosyu/p073448.html",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://www.city.fukui.lg.jp/kankou/osirase/bosyu/p073448_d/img/001.jpg",
+    "title": "越美北線で行く 東郷フォトウォークツアーの参加者募集",
+    "description": "『越美北線で行く 東郷フォトウォークツアー』を開催します！",
+    "site": "福井市役所"
+   }
+  },
+  {
+   "text": "10/25 高浜町で「第30回記念大会 若狭高浜はまなすマラソン」。町が交通規制と駐車場を案内している",
+   "note": "走る人も見に行く人も、規制と駐車場を事前に確認したい日",
+   "kind": "話題",
+   "area": "高浜町",
+   "start": "2026-10-25",
+   "end": "2026-10-25",
+   "source": "http://www.town.takahama.fukui.jp/page/kyouiku/p009052.html",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": null,
+    "title": "第30回記念大会若狭高浜はまなすマラソン開催に伴う交通規制・駐車場について（10/25）",
+    "description": null,
+    "site": null
+   }
+  },
+  {
+   "text": "11/14 越前市で「八ツ杉和ハーブイベント」を開催（越前市の発表）",
+   "note": "市の和ハーブをテーマにした催しが、11月中旬に決まった",
+   "kind": "催し",
+   "area": "越前市",
+   "start": "2026-11-14",
+   "end": "2026-11-14",
+   "source": "https://www.city.echizen.lg.jp/office/kankyounourin/030/nourin.html",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "令和8年11月14日に八ツ杉和ハーブイベントを開催します。(令和8年10月9日)（農林整備課トピックス）",
+    "description": "令和8年11月14日に八ツ杉和ハーブイベントを開催します。(令和8年10月9日)（農林整備課トピックス）",
+    "site": "越前市ウェブサイト"
+   }
+  },
+  {
+   "text": "道の駅 越前おおの荒島の郷で「秋の収穫祭 in 荒島の郷」を開催（道の駅の発表）",
+   "note": "大野の道の駅で、秋の実りを楽しむ催しがある",
+   "kind": "催し",
+   "area": null,
+   "start": null,
+   "end": null,
+   "source": "https://arashimanosato.com/2026/10/04/%e7%a7%8b%e3%81%ae%e5%8f%8e%e7%a9%ab%e7%a5%ad-in-%e8%8d%92%e5%b3%b6%e3%81%ae%e9%83%b7-%e9%96%8b%e5%82%ac%e3%81%ae%e3%81%8a%e7%9f%a5%e3%82%89%e3%81%9b/",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": null,
+   "og": {
+    "image": "https://arashimanosato.com/hp/wp-content/uploads/2026/10/3d47cad30cc2accf3748a0ad52cd543e.jpeg",
+    "title": "秋の収穫祭 in 荒島の郷 開催のお知らせ | 道の駅「越前おおの 荒島の郷」",
+    "description": "秋の味覚と地域の魅力を楽しめる秋の収穫祭 in 荒島の郷食べて・遊んで・つながる大野！を開催します!!日時：令和8年11月3日（火・祝）10:00～15:00会場：越前おおの荒島の郷 屋外交流広場周…",
+    "site": "道の駅「越前おおの 荒島の郷」"
+   }
+  },
+  {
+   "text": "道の駅 越前おおの荒島の郷で「水めぐるマーケット 2026」を開催（道の駅の発表）",
+   "note": "名水のまち大野の道の駅が、マーケットの会場になる",
+   "kind": "催し",
+   "area": null,
+   "start": null,
+   "end": null,
+   "source": "https://arashimanosato.com/2026/10/07/%e6%b0%b4%e3%82%81%e3%81%90%e3%82%8b%e3%83%9e%e3%83%bc%e3%82%b1%e3%83%83%e3%83%88-2026/",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": null,
+   "og": {
+    "image": "https://arashimanosato.com/hp/wp-content/uploads/2026/10/mizu_rogo2-1024x725.jpeg",
+    "title": "水めぐるマーケット 2026 | 道の駅「越前おおの 荒島の郷」",
+    "description": "「水めぐるマーケット 2026 」開催！「水がめぐる。人がめぐる。地域がめぐる。」水がめぐるように、ひとも、ものも、文化もめぐっていく。豊かな水と自然を、未来へ。水と自然に囲まれた道の駅 越前おおの…",
+    "site": "道の駅「越前おおの 荒島の郷」"
+   }
+  },
+  {
+   "text": "道の駅 南えちぜん山海里が「５周年記念感謝祭」を開催し、特別記念きっぷを用意（道の駅の発表）",
+   "note": "開業5周年の節目に、記念のきっぷが出る",
+   "kind": "催し",
+   "area": null,
+   "start": null,
+   "end": null,
+   "source": "https://kineno-nanjo.com/info/news/post-5341/",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": null,
+   "og": {
+    "image": null,
+    "title": "５周年記念感謝祭特別記念きっぷ – 道の駅 南えちぜん山海里",
+    "description": null,
+    "site": null
+   }
+  },
+  {
+   "text": "大野市の観光案内が【期間限定】で、駐車券を見せると「はいから茶屋」のお食事代が最大200円引きになる企画を案内",
+   "note": "大野の観光駐車場を使った人が、食事でお得になる",
+   "kind": "話題",
+   "area": "大野市",
+   "start": null,
+   "end": null,
+   "source": "https://www.ono-kankou.jp/waribiki_haikarachaya/",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://www.ono-kankou.jp/wp-content/uploads/2012/10/IMG_6814-EDIT.jpg",
+    "title": "【期間限定】駐車券の提示で「はいから茶屋」のお食事代が最大200円引き！ - 越前おおの観光ガイド",
+    "description": "2026年10月10日（土）から11月30日（月）まで、結ステーション駐車場をご利用の方を対象に、お食事代の割引キャンペーンを実施します。 駐車券を「はいから茶屋」でのご注文時に提示すると、お会計金…",
+    "site": "越前おおの観光ガイド"
+   }
+  },
+  {
+   "text": "さかい旅ナビが「東尋坊2日フリーきっぷ」「永平寺・丸岡城・東尋坊2日フリーきっぷ」の利用で、三国温泉のお宿のキャッシュバックキャンペーンを案内",
+   "note": "フリーきっぷで坂井市を巡る人が、三国温泉の宿泊でも得をする",
+   "kind": "話題",
+   "area": "永平寺町",
+   "start": null,
+   "end": null,
+   "source": "https://kanko-sakai.com/event/4506/",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://kanko-sakai.com/kanko-sakai/wp-content/uploads/2024/11/キャッシュバックキャンペーン_アートボード-1_アートボード-1.jpg",
+    "title": "「東尋坊2日フリーきっぷ」「永平寺・丸岡城・東尋坊2日フリーきっぷ」利用で三国温泉のお宿 キャッシュバックキャンペーン | イベント・トピックス | 福井県坂…",
+    "description": "福井県坂井市の公式観光サイト。越前がにやふくい甘えびなどの海の幸、東尋坊や丸岡城などの名所、そして豊かな自然がいっぱい。坂井市の観光・宿泊・温泉・グルメ・イベント情報を紹介します。",
+    "site": null
+   }
+  },
+  {
+   "text": "小浜市で「あの海の見える、路地マルシェ」を開催（若狭おばま観光協会のイベント情報）",
+   "note": "小浜の路地が、マルシェの会場になる",
+   "kind": "催し",
+   "area": "小浜市",
+   "start": null,
+   "end": null,
+   "source": "https://wakasa-obama.jp/event/ano-roji/",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": null,
+    "title": "あの海の見える、路地マルシェ | 【小浜市公式】御食国若狭おばま観光サイト ｜ まるっとおばま",
+    "description": null,
+    "site": "【小浜市公式】御食国若狭おばま観光サイト ｜ まるっとおばま | あなたの癒し…"
+   }
+  },
+  {
+   "text": "福井県が「第47回全国豊かな海づくり大会」のページを公開",
+   "note": "福井県が舞台になる全国大会の情報が、県のページにまとまった",
+   "kind": "催し",
+   "area": null,
+   "start": null,
+   "end": null,
+   "source": "https://www.pref.fukui.lg.jp/doc/suisan/umidukuri_fukui.html",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": null,
+   "og": {
+    "image": null,
+    "title": "第47回全国豊かな海づくり大会 | 福井県ホームページ",
+    "description": "福井県公式サイト。",
+    "site": null
+   }
+  },
+  {
+   "text": "坂井市のエンゼルランドふくいで、全国科学館連携協議会巡回展「宇宙をさわる」を開催",
+   "note": "科学館で、宇宙をテーマにした巡回展が見られる",
+   "kind": "催し",
+   "area": "坂井市",
+   "start": null,
+   "end": null,
+   "source": "https://angelland.or.jp/modules/event/index.php?action=PageView&amp;page_id=1477",
+   "instagram": null,
+   "written": "2026-10-12",
+   "pick": false,
+   "region": "嶺北",
+   "og": null
+  },
   {
    "text": "10/24(土)〜10/25(日) 福井駅前のハピリン（福井市にぎわい交流施設・福井市中央1丁目）で「福井そば博2026」を開催。25日は「第31回全日本素人そば打ち名人大会」も。そば食べ比べ9ブース、そば菓子・物販6ブース。主催は福井そばルネッサンス。出店者のひとつ、東京・学芸大学のそば粉の菓子店「SOBOKU NI」（福井在来種の石臼挽きそば粉100%・グルテンフリー）が、そば粉100%のお菓子を出す（出店者からの情報提供。多くのお店がおろしそばを出すとのこと。SOBOKU NI の Threads: @sobokuni_gakudai）",
    "note": "",
