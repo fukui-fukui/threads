@@ -775,6 +775,15 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "",
         f"{hours} のぶんを、この順に @@@POST 〜 @@@END の組で並べてください。",
         f"HOUR には {hour_choices} のいずれかの数字だけを書きます。",
+        "",
+        "## 確かめられないので使わなかったネタ（2026-10-11 代表「不確定で省いている案件は私に知らせてください」）",
+        "出典に日付・場所・名前が無い、公式が見つからない、などの理由で**確かめられず使わなかった**ネタがあれば、",
+        "最後に次の組で1行ずつ書いてください。無ければこの組ごと省きます。",
+        "14日の再使用の制限や、季節・地域が合わないなど**確かめられないこと以外の理由**で使わなかったものは書かないこと。",
+        "",
+        "@@@外した",
+        "- ネタの要旨（理由）出典のURL",
+        "@@@END",
     ]
     if kifu and kifu_hour is not None:
         sections += [
@@ -887,6 +896,42 @@ def ask(api_key: str, model: str, prompt: str) -> str:
 
 
 予備の作りかけ: list[dict] = []
+外したネタ: list[str] = []
+
+外した候補_PATH = Path("neta/外した候補.md")
+外した候補_頭 = (
+    "# 外した候補（確かめられず使わなかったもの）\n\n"
+    "情報集めと翌日ぶんの作成が、出典で確かめられずに外したネタを、新しい順に残す。\n"
+    "運用部が毎晩読んで代表に知らせる（2026-10-11 代表「不確定で省いている案件は私に知らせてください。福井も同様です」）。\n"
+)
+
+
+def 外したを読む(text: str) -> list[str]:
+    出 = []
+    for body in re.findall(r"@@@外した[ \t]*\n(.*?)\n?@@@END", text, re.S):
+        for line in body.splitlines():
+            line = line.strip()
+            if line.startswith(("-", "・", "*")):
+                line = line.lstrip("-・* ").strip()
+                if line and line not in 出:
+                    出.append(line)
+    return 出
+
+
+def 外した候補に足す(見出し: str, 行たち: list[str], path: Path = None) -> None:
+    """neta/外した候補.md の頭（説明の下）に、見出しつきで足す。古いものは 400 行で切る。"""
+    if not 行たち:
+        return
+    path = path or 外した候補_PATH
+    前 = path.read_text(encoding="utf-8") if path.exists() else 外した候補_頭
+    if not 前.startswith("# "):
+        前 = 外した候補_頭 + "\n" + 前
+    i = 前.find("\n## ")
+    頭, 残り = (前, "") if i < 0 else (前[: i + 1], 前[i + 1 :])
+    塊 = f"## {見出し}\n\n" + "\n".join(f"- {x}" for x in 行たち) + "\n\n"
+    全部 = (頭.rstrip("\n") + "\n\n" + 塊 + 残り).splitlines()[:400]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(全部).rstrip("\n") + "\n", encoding="utf-8")
 
 
 def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[dict]:
@@ -919,6 +964,9 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
                 + "説明や ``` を付けず、@@@POST 〜 @@@END の組だけを返してください。"
             )
         text = ask(api_key, model, この回の指示)
+        for x in 外したを読む(text):
+            if x not in 外したネタ:
+                外したネタ.append(x)
         for post in parse_posts(text):
             if post.get("hour") == 0 and attempt == 1:
                 予備の作りかけ.append(post)
@@ -2081,6 +2129,8 @@ def main() -> None:
     新しい予備 = 予備にする(予備の作りかけ, target_date, 記, set(出典の枠))
     if 新しい予備:
         print(f"予備を {len(新しい予備)} 本作りました（出典・期限の見張りを通ったもの）")
+    if 外したネタ:
+        print("確かめられず使わなかったネタ: " + " ／ ".join(外したネタ))
     if dry_run:
         print("\nDRY_RUN のため、キューには書き込みません。")
         if 空き:
@@ -2095,6 +2145,7 @@ def main() -> None:
         for line in new_lines:
             handle.write(line + "\n")
     print(f"\nキューに {len(new_lines)} 件追加しました。")
+    外した候補に足す(f"{target_date.isoformat()} ぶんの作成で外したネタ", 外したネタ)
 
 
 if __name__ == "__main__":
