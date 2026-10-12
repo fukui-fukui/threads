@@ -1757,6 +1757,16 @@ def main() -> None:
             print("作れる枠がありません。何もしません。")
             return
 
+    # 宿◯選の日は、15:00 を scripts/宿まとめの投稿.py が埋める（AI は作らない）。
+    # 2026-10-12 代表「催し+宿と〇〇選を1日おきでいいですよ」
+    if 地域.地域.get("使う", {}).get("宿まとめ", False) and 地域.使う("宿") and 宿.まとめの日(target_date):
+        if any(h == HOTEL_HOUR for h, *_ in needed):
+            print(f"{target_date} は宿◯選の日なので、{HOTEL_HOUR}:00 は宿まとめの投稿にまかせます。")
+        needed = [slot for slot in needed if slot[0] != HOTEL_HOUR]
+        if not needed:
+            print("作れる枠がありません。何もしません。")
+            return
+
     if 予備だけ:
         # compose が失敗したとき（残高切れなど）に、空いた枠を予備で埋める。API は使わない。
         今日の出典: set[str] = set()
