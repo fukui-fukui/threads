@@ -72,13 +72,13 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: python "scripts/クーポンの投稿.py"
 
-      # 楽天トラベルの「【福井】◯◯な宿◯選」を明日の 20:00 に1本足す（AI は使わない。2026-10-12 代表指示）
-      # region.json の 使う.宿まとめ が true のときだけ動く
+      # 楽天トラベルの「【福井】◯◯な宿◯選」を、宿◯選の日（1日おき）の 15:00 に1本足す（AI は使わない）
+      # 2026-10-12 代表「催し+宿と〇〇選を1日おきでいいですよ」。region.json の 使う.宿まとめ が true のときだけ動く
       - name: 宿まとめ（◯選）を足す
         if: ${{ !cancelled() }}
         continue-on-error: true
         env:
-          ROUNDUP_HOUR: "20"
+          ROUNDUP_HOUR: "15"
         run: python "scripts/宿まとめの投稿.py"
 
       - name: キューの形式を検証する

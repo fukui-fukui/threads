@@ -8,14 +8,15 @@
   返信  … 1軒に1本。「【PR】／①🏨宿名／📍県・市町／⭐口コミ 4.4（123件）／詳しくはこちら👇」
           リンクは URL の文字にせず、返信のリンクカード（link_attachment）で見せる
 
-- 15:00 の「催し × 宿」はそのまま。これは別の枠（既定 20:00）
+- 2026-10-12 代表「催し+宿と〇〇選を1日おきでいいですよ」：15:00 で「催し × 宿」と1日おきに出す
+  （どちらの日かは 宿.まとめの日。宿◯選の日は compose が 15:00 を作らない）
 - 切り口は scripts/宿.py の切り口（大浴場・露天風呂・サウナ・エリアなど）。日付で回す
 - 見出しに出典の無い誇張（「正直教えたくない」など）は使わない
 - 評価とレビュー数は宿のリストの数字だけ
 - region.json の「使う」で「宿まとめ」が true のときだけ動く（既定は出さない）
 
 環境変数:
-  ROUNDUP_HOUR … 何時に出すか（既定 20）
+  ROUNDUP_HOUR … 何時に出すか（既定 15）
   TARGET_DATE  … 対象日（無ければ明日）
   DRY_RUN      … "true" なら表示だけ
 """
@@ -122,8 +123,11 @@ def main() -> None:
     if not 地域.使う("宿"):
         print("宿を使わない設定です。何もしません。")
         return
-    時 = int(os.environ.get("ROUNDUP_HOUR", "20"))
+    時 = int(os.environ.get("ROUNDUP_HOUR", "15"))
     日 = 対象日()
+    if not 宿.まとめの日(日):
+        print(f"{日} は「催し × 宿」の日です。宿◯選は足しません。")
+        return
     すでに = [json.loads(l) for l in QUEUE.read_text(encoding="utf-8").splitlines() if l.strip()] if QUEUE.exists() else []
     if any(str(e.get("scheduled_at", "")).startswith(f"{日.isoformat()}T{時:02d}:") for e in すでに):
         print(f"{日} {時}:00 はすでに埋まっています。宿まとめは足しません。")
