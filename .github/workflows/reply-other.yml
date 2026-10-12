@@ -1,0 +1,39 @@
+name: ほかの投稿に返信する
+
+# 代表が「出して」と言った返信だけを、手で1回出す（2026-10-12）。自動では動かない。
+on:
+  workflow_dispatch:
+    inputs:
+      post_url:
+        description: "返信先の投稿の URL（https://www.threads.com/@ユーザー名/post/コード）"
+        required: true
+      reply_text:
+        description: "返信の本文（改行は \\n）"
+        required: true
+      keyword:
+        description: "投稿を探すキーワード（任意）"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  reply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 返信する
+        env:
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          POST_URL: ${{ inputs.post_url }}
+          REPLY_TEXT: ${{ inputs.reply_text }}
+          KEYWORD: ${{ inputs.keyword }}
+        run: python "scripts/ほかの投稿に返信する.py"
+      - name: 記録をコミットする
+        if: ${{ success() }}
+        run: |
+          ./scripts/commit_file.sh "state/ほかへの返信.jsonl" "chore(reply): ほかの投稿への返信を記録"
