@@ -65,6 +65,16 @@ class LoadQueueTest(unittest.TestCase):
             with self.assertRaises(QueueError):
                 load_queue(path)
 
+    def test_thread_links_are_read_and_checked(self):
+        with TemporaryDirectory() as tmp:
+            path = write_queue(Path(tmp), [{"text": "宿", "thread": ["A", "B"], "thread_links": ["https://a.r10.to/x", None]}])
+            self.assertEqual(load_queue(path)[0].thread_links, ["https://a.r10.to/x", None])
+        for bad in (["x"], ["https://a", "https://b", "https://c"]):
+            with TemporaryDirectory() as tmp:
+                path = write_queue(Path(tmp), [{"text": "宿", "thread": ["A", "B"], "thread_links": bad}])
+                with self.assertRaises(QueueError):
+                    load_queue(path)
+
     def test_empty_text_is_rejected(self):
         with TemporaryDirectory() as tmp:
             path = write_queue(Path(tmp), [{"text": "   "}])

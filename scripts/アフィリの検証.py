@@ -114,7 +114,7 @@ def main() -> None:
         if not l.strip():
             continue
         q = json.loads(l)
-        文 = q["text"] + "\n" + "\n".join(q.get("thread") or [])
+        文 = q["text"] + "\n" + "\n".join(q.get("thread") or []) + "\n" + "\n".join(u for u in (q.get("thread_links") or []) if u)
         リンク = sorted(set(リンクの形.findall(文)))
         if not リンク:
             continue

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from .client import PostResult, ThreadsClient
+from .client import PostResult, ThreadsAPIError, ThreadsClient
 from .config import Config
 from .queue import QueueItem
 
@@ -45,7 +45,18 @@ def publish_item(
     # 連投は 1 件目への返信として順につなげる
     reply_to = post_id
     for index, text in enumerate(item.thread, start=2):
-        reply_container = client.create_container(text=text, reply_to_id=reply_to)
+        links = item.thread_links
+        link = links[index - 2] if index - 2 < len(links) else None
+        try:
+            reply_container = client.create_container(
+                text=text, reply_to_id=reply_to, link_attachment=link or None
+            )
+        except ThreadsAPIError:
+            if not link:
+                raise
+            # カードが付けられなかったときは、URL を本文の末尾に書いて出す（返信が抜けないように）
+            logger.warning("連投 %d 件目のリンクカードが付けられません。URL を本文に書いて出します", index)
+            reply_container = client.create_container(text=f"{text}\n{link}", reply_to_id=reply_to)
         _wait_for_container(client, reply_container, "TEXT", config)
         reply_to = client.publish(reply_container)
         logger.info("連投 %d 件目を投稿しました post_id=%s", index, reply_to)

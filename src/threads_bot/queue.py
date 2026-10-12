@@ -30,6 +30,9 @@ class QueueItem:
     alt_text: str | None = None
     # 連投（スレッド）。1 件目への返信として順に投稿される。
     thread: list[str] = field(default_factory=list)
+    # 連投のそれぞれに付けるリンクカード（link_attachment）。thread と同じ順。無いものは None。
+    # URL を本文に書かずにカードで見せるため（2026-10-12 代表「リンクURLを表示せず、カードで見せる」）
+    thread_links: list[str | None] = field(default_factory=list)
     line_number: int = 0
 
     @property
@@ -72,6 +75,15 @@ def _parse_item(raw: dict, *, line_number: int, tz: ZoneInfo) -> QueueItem:
                 f"{where}: thread の {index} 件目が {MAX_TEXT_LENGTH} 文字を超えています"
             )
 
+    thread_links = raw.get("thread_links") or []
+    if not isinstance(thread_links, list) or len(thread_links) > len(thread) or any(
+        u is not None and (not isinstance(u, str) or not u.startswith(("http://", "https://")))
+        for u in thread_links
+    ):
+        raise QueueError(
+            f"{where}: thread_links は thread と同じ順の URL（無いものは null）の配列にしてください"
+        )
+
     reply_control = raw.get("reply_control")
     if reply_control is not None and reply_control not in VALID_REPLY_CONTROLS:
         raise QueueError(
@@ -97,6 +109,7 @@ def _parse_item(raw: dict, *, line_number: int, tz: ZoneInfo) -> QueueItem:
         reply_control=reply_control,
         alt_text=raw.get("alt_text"),
         thread=list(thread),
+        thread_links=list(thread_links),
         line_number=line_number,
     )
 
