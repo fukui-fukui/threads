@@ -6,9 +6,9 @@
    "city": "福井市",
    "area": "福井市",
    "region": "嶺北",
-   "rating": 4.37,
-   "reviews": 4565,
-   "price": 5152,
+   "rating": 4.38,
+   "reviews": 4581,
+   "price": 5100,
    "kind": null,
    "pick": false,
    "text": "美しい自然豊かな川のほとり。福井の景観、福井の文化、福井の食でおもてなしする「美食のホテル」",
@@ -20,7 +20,7 @@
    ],
    "url": "https://a.r10.to/hgO14o",
    "image": "https://trvimg.r10s.jp/share/HOTEL/168/168.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 2128,
@@ -29,7 +29,7 @@
    "area": "福井市",
    "region": "嶺北",
    "rating": 3.97,
-   "reviews": 5649,
+   "reviews": 5658,
    "price": 4500,
    "kind": null,
    "pick": false,
@@ -43,7 +43,7 @@
    ],
    "url": "https://a.r10.to/h5zZS0",
    "image": "https://trvimg.r10s.jp/share/HOTEL/2128/2128.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 151361,
@@ -52,7 +52,7 @@
    "area": "福井市",
    "region": "嶺北",
    "rating": 4.32,
-   "reviews": 2005,
+   "reviews": 2023,
    "price": 5400,
    "kind": null,
    "pick": false,
@@ -65,7 +65,7 @@
    ],
    "url": "https://a.r10.to/hPvnsp",
    "image": "https://trvimg.r10s.jp/share/HOTEL/151361/151361.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 172494,
@@ -74,8 +74,8 @@
    "area": "福井市",
    "region": "嶺北",
    "rating": 4.44,
-   "reviews": 1540,
-   "price": 5775,
+   "reviews": 1553,
+   "price": 7062,
    "kind": null,
    "pick": false,
    "text": "最上階９Ｆには天然温泉用男女別大浴場完備",
@@ -88,7 +88,7 @@
    ],
    "url": "https://a.r10.to/hPMbtt",
    "image": "https://trvimg.r10s.jp/share/HOTEL/172494/172494.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 181073,
@@ -96,8 +96,8 @@
    "city": "福井市",
    "area": "福井市",
    "region": "嶺北",
-   "rating": 4.13,
-   "reviews": 2084,
+   "rating": 4.14,
+   "reviews": 2104,
    "price": 5300,
    "kind": null,
    "pick": false,
@@ -107,7 +107,7 @@
    ],
    "url": "https://hb.afl.rakuten.co.jp/hgc/57d349d5.b23354d5.57d349d6.03cbb5c1/?pc=https%3A%2F%2Fimg.travel.rakuten.co.jp%2Fimage%2Ftr%2Fapi%2Fif%2FuPw0Q%2F%3Ff_no%3D181073",
    "image": "https://trvimg.r10s.jp/share/HOTEL/181073/181073.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 15909,
@@ -116,7 +116,7 @@
    "area": "鯖江",
    "region": "嶺北",
    "rating": 3.98,
-   "reviews": 2613,
+   "reviews": 2627,
    "price": 4900,
    "kind": null,
    "pick": false,
@@ -124,28 +124,7 @@
    "features": [],
    "url": "https://a.r10.to/hgo9xp",
    "image": "https://trvimg.r10s.jp/share/HOTEL/15909/15909.jpg",
-   "checked": "2026-10-05"
-  },
-  {
-   "id": 177929,
-   "name": "天然温泉 蓬莱山の湯 スーパーホテル越前・武生",
-   "city": "越前市",
-   "area": "越前市",
-   "region": "嶺北",
-   "rating": 4.38,
-   "reviews": 1102,
-   "price": 4050,
-   "kind": null,
-   "pick": false,
-   "text": "ラウンジではワインなどアルコールを無料提供",
-   "features": [
-    "温泉",
-    "大浴場",
-    "朝食バイキング"
-   ],
-   "url": "https://a.r10.to/hPLAkC",
-   "image": "https://trvimg.r10s.jp/share/HOTEL/177929/177929.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 128494,
@@ -153,8 +132,8 @@
    "city": "敦賀市",
    "area": "敦賀",
    "region": "嶺南",
-   "rating": 4.17,
-   "reviews": 1549,
+   "rating": 4.18,
+   "reviews": 1555,
    "price": 4900,
    "kind": null,
    "pick": false,
@@ -166,7 +145,28 @@
    ],
    "url": "https://a.r10.to/h5H4rd",
    "image": "https://trvimg.r10s.jp/share/HOTEL/128494/128494.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
+  },
+  {
+   "id": 177929,
+   "name": "天然温泉 蓬莱山の湯 スーパーホテル越前・武生",
+   "city": "越前市",
+   "area": "越前市",
+   "region": "嶺北",
+   "rating": 4.36,
+   "reviews": 1114,
+   "price": 4050,
+   "kind": null,
+   "pick": false,
+   "text": "ラウンジではワインなどアルコールを無料提供",
+   "features": [
+    "温泉",
+    "大浴場",
+    "朝食バイキング"
+   ],
+   "url": "https://a.r10.to/hPLAkC",
+   "image": "https://trvimg.r10s.jp/share/HOTEL/177929/177929.jpg",
+   "checked": "2026-10-12"
   },
   {
    "id": 184200,
@@ -175,15 +175,15 @@
    "area": "敦賀",
    "region": "嶺南",
    "rating": 4.45,
-   "reviews": 937,
-   "price": 6500,
+   "reviews": 957,
+   "price": 5600,
    "kind": null,
    "pick": false,
    "text": "余裕の広さを誇る客室と最新の設備、最上級のホスピタリティで快適なご滞在をお約束いたします",
    "features": [],
    "url": "https://a.r10.to/h5Td3i",
    "image": "https://trvimg.r10s.jp/share/HOTEL/184200/184200.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 196431,
@@ -192,8 +192,8 @@
    "area": "敦賀",
    "region": "嶺南",
    "rating": 4.56,
-   "reviews": 769,
-   "price": 5775,
+   "reviews": 788,
+   "price": 6215,
    "kind": null,
    "pick": false,
    "text": "天然温泉大浴場に高温サウナ＆水風呂も完備",
@@ -206,7 +206,7 @@
    ],
    "url": "https://a.r10.to/hPcLZz",
    "image": "https://trvimg.r10s.jp/share/HOTEL/196431/196431.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 687,
@@ -215,7 +215,7 @@
    "area": "小浜",
    "region": "嶺南",
    "rating": 3.97,
-   "reviews": 1772,
+   "reviews": 1785,
    "price": 6600,
    "kind": null,
    "pick": false,
@@ -228,7 +228,7 @@
    ],
    "url": "https://a.r10.to/hP19W5",
    "image": "https://trvimg.r10s.jp/share/HOTEL/687/687.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 70274,
@@ -237,8 +237,8 @@
    "area": "敦賀",
    "region": "嶺南",
    "rating": 3.98,
-   "reviews": 1628,
-   "price": 5650,
+   "reviews": 1641,
+   "price": 10350,
    "kind": null,
    "pick": false,
    "text": "無料朝食バイキング6:00〜9:00（本館1階） 男女別大浴場 Ｗｉ-Ｆｉ完備",
@@ -248,7 +248,7 @@
    ],
    "url": "https://a.r10.to/hPZJyF",
    "image": "https://trvimg.r10s.jp/share/HOTEL/70274/70274.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 108201,
@@ -257,7 +257,7 @@
    "area": "おおい",
    "region": "嶺南",
    "rating": 4.57,
-   "reviews": 590,
+   "reviews": 593,
    "price": 9900,
    "kind": null,
    "pick": false,
@@ -265,7 +265,7 @@
    "features": [],
    "url": "https://a.r10.to/h5i5Lk",
    "image": "https://trvimg.r10s.jp/share/HOTEL/108201/108201.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 5691,
@@ -273,8 +273,8 @@
    "city": "鯖江市",
    "area": "鯖江",
    "region": "嶺北",
-   "rating": 4.15,
-   "reviews": 1124,
+   "rating": 4.11,
+   "reviews": 1133,
    "price": 5050,
    "kind": null,
    "pick": false,
@@ -284,26 +284,7 @@
    ],
    "url": "https://a.r10.to/hgFd9R",
    "image": "https://trvimg.r10s.jp/share/HOTEL/5691/5691.jpg",
-   "checked": "2026-10-05"
-  },
-  {
-   "id": 15887,
-   "name": "ホテルアルファーワン敦賀バイパス",
-   "city": "敦賀市",
-   "area": "敦賀",
-   "region": "嶺南",
-   "rating": 3.75,
-   "reviews": 2015,
-   "price": 4900,
-   "kind": null,
-   "pick": false,
-   "text": "敷地内平面駐車場無料（先着順）・男女大浴場・各階電子レンジ・全室Wi-Fi・個性的なスープ朝食",
-   "features": [
-    "大浴場"
-   ],
-   "url": "https://hb.afl.rakuten.co.jp/hgc/57d349d5.b23354d5.57d349d6.03cbb5c1/?pc=https%3A%2F%2Fimg.travel.rakuten.co.jp%2Fimage%2Ftr%2Fapi%2Fif%2FuPw0Q%2F%3Ff_no%3D15887",
-   "image": "https://trvimg.r10s.jp/share/HOTEL/15887/15887.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 108768,
@@ -311,9 +292,9 @@
    "city": "あわら市",
    "area": "あわら・三国",
    "region": "嶺北",
-   "rating": 3.95,
-   "reviews": 1360,
-   "price": 9900,
+   "rating": 3.96,
+   "reviews": 1367,
+   "price": 10400,
    "kind": null,
    "pick": false,
    "text": "キッズパークやプール、グランピングなど、わくわく満載の当館で笑顔溢れる時間をお楽しみください",
@@ -327,7 +308,26 @@
    ],
    "url": "https://a.r10.to/hPp7zi",
    "image": "https://trvimg.r10s.jp/share/HOTEL/108768/108768.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
+  },
+  {
+   "id": 15887,
+   "name": "ホテルアルファーワン敦賀バイパス",
+   "city": "敦賀市",
+   "area": "敦賀",
+   "region": "嶺南",
+   "rating": 3.75,
+   "reviews": 2023,
+   "price": 4900,
+   "kind": null,
+   "pick": false,
+   "text": "敷地内平面駐車場無料（先着順）・男女大浴場・各階電子レンジ・全室Wi-Fi・個性的なスープ朝食",
+   "features": [
+    "大浴場"
+   ],
+   "url": "https://hb.afl.rakuten.co.jp/hgc/57d349d5.b23354d5.57d349d6.03cbb5c1/?pc=https%3A%2F%2Fimg.travel.rakuten.co.jp%2Fimage%2Ftr%2Fapi%2Fif%2FuPw0Q%2F%3Ff_no%3D15887",
+   "image": "https://trvimg.r10s.jp/share/HOTEL/15887/15887.jpg",
+   "checked": "2026-10-12"
   },
   {
    "id": 184587,
@@ -335,8 +335,8 @@
    "city": "あわら市",
    "area": "あわら・三国",
    "region": "嶺北",
-   "rating": 4.36,
-   "reviews": 623,
+   "rating": 4.37,
+   "reviews": 636,
    "price": 7750,
    "kind": null,
    "pick": false,
@@ -348,7 +348,7 @@
    ],
    "url": "https://a.r10.to/hPBDIf",
    "image": "https://trvimg.r10s.jp/share/HOTEL/184587/184587.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 9512,
@@ -356,9 +356,9 @@
    "city": "鯖江市",
    "area": "鯖江",
    "region": "嶺北",
-   "rating": 4,
-   "reviews": 1000,
-   "price": 6200,
+   "rating": 4.01,
+   "reviews": 1009,
+   "price": 5700,
    "kind": null,
    "pick": false,
    "text": "このホテルでしか味わえない、和食料理人の作る朝食ビュッフェを心ゆくまでご堪能ください",
@@ -368,7 +368,7 @@
    ],
    "url": "https://a.r10.to/hgeaHo",
    "image": "https://trvimg.r10s.jp/share/HOTEL/9512/9512.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 6113,
@@ -376,9 +376,9 @@
    "city": "越前市",
    "area": "越前市",
    "region": "嶺北",
-   "rating": 4.01,
-   "reviews": 943,
-   "price": 5270,
+   "rating": 3.99,
+   "reviews": 952,
+   "price": 4300,
    "kind": null,
    "pick": false,
    "text": "ハピライン武生駅より徒歩1分以内の好立地",
@@ -389,7 +389,7 @@
    ],
    "url": "https://a.r10.to/hRmraX",
    "image": "https://trvimg.r10s.jp/share/HOTEL/6113/6113.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 4898,
@@ -398,7 +398,7 @@
    "area": "あわら・三国",
    "region": "嶺北",
    "rating": 4.17,
-   "reviews": 683,
+   "reviews": 686,
    "price": 8000,
    "kind": null,
    "pick": false,
@@ -412,7 +412,7 @@
    ],
    "url": "https://a.r10.to/hP92Gb",
    "image": "https://trvimg.r10s.jp/share/HOTEL/4898/4898.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 9165,
@@ -420,8 +420,8 @@
    "city": "越前市",
    "area": "越前市",
    "region": "嶺北",
-   "rating": 4.15,
-   "reviews": 668,
+   "rating": 4.13,
+   "reviews": 676,
    "price": 4000,
    "kind": null,
    "pick": false,
@@ -429,7 +429,7 @@
    "features": [],
    "url": "https://a.r10.to/hkxP45",
    "image": "https://trvimg.r10s.jp/share/HOTEL/9165/9165.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 50199,
@@ -437,8 +437,8 @@
    "city": "坂井市",
    "area": "あわら・三国",
    "region": "嶺北",
-   "rating": 4.38,
-   "reviews": 445,
+   "rating": 4.37,
+   "reviews": 450,
    "price": 10500,
    "kind": null,
    "pick": false,
@@ -450,26 +450,7 @@
    ],
    "url": "https://a.r10.to/hPcziS",
    "image": "https://trvimg.r10s.jp/share/HOTEL/50199/50199.jpg",
-   "checked": "2026-10-05"
-  },
-  {
-   "id": 19865,
-   "name": "越前海岸 玉川の宿 岩本屋",
-   "city": "越前町",
-   "area": "越前海岸",
-   "region": "嶺北",
-   "rating": 4.55,
-   "reviews": 347,
-   "price": 9900,
-   "kind": null,
-   "pick": false,
-   "text": "2021年全客室リニュアール 天然温泉と料理自慢の小さな漁師宿です",
-   "features": [
-    "温泉"
-   ],
-   "url": "https://a.r10.to/hg7X7r",
-   "image": "https://trvimg.r10s.jp/share/HOTEL/19865/19865.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 184069,
@@ -478,8 +459,8 @@
    "area": "勝山",
    "region": "嶺北",
    "rating": 4.17,
-   "reviews": 596,
-   "price": 6000,
+   "reviews": 606,
+   "price": 5500,
    "kind": null,
    "pick": false,
    "text": "恐竜博物館車8分！恐竜と過ごせるホテル",
@@ -491,7 +472,26 @@
    ],
    "url": "https://a.r10.to/hP2G7U",
    "image": "https://trvimg.r10s.jp/share/HOTEL/184069/184069.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
+  },
+  {
+   "id": 19865,
+   "name": "越前海岸 玉川の宿 岩本屋",
+   "city": "越前町",
+   "area": "越前海岸",
+   "region": "嶺北",
+   "rating": 4.55,
+   "reviews": 347,
+   "price": 18700,
+   "kind": null,
+   "pick": false,
+   "text": "2021年全客室リニュアール 天然温泉と料理自慢の小さな漁師宿です",
+   "features": [
+    "温泉"
+   ],
+   "url": "https://a.r10.to/hg7X7r",
+   "image": "https://trvimg.r10s.jp/share/HOTEL/19865/19865.jpg",
+   "checked": "2026-10-12"
   },
   {
    "id": 168327,
@@ -499,16 +499,16 @@
    "city": "鯖江市",
    "area": "鯖江",
    "region": "嶺北",
-   "rating": 4.59,
-   "reviews": 319,
-   "price": null,
+   "rating": 4.58,
+   "reviews": 322,
+   "price": 4250,
    "kind": null,
    "pick": false,
    "text": "２０１８年９月オープン。サンドーム福井に隣接したホテル",
    "features": [],
    "url": "https://a.r10.to/h8oQCB",
    "image": "https://trvimg.r10s.jp/share/HOTEL/168327/168327.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 14400,
@@ -517,7 +517,7 @@
    "area": "あわら・三国",
    "region": "嶺北",
    "rating": 4.35,
-   "reviews": 364,
+   "reviews": 366,
    "price": 5500,
    "kind": null,
    "pick": false,
@@ -527,7 +527,7 @@
    ],
    "url": "https://a.r10.to/hF40RW",
    "image": "https://trvimg.r10s.jp/share/HOTEL/14400/14400.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 172959,
@@ -535,8 +535,8 @@
    "city": "越前市",
    "area": "越前市",
    "region": "嶺北",
-   "rating": 4.17,
-   "reviews": 431,
+   "rating": 4.18,
+   "reviews": 439,
    "price": 7800,
    "kind": null,
    "pick": false,
@@ -547,7 +547,7 @@
    ],
    "url": "https://a.r10.to/hYEKH8",
    "image": "https://trvimg.r10s.jp/share/HOTEL/172959/172959.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 196681,
@@ -556,7 +556,7 @@
    "area": "越前市",
    "region": "嶺北",
    "rating": 4.06,
-   "reviews": 483,
+   "reviews": 495,
    "price": 2800,
    "kind": null,
    "pick": false,
@@ -567,7 +567,7 @@
    ],
    "url": "https://a.r10.to/hYaKgm",
    "image": "https://trvimg.r10s.jp/share/HOTEL/196681/196681.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 158744,
@@ -575,8 +575,8 @@
    "city": "鯖江市",
    "area": "鯖江",
    "region": "嶺北",
-   "rating": 4.03,
-   "reviews": 501,
+   "rating": 4.04,
+   "reviews": 507,
    "price": 6000,
    "kind": null,
    "pick": false,
@@ -586,7 +586,7 @@
    ],
    "url": "https://a.r10.to/hPkKUw",
    "image": "https://trvimg.r10s.jp/share/HOTEL/158744/158744.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 20109,
@@ -594,8 +594,8 @@
    "city": "小浜市",
    "area": "小浜",
    "region": "嶺南",
-   "rating": 4.27,
-   "reviews": 332,
+   "rating": 4.29,
+   "reviews": 339,
    "price": 5500,
    "kind": null,
    "pick": false,
@@ -605,7 +605,7 @@
    ],
    "url": "https://hb.afl.rakuten.co.jp/hgc/57d349d5.b23354d5.57d349d6.03cbb5c1/?pc=https%3A%2F%2Fimg.travel.rakuten.co.jp%2Fimage%2Ftr%2Fapi%2Fif%2FuPw0Q%2F%3Ff_no%3D20109",
    "image": "https://trvimg.r10s.jp/share/HOTEL/20109/20109.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 16207,
@@ -614,7 +614,7 @@
    "area": "あわら・三国",
    "region": "嶺北",
    "rating": 4.65,
-   "reviews": 2569,
+   "reviews": 2583,
    "price": 20240,
    "kind": null,
    "pick": true,
@@ -627,7 +627,7 @@
    ],
    "url": "https://a.r10.to/hgU7sQ",
    "image": "https://trvimg.r10s.jp/share/HOTEL/16207/16207.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 189079,
@@ -635,9 +635,9 @@
    "city": "福井市",
    "area": "福井市",
    "region": "嶺北",
-   "rating": 4.42,
-   "reviews": 372,
-   "price": 9075,
+   "rating": 4.43,
+   "reviews": 383,
+   "price": 7865,
    "kind": null,
    "pick": true,
    "text": "JR福井駅西口から徒歩2分！⾼層ビルの17〜28階にあり眺望◎",
@@ -647,7 +647,7 @@
    ],
    "url": "https://a.r10.to/hP1fCD",
    "image": "https://trvimg.r10s.jp/share/HOTEL/189079/189079.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 198434,
@@ -657,7 +657,7 @@
    "region": "嶺北",
    "rating": null,
    "reviews": 4,
-   "price": 9500,
+   "price": 7500,
    "kind": null,
    "pick": true,
    "text": "足羽川リトアート asunowa は、プライベートサウナ・アートに触れながら「ととのう」駅近ホテル",
@@ -666,7 +666,7 @@
    ],
    "url": "https://a.r10.to/hPZJgI",
    "image": "https://trvimg.r10s.jp/share/HOTEL/198434/198434.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 196274,
@@ -688,7 +688,7 @@
    ],
    "url": "https://a.r10.to/hYJVC3",
    "image": "https://trvimg.r10s.jp/share/HOTEL/196274/196274.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 193225,
@@ -710,7 +710,7 @@
    ],
    "url": "https://a.r10.to/h5WGUM",
    "image": "https://trvimg.r10s.jp/share/HOTEL/193225/193225.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 187307,
@@ -730,7 +730,7 @@
    ],
    "url": "https://a.r10.to/hY32UJ",
    "image": "https://trvimg.r10s.jp/share/HOTEL/187307/187307.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 197363,
@@ -738,8 +738,8 @@
    "city": "福井市",
    "area": "越前海岸",
    "region": "嶺北",
-   "rating": 4.56,
-   "reviews": 9,
+   "rating": 4.4,
+   "reviews": 10,
    "price": 11840,
    "kind": "一棟貸し",
    "pick": true,
@@ -753,7 +753,7 @@
    ],
    "url": "https://a.r10.to/hPcfFw",
    "image": "https://trvimg.r10s.jp/share/HOTEL/197363/197363.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 162866,
@@ -761,8 +761,8 @@
    "city": "小浜市",
    "area": "小浜",
    "region": "嶺南",
-   "rating": 4.71,
-   "reviews": 85,
+   "rating": 4.72,
+   "reviews": 86,
    "price": 5000,
    "kind": "一棟貸し",
    "pick": true,
@@ -773,7 +773,7 @@
    ],
    "url": "https://a.r10.to/hkxPUZ",
    "image": "https://trvimg.r10s.jp/share/HOTEL/162866/162866.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 84608,
@@ -781,8 +781,8 @@
    "city": "勝山市",
    "area": "勝山",
    "region": "嶺北",
-   "rating": 4.45,
-   "reviews": 153,
+   "rating": 4.48,
+   "reviews": 154,
    "price": 9000,
    "kind": "一棟貸し",
    "pick": true,
@@ -792,7 +792,7 @@
    ],
    "url": "https://a.r10.to/h5896l",
    "image": "https://trvimg.r10s.jp/share/HOTEL/84608/84608.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 184031,
@@ -800,8 +800,8 @@
    "city": "福井市",
    "area": "福井市",
    "region": "嶺北",
-   "rating": 3.88,
-   "reviews": 408,
+   "rating": 3.87,
+   "reviews": 410,
    "price": 880,
    "kind": "グランピング",
    "pick": true,
@@ -813,7 +813,7 @@
    ],
    "url": "https://a.r10.to/hFJehJ",
    "image": "https://trvimg.r10s.jp/share/HOTEL/184031/184031.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 171513,
@@ -833,7 +833,7 @@
    ],
    "url": "https://a.r10.to/hYqFQV",
    "image": "https://trvimg.r10s.jp/share/HOTEL/171513/171513.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 188004,
@@ -841,8 +841,8 @@
    "city": "美浜町",
    "area": "美浜",
    "region": "嶺南",
-   "rating": 4.67,
-   "reviews": 17,
+   "rating": 4.5,
+   "reviews": 18,
    "price": 17550,
    "kind": "グランピング",
    "pick": true,
@@ -852,7 +852,7 @@
    ],
    "url": "https://a.r10.to/hYh4po",
    "image": "https://trvimg.r10s.jp/share/HOTEL/188004/188004.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   },
   {
    "id": 198624,
@@ -860,8 +860,8 @@
    "city": "永平寺町",
    "area": "永平寺",
    "region": "嶺北",
-   "rating": 4.88,
-   "reviews": 8,
+   "rating": 4.89,
+   "reviews": 9,
    "price": 10000,
    "kind": "一棟貸し",
    "pick": true,
@@ -871,7 +871,7 @@
    ],
    "url": "https://a.r10.to/h5wVJs",
    "image": "https://trvimg.r10s.jp/share/HOTEL/198624/198624.jpg",
-   "checked": "2026-10-05"
+   "checked": "2026-10-12"
   }
  ]
 }
