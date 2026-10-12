@@ -48,6 +48,30 @@ class PublishItemTest(unittest.TestCase):
         self.assertEqual(client.containers[1]["reply_to_id"], "p1")
         self.assertEqual(client.containers[2]["reply_to_id"], "p2")
 
+    def test_thread_links_become_link_cards(self):
+        client = RecordingClient()
+        item = QueueItem(id="a", text="宿5選", thread=["① 宿A", "② 宿B"],
+                         thread_links=["https://a.r10.to/x", None])
+        publish_item(client, item, CONFIG)
+        self.assertEqual(client.containers[1]["link_attachment"], "https://a.r10.to/x")
+        self.assertIsNone(client.containers[2]["link_attachment"])
+        self.assertNotIn("https://", client.containers[1]["text"])
+
+    def test_link_card_falls_back_to_url_in_text(self):
+        from threads_bot.client import ThreadsAPIError
+
+        class Refuses(RecordingClient):
+            def create_container(self, **kwargs):
+                if kwargs.get("link_attachment"):
+                    raise ThreadsAPIError("no")
+                return super().create_container(**kwargs)
+
+        client = Refuses()
+        item = QueueItem(id="a", text="宿5選", thread=["① 宿A"], thread_links=["https://a.r10.to/x"])
+        publish_item(client, item, CONFIG)
+        self.assertEqual(client.published, ["c1", "c2"])
+        self.assertTrue(client.containers[1]["text"].endswith("https://a.r10.to/x"))
+
     def test_media_posts_wait_for_the_container(self):
         client = RecordingClient()
         item = QueueItem(id="a", text="写真", image_url="https://a/i.jpg")
