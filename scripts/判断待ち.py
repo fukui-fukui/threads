@@ -10,6 +10,9 @@ Metaで収集と、おでかけ2つの収集で、判断に迷ったものを表
     載せる → ネタ帳の「調べてほしいもの」に足す（翌朝の情報集めが公式で確かめ直して入れる）
     載せない → neta/載せないもの.jsonl に残す（情報集めがその URL を二度と候補にしない）
     保留 → 何もしない
+    返事の案（2026-10-13 代表「進めてOK」）：運用部がダッシュボードに置いた、読者の返信への返事の案
+      出す → posts/queue.jsonl に reply_to つきで入れる（返事の文と宛先の ID だけ。読者の返信の本文・ユーザー名は書かない）
+      出さない・保留 → 何もしない
 
 使い方:
   python scripts/判断待ち.py 集める --fukui . --ishikawa ../odekake-ishikawa > items.json
@@ -137,13 +140,59 @@ def _調べもの節に足す(ネタ帳: str, 行たち: list[str]) -> str:
     return ネタ帳[:i] + 節 + "\n" + "\n".join(足す) + "\n" + ネタ帳[j:]
 
 
+def 返事の時刻(今: datetime, 何本目: int) -> str:
+    """返事は ◯:00 の枠を埋めないよう、毎時 20〜50 分に10分おきで入れる（compose の枠の数え方は ◯:00 だけ）。"""
+    t = (今 + timedelta(minutes=15)).replace(second=0, microsecond=0)
+    分 = [20, 30, 40, 50]
+    if t.minute > 分[-1]:
+        t = (t + timedelta(hours=1)).replace(minute=0)
+    候補 = []
+    while len(候補) <= 何本目:
+        for m in 分:
+            c = t.replace(minute=m)
+            if c >= t:
+                候補.append(c)
+        t = (t + timedelta(hours=1)).replace(minute=0)
+    return 候補[何本目].isoformat()
+
+
+def 返事を入れる(mine: list[dict], repo: Path) -> list[str]:
+    出す = [a for a in mine if a.get("種類") == "返事の案" and a.get("答え") == "出す"]
+    if not 出す:
+        return []
+    q = repo / "posts" / "queue.jsonl"
+    すでに = {json.loads(l).get("id") for l in q.read_text(encoding="utf-8").splitlines() if l.strip()} if q.exists() else set()
+    今 = datetime.now(JST)
+    済み, 行たち = [], []
+    for a in 出す:
+        文 = str(a.get("返事") or "").strip()
+        宛先 = str(a.get("reply_to") or "").strip()
+        if not 文 or not 宛先.isdigit() or len(文) > 500:
+            print(f"::warning::返事の案 {a.get('id')} は、返事の文か宛先の ID が無いので入れません")
+            continue
+        pid = f"r-{今:%Y%m%d}-{a['id'][:8]}"
+        if pid not in すでに:
+            行たち.append(json.dumps({"id": pid, "text": 文, "scheduled_at": 返事の時刻(今, len(行たち)),
+                                     "reply_to": 宛先, "note": "読者の返信への返事（代表が判断待ちで「出す」）"},
+                                    ensure_ascii=False))
+        済み.append(a["id"])
+    if 行たち:
+        with q.open("a", encoding="utf-8") as f:
+            f.write("\n".join(行たち) + "\n")
+    return 済み
+
+
 def 反映(answers: list[dict], repos: dict[str, Path]) -> list[str]:
     名で = {v: k for k, v in 出どころの名.items()}
     済み = []
     今日 = datetime.now(JST).date().isoformat()
     for 名, repo in repos.items():
-        mine = [a for a in answers if 名で.get(a.get("出どころ")) == 名 and a.get("答え") in ("載せる", "載せない")]
-        if not mine or not repo:
+        if not repo:
+            continue
+        済み += 返事を入れる([a for a in answers if 名で.get(a.get("出どころ")) == 名], repo)
+        mine = [a for a in answers if 名で.get(a.get("出どころ")) == 名 and a.get("答え") in ("載せる", "載せない")
+                and a.get("種類") != "返事の案"]
+        if not mine:
             continue
         ネタ帳p = repo / "neta" / "ネタ帳.md"
         ネタ帳 = ネタ帳p.read_text(encoding="utf-8")

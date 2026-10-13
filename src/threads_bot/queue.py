@@ -33,6 +33,9 @@ class QueueItem:
     # 連投のそれぞれに付けるリンクカード（link_attachment）。thread と同じ順。無いものは None。
     # URL を本文に書かずにカードで見せるため（2026-10-12 代表「リンクURLを表示せず、カードで見せる」）
     thread_links: list[str | None] = field(default_factory=list)
+    # 読者の返信への返事（2026-10-13 代表「進めてOK」）。入っていれば、1件目をこの投稿への返信として出す。
+    # 代表が判断待ちダッシュボードで「出す」を押したものだけが、scripts/判断待ち.py からここに入る。
+    reply_to: str | None = None
     line_number: int = 0
 
     @property
@@ -84,6 +87,10 @@ def _parse_item(raw: dict, *, line_number: int, tz: ZoneInfo) -> QueueItem:
             f"{where}: thread_links は thread と同じ順の URL（無いものは null）の配列にしてください"
         )
 
+    reply_to = raw.get("reply_to")
+    if reply_to is not None and not (isinstance(reply_to, str) and reply_to.isdigit()):
+        raise QueueError(f"{where}: reply_to は返事を付ける投稿の ID（数字の文字列）にしてください")
+
     reply_control = raw.get("reply_control")
     if reply_control is not None and reply_control not in VALID_REPLY_CONTROLS:
         raise QueueError(
@@ -110,6 +117,7 @@ def _parse_item(raw: dict, *, line_number: int, tz: ZoneInfo) -> QueueItem:
         alt_text=raw.get("alt_text"),
         thread=list(thread),
         thread_links=list(thread_links),
+        reply_to=reply_to,
         line_number=line_number,
     )
 

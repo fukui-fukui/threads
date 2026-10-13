@@ -37,6 +37,7 @@ def publish_item(
         link_attachment=item.link_attachment,
         reply_control=item.reply_control,
         alt_text=item.alt_text,
+        reply_to_id=item.reply_to,
     )
     _wait_for_container(client, creation_id, item.media_type, config)
     post_id = client.publish(creation_id)
