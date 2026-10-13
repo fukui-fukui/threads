@@ -2,13 +2,441 @@
  "作った日": "2026-10-13",
  "GA": [
   {
-   "名前": "Google アナリティクス・Search Console",
-   "計測ID": [],
-   "property": "",
-   "エラー": "Google にログインできません（鍵が正しくありません）。Google Cloud で新しい JSON の鍵を作り、Secrets の GA_SA_KEY を中身全部で入れ直してください"
+   "property": "properties/557339261",
+   "名前": "ふくいエキマエ",
+   "計測ID": [
+    "G-H9J2X4WZBW"
+   ],
+   "直近7日": {
+    "screenPageViews": 161,
+    "activeUsers": 124,
+    "sessions": 149
+   },
+   "その前の7日": {
+    "screenPageViews": 26,
+    "activeUsers": 12,
+    "sessions": 17
+   },
+   "日ごと": [
+    {
+     "date": "20261006",
+     "screenPageViews": 44,
+     "activeUsers": 36
+    },
+    {
+     "date": "20261007",
+     "screenPageViews": 42,
+     "activeUsers": 41
+    },
+    {
+     "date": "20261009",
+     "screenPageViews": 19,
+     "activeUsers": 12
+    },
+    {
+     "date": "20261008",
+     "screenPageViews": 18,
+     "activeUsers": 9
+    },
+    {
+     "date": "20261012",
+     "screenPageViews": 14,
+     "activeUsers": 10
+    },
+    {
+     "date": "20261010",
+     "screenPageViews": 12,
+     "activeUsers": 9
+    },
+    {
+     "date": "20261011",
+     "screenPageViews": 12,
+     "activeUsers": 11
+    }
+   ],
+   "どこから": [
+    {
+     "sessionDefaultChannelGroup": "Referral",
+     "sessions": 71
+    },
+    {
+     "sessionDefaultChannelGroup": "Organic Social",
+     "sessions": 51
+    },
+    {
+     "sessionDefaultChannelGroup": "Organic Shopping",
+     "sessions": 13
+    },
+    {
+     "sessionDefaultChannelGroup": "Direct",
+     "sessions": 10
+    },
+    {
+     "sessionDefaultChannelGroup": "Organic Search",
+     "sessions": 2
+    },
+    {
+     "sessionDefaultChannelGroup": "Unassigned",
+     "sessions": 2
+    }
+   ],
+   "参照元": [
+    {
+     "sessionSource": "l.threads.com",
+     "sessions": 71
+    },
+    {
+     "sessionSource": "facebook.com",
+     "sessions": 19
+    },
+    {
+     "sessionSource": "m.facebook.com",
+     "sessions": 18
+    },
+    {
+     "sessionSource": "threads",
+     "sessions": 14
+    },
+    {
+     "sessionSource": "checkout.stripe.com",
+     "sessions": 13
+    },
+    {
+     "sessionSource": "(direct)",
+     "sessions": 10
+    },
+    {
+     "sessionSource": "(not set)",
+     "sessions": 2
+    },
+    {
+     "sessionSource": "google",
+     "sessions": 1
+    },
+    {
+     "sessionSource": "yahoo",
+     "sessions": 1
+    }
+   ],
+   "よく見られたページ": [
+    {
+     "pagePath": "/",
+     "screenPageViews": 150
+    },
+    {
+     "pagePath": "/katamachi/",
+     "screenPageViews": 11
+    }
+   ]
+  },
+  {
+   "property": "properties/557355267",
+   "名前": "ふくいおでかけ",
+   "計測ID": [
+    "G-13WG76PCKH"
+   ],
+   "直近7日": {
+    "screenPageViews": 71,
+    "activeUsers": 47,
+    "sessions": 62
+   },
+   "その前の7日": {
+    "screenPageViews": 44,
+    "activeUsers": 40,
+    "sessions": 40
+   },
+   "日ごと": [
+    {
+     "date": "20261007",
+     "screenPageViews": 19,
+     "activeUsers": 14
+    },
+    {
+     "date": "20261008",
+     "screenPageViews": 14,
+     "activeUsers": 10
+    },
+    {
+     "date": "20261009",
+     "screenPageViews": 9,
+     "activeUsers": 4
+    },
+    {
+     "date": "20261012",
+     "screenPageViews": 9,
+     "activeUsers": 7
+    },
+    {
+     "date": "20261010",
+     "screenPageViews": 7,
+     "activeUsers": 4
+    },
+    {
+     "date": "20261011",
+     "screenPageViews": 7,
+     "activeUsers": 6
+    },
+    {
+     "date": "20261006",
+     "screenPageViews": 6,
+     "activeUsers": 6
+    }
+   ],
+   "どこから": [
+    {
+     "sessionDefaultChannelGroup": "Direct",
+     "sessions": 29
+    },
+    {
+     "sessionDefaultChannelGroup": "Organic Social",
+     "sessions": 20
+    },
+    {
+     "sessionDefaultChannelGroup": "Organic Search",
+     "sessions": 7
+    },
+    {
+     "sessionDefaultChannelGroup": "Referral",
+     "sessions": 4
+    },
+    {
+     "sessionDefaultChannelGroup": "Unassigned",
+     "sessions": 2
+    }
+   ],
+   "参照元": [
+    {
+     "sessionSource": "(direct)",
+     "sessions": 29
+    },
+    {
+     "sessionSource": "threads",
+     "sessions": 19
+    },
+    {
+     "sessionSource": "l.threads.com",
+     "sessions": 4
+    },
+    {
+     "sessionSource": "yahoo",
+     "sessions": 4
+    },
+    {
+     "sessionSource": "google",
+     "sessions": 2
+    },
+    {
+     "sessionSource": "openai",
+     "sessions": 2
+    },
+    {
+     "sessionSource": "bing",
+     "sessions": 1
+    },
+    {
+     "sessionSource": "m.facebook.com",
+     "sessions": 1
+    }
+   ],
+   "よく見られたページ": [
+    {
+     "pagePath": "/",
+     "screenPageViews": 49
+    },
+    {
+     "pagePath": "/month/2026-10/",
+     "screenPageViews": 20
+    },
+    {
+     "pagePath": "/about/",
+     "screenPageViews": 2
+    }
+   ]
+  },
+  {
+   "property": "properties/558237202",
+   "名前": "いしかわおでかけ",
+   "計測ID": [
+    "G-30WY9GJLB5"
+   ],
+   "直近7日": {
+    "screenPageViews": 44,
+    "activeUsers": 32,
+    "sessions": 41
+   },
+   "その前の7日": {},
+   "日ごと": [
+    {
+     "date": "20261010",
+     "screenPageViews": 12,
+     "activeUsers": 10
+    },
+    {
+     "date": "20261009",
+     "screenPageViews": 11,
+     "activeUsers": 8
+    },
+    {
+     "date": "20261011",
+     "screenPageViews": 8,
+     "activeUsers": 5
+    },
+    {
+     "date": "20261012",
+     "screenPageViews": 7,
+     "activeUsers": 4
+    },
+    {
+     "date": "20261008",
+     "screenPageViews": 6,
+     "activeUsers": 6
+    }
+   ],
+   "どこから": [
+    {
+     "sessionDefaultChannelGroup": "Direct",
+     "sessions": 18
+    },
+    {
+     "sessionDefaultChannelGroup": "Organic Social",
+     "sessions": 18
+    },
+    {
+     "sessionDefaultChannelGroup": "Referral",
+     "sessions": 4
+    },
+    {
+     "sessionDefaultChannelGroup": "Organic Search",
+     "sessions": 1
+    }
+   ],
+   "参照元": [
+    {
+     "sessionSource": "(direct)",
+     "sessions": 18
+    },
+    {
+     "sessionSource": "threads",
+     "sessions": 18
+    },
+    {
+     "sessionSource": "l.threads.com",
+     "sessions": 4
+    },
+    {
+     "sessionSource": "yahoo",
+     "sessions": 1
+    }
+   ],
+   "よく見られたページ": [
+    {
+     "pagePath": "/",
+     "screenPageViews": 44
+    }
+   ]
   }
  ],
- "SC": [],
+ "SC": [
+  {
+   "サイト": "sc-domain:fukui-fukui.com",
+   "権限": "siteRestrictedUser",
+   "期間": "2026-09-13〜2026-10-10",
+   "検索語": [
+    {
+     "語": "10月10日 イベント",
+     "クリック": 0,
+     "表示": 1,
+     "順位": 11
+    },
+    {
+     "語": "10月31日 イベント",
+     "クリック": 0,
+     "表示": 1,
+     "順位": 10
+    },
+    {
+     "語": "マルシェ 10月",
+     "クリック": 0,
+     "表示": 3,
+     "順位": 10.7
+    },
+    {
+     "語": "福井 キヤノン",
+     "クリック": 0,
+     "表示": 1,
+     "順位": 60
+    }
+   ],
+   "検索に出たページ": [
+    {
+     "ページ": "https://ekimae.fukui-fukui.com/katamachi/",
+     "クリック": 2,
+     "表示": 26,
+     "順位": 8.2
+    },
+    {
+     "ページ": "https://odekake.fukui-fukui.com/month/2026-10/",
+     "クリック": 2,
+     "表示": 41,
+     "順位": 12.0
+    },
+    {
+     "ページ": "https://ekimae.fukui-fukui.com/",
+     "クリック": 1,
+     "表示": 2,
+     "順位": 6
+    },
+    {
+     "ページ": "http://fukui-fukui.com/",
+     "クリック": 0,
+     "表示": 2,
+     "順位": 1.5
+    },
+    {
+     "ページ": "http://www.fukui-fukui.com/",
+     "クリック": 0,
+     "表示": 1,
+     "順位": 7
+    },
+    {
+     "ページ": "https://odekake.fukui-fukui.com/",
+     "クリック": 0,
+     "表示": 1,
+     "順位": 10
+    },
+    {
+     "ページ": "https://www.fukui-fukui.com/",
+     "クリック": 0,
+     "表示": 3,
+     "順位": 23.7
+    }
+   ],
+   "合計": {
+    "クリック": 5,
+    "表示": 76
+   },
+   "サイトマップ": [
+    {
+     "path": "https://ishikawa-odekake.fukui-fukui.com/sitemap.xml",
+     "最後に読まれた日": "2026-10-12T22:31:08.828Z",
+     "エラー": 0,
+     "警告": 0
+    },
+    {
+     "path": "https://ekimae.fukui-fukui.com/sitemap.xml",
+     "最後に読まれた日": "2026-10-10T13:17:01.668Z",
+     "エラー": 0,
+     "警告": 0
+    },
+    {
+     "path": "https://odekake.fukui-fukui.com/sitemap.xml",
+     "最後に読まれた日": "2026-10-13T00:22:05.338Z",
+     "エラー": 0,
+     "警告": 0
+    }
+   ]
+  }
+ ],
  "CF": [
   {
    "エラー": "Cloudflare を読めません（通信エラー）。トークンの権限（Account Analytics: Read）を確かめてください"
