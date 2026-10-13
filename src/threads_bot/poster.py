@@ -3,12 +3,33 @@
 from __future__ import annotations
 
 import logging
+import re
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from .client import PostResult, ThreadsAPIError, ThreadsClient
 from .config import Config
 from .queue import QueueItem
 
 logger = logging.getLogger(__name__)
+
+# 自分のサイトへのリンクに、どの投稿から来たかの印（UTM）を付ける（2026-10-13 代表「つける」）。
+# GA で utm_campaign（日付と時刻）・utm_content（投稿の id）ごとに見られる。
+_自分のサイト = re.compile(r"https?://(?:odekake|ishikawa-odekake)\.fukui-fukui\.com[^\s）)」』、。]*")
+
+
+def _印を付けたURL(url: str, item: QueueItem) -> str:
+    parts = urlsplit(url)
+    q = dict(parse_qsl(parts.query, keep_blank_values=True))
+    when = item.scheduled_at.strftime("%Y%m%d-%H") if item.scheduled_at else "nodate"
+    q.update({"utm_source": "threads", "utm_medium": "social",
+              "utm_campaign": f"{'reply' if item.reply_to else 'post'}-{when}", "utm_content": item.id})
+    return urlunsplit(parts._replace(path=parts.path or "/", query=urlencode(q)))
+
+
+def add_utm(text: str | None, item: QueueItem) -> str | None:
+    if not text:
+        return text
+    return _自分のサイト.sub(lambda m: _印を付けたURL(m.group(0), item), text)
 
 
 def publish_item(
@@ -30,11 +51,11 @@ def publish_item(
         return None
 
     creation_id = client.create_container(
-        text=item.text,
+        text=add_utm(item.text, item),
         media_type=item.media_type,
         image_url=item.image_url,
         video_url=item.video_url,
-        link_attachment=item.link_attachment,
+        link_attachment=add_utm(item.link_attachment, item),
         reply_control=item.reply_control,
         alt_text=item.alt_text,
         reply_to_id=item.reply_to,
@@ -46,8 +67,9 @@ def publish_item(
     # 連投は 1 件目への返信として順につなげる
     reply_to = post_id
     for index, text in enumerate(item.thread, start=2):
+        text = add_utm(text, item)
         links = item.thread_links
-        link = links[index - 2] if index - 2 < len(links) else None
+        link = add_utm(links[index - 2], item) if index - 2 < len(links) else None
         try:
             reply_container = client.create_container(
                 text=text, reply_to_id=reply_to, link_attachment=link or None

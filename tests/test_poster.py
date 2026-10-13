@@ -57,6 +57,20 @@ class PublishItemTest(unittest.TestCase):
         publish_item(client, QueueItem(id="a", text="本文"), CONFIG)
         self.assertIsNone(client.containers[0]["reply_to_id"])
 
+    def test_site_links_get_utm(self):
+        # 自分のサイトへのリンクに UTM（2026-10-13）。ほかのリンクは触らない
+        from datetime import datetime, timezone
+        client = RecordingClient()
+        item = QueueItem(id="p-1", text="本文", scheduled_at=datetime(2026, 10, 18, 13, tzinfo=timezone.utc),
+                         thread=["まとめ\nhttps://odekake.fukui-fukui.com/?utm_source=threads&utm_medium=social&utm_campaign=post",
+                                 "出典元：https://example.com/a"])
+        publish_item(client, item, CONFIG)
+        t = client.containers[1]["text"]
+        self.assertIn("utm_campaign=post-20261018-13", t)
+        self.assertIn("utm_content=p-1", t)
+        self.assertEqual(t.count("utm_source"), 1)
+        self.assertEqual(client.containers[2]["text"], "出典元：https://example.com/a")
+
     def test_thread_links_become_link_cards(self):
         client = RecordingClient()
         item = QueueItem(id="a", text="宿5選", thread=["① 宿A", "② 宿B"],
