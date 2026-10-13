@@ -6,6 +6,7 @@
 #   ./scripts/非公開.sh push <道筋> [メッセージ] … 作業中のフォルダから非公開の置き場に写して push する
 #   ./scripts/非公開.sh is-private <道筋>        … 置き場の対象なら 0
 #
+# DATA_DIR で置き場のフォルダ名を決められる（既定は region.json の県。エキマエは DATA_DIR=ekimae）。
 # DATA_REPO_TOKEN（odekake-data の Contents を読み書きできる鍵）が無いときは、pull は何もせず、push は 2 を返す
 # （呼んだ側は今まで通り公開リポジトリにコミットする。引っ越しの前と同じ動き）。
 set -euo pipefail
@@ -80,7 +81,7 @@ case "$cmd" in
   pull)
     if [ -z "${DATA_REPO_TOKEN:-}" ]; then echo "DATA_REPO_TOKEN が無いので、非公開の置き場は使いません。"; exit 0; fi
     clone
-    k="$(県)"
+    k="${DATA_DIR:-$(県)}"
     while read -r x; do
       if [ -e "$CLONE/$k/$x" ]; then 写す "$CLONE/$k/$x" "$x"; fi
     done < <(対象一覧)
@@ -90,7 +91,7 @@ case "$cmd" in
     is_private "$target" || { echo "${target} は非公開の置き場の対象ではありません。" >&2; exit 1; }
     if [ -z "${DATA_REPO_TOKEN:-}" ]; then exit 2; fi
     if [ ! -e "$target" ]; then echo "${target} がありません。"; exit 0; fi
-    k="$(県)"
+    k="${DATA_DIR:-$(県)}"
     for attempt in 1 2 3 4; do
       clone
       写す "$target" "$CLONE/$k/$target"
