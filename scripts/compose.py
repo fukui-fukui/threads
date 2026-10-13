@@ -362,6 +362,20 @@ def recent_texts(entries: list[dict], count: int | None = None) -> str:
     return "\n".join(parts)
 
 
+_問いの行 = re.compile(r"(か|ですか|ますか|でしょう)[。？?]?\s*$|[？?]\s*$")
+
+
+def 問いで終わる(entry: dict) -> bool:
+    """読む人への問いかけが入った投稿か（本文・返信のどこかの行が問い、または「教えてください」）。
+    「問いで終わる投稿は1日2本まで」の数え方に使う。"""
+    for 部 in [entry.get("text") or "", *(entry.get("thread") or [])]:
+        for l in 部.splitlines():
+            l = l.strip()
+            if l and (_問いの行.search(l) or "教えてください" in l):
+                return True
+    return False
+
+
 def find_filled(entries: list[dict], target_date) -> dict[int, dict]:
     prefix = target_date.isoformat()
     filled: dict[int, dict] = {}
@@ -410,13 +424,21 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
     # 締めの問いの A/B。日付の偶数・奇数で切り替える。
     # 同じ枠を日をまたいで比べれば、時刻の影響を受けずに問いの効果だけを見られる。
     # 投稿 id に日付が入っているので、あとから振り分けを復元できる（別の記録は持たない）。
-    if target_date.day % 2 == 0:
+    # 手で入れた投稿（運用部・代表）が問いで終わっていたら、1日2本のうちに数える（2026-10-13 運用部・福井担当）
+    手の問い = sum(1 for e in filled.values() if 問いで終わる(e))
+    if target_date.day % 2 == 0 and 手の問い == 0:
         AB_CLOSING_RULE = (
             "**今日は「問いあり」の日です（偶数日）。** 紹介枠は、本文または THREAD の最後に、"
             "読者が答えられる短い問いを1行置いてください。"
             "例：「行くなら土曜と日曜、どちらが空いていると思いますか。」「ここ、行ったことありますか。」"
             "**ただし問いを置くのは、紹介枠のうち1本だけ。** 14:00 の問いかけ枠と合わせて、問いで終わる投稿は1日2本まで"
             "（2026-10-13 代表「どちらも2本まで。」）。問いが一番自然に置ける1本を選び、ほかの紹介枠は事実で締めてください。"
+        )
+    elif target_date.day % 2 == 0:
+        AB_CLOSING_RULE = (
+            "**今日は「問いあり」の日（偶数日）ですが、問いで終わる投稿がすでに手で入っています。**"
+            "問いで終わる投稿は1日2本まで（2026-10-13 代表「どちらも2本まで。」）なので、"
+            "**紹介枠には問いを置かず、事実で締めてください。** 問いは 14:00 の問いかけ枠だけです。"
         )
     else:
         AB_CLOSING_RULE = (
