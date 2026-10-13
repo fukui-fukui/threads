@@ -1,0 +1,37 @@
+name: 投稿を消す（手で動かす・代表の「消して」があったときだけ）
+
+# 2026-10-13 代表「OK」の決まり：消すのは、まちがった投稿を直すときだけ。代表の「消して」があったときだけ手で動かす。
+# 仕組みが自動で消すことはしない。記録は投稿の id・日時・理由だけ（本文は残さない）。
+on:
+  workflow_dispatch:
+    inputs:
+      post_id:
+        description: "消す投稿の id（数字）"
+        required: true
+      reason:
+        description: "消す理由（例：日付のまちがい・二重投稿）"
+        required: true
+      approval:
+        description: "代表の「消して」（いつ・どこで。例：10/14 9:00 統括経由）"
+        required: true
+
+concurrency:
+  group: delete-post
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 消す
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          POST_ID: ${{ inputs.post_id }}
+          REASON: ${{ inputs.reason }}
+          APPROVAL: ${{ inputs.approval }}
+        run: python "scripts/投稿を消す.py"
