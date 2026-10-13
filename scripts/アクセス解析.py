@@ -9,15 +9,19 @@
 - Search Console：サービスアカウントが足されたサイトを全部読む（検索語・よく出たページ・サイトマップ）
 - 書き出し：insights/アクセス/最新.md と 最新.json。月曜は日付のファイルも残す
 
+- Cloudflare Web Analytics（2026-10-13 代表「1,2、3 進めて」）：Account Analytics: Read だけの API トークンで、
+  サイト（ホスト）ごとの閲覧数・訪問・よく見られたページ・参照元を読む
+
 環境変数:
-  GA_SA_KEY … サービスアカウントの鍵（JSON の中身）
+  GA_SA_KEY     … サービスアカウントの鍵（JSON の中身）。無ければ GA・Search Console は読まない
+  CF_API_TOKEN  … Cloudflare の API トークン（Account Analytics: Read）。無ければ Cloudflare は読まない
+  CF_ACCOUNT_ID … Cloudflare のアカウント ID
   OUT_DIR   … 書き出し先（既定 insights/アクセス）
 """
 from __future__ import annotations
 
 import json
 import os
-import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -154,6 +158,46 @@ def SCを読む(よ: 読み手) -> list[dict]:
     return 出
 
 
+CF_GQL = "https://api.cloudflare.com/client/v4/graphql"
+CF_Q = """query($a: String!, $s: Date!, $e: Date!) { viewer { accounts(filter: {accountTag: $a}) {
+  host: rumPageloadEventsAdaptiveGroups(limit: 50, filter: {date_geq: $s, date_leq: $e}, orderBy: [count_DESC]) {
+    count sum { visits } dimensions { requestHost } }
+  path: rumPageloadEventsAdaptiveGroups(limit: 60, filter: {date_geq: $s, date_leq: $e}, orderBy: [count_DESC]) {
+    count dimensions { requestHost requestPath } }
+  ref: rumPageloadEventsAdaptiveGroups(limit: 60, filter: {date_geq: $s, date_leq: $e}, orderBy: [count_DESC]) {
+    count dimensions { requestHost refererHost } }
+} } }"""
+
+
+def CFを読む(token: str, account: str) -> list[dict]:
+    """昨日までの7日間の、ホストごとの閲覧数・訪問・ページ・参照元。"""
+    今日 = datetime.now(JST).date()
+    v = {"a": account, "s": (今日 - timedelta(days=7)).isoformat(), "e": (今日 - timedelta(days=1)).isoformat()}
+    try:
+        r = requests.post(CF_GQL, headers={"Authorization": f"Bearer {token}"},
+                          json={"query": CF_Q, "variables": v}, timeout=60)
+        r.raise_for_status()
+        d = r.json()
+    except requests.RequestException as e:
+        return [{"エラー": f"Cloudflare を読めません（{e}）"}]
+    if d.get("errors"):
+        return [{"エラー": "Cloudflare を読めません（" + "; ".join(str(x.get("message")) for x in d["errors"])[:300] + "）"}]
+    acc = ((d.get("data") or {}).get("viewer") or {}).get("accounts") or [{}]
+    acc = acc[0] if acc else {}
+    出 = []
+    for h in acc.get("host") or []:
+        host = h["dimensions"]["requestHost"]
+        出.append({
+            "サイト": host, "期間": f"{v['s']}〜{v['e']}",
+            "閲覧数": h["count"], "訪問": (h.get("sum") or {}).get("visits", 0),
+            "よく見られたページ": [{"ページ": x["dimensions"]["requestPath"], "閲覧数": x["count"]}
+                             for x in acc.get("path") or [] if x["dimensions"]["requestHost"] == host][:10],
+            "参照元": [{"参照元": x["dimensions"]["refererHost"] or "（直接・不明）", "閲覧数": x["count"]}
+                    for x in acc.get("ref") or [] if x["dimensions"]["requestHost"] == host][:10],
+        })
+    return 出
+
+
 def _増減(今: int, 前: int) -> str:
     if not 前:
         return ""
@@ -192,31 +236,49 @@ def まとめる(結果: dict) -> str:
         for m in s.get("サイトマップ", []):
             行.append(f"- サイトマップ {m['path']}：エラー {m['エラー']}・警告 {m['警告']}（最後に読まれた日 {m['最後に読まれた日']}）")
         行.append("")
+    for c in 結果.get("CF", []):
+        行.append(f"## Cloudflare：{c.get('サイト', '')}")
+        if "エラー" in c:
+            行 += [f"- {c['エラー']}", ""]
+            continue
+        行.append(f"- {c['期間']}：閲覧数 {c['閲覧数']:,}／訪問 {c['訪問']:,}")
+        if c["参照元"]:
+            行.append("- 参照元：" + "、".join(f"{r['参照元']} {r['閲覧数']}" for r in c["参照元"]))
+        if c["よく見られたページ"]:
+            行.append("- よく見られたページ：")
+            行 += [f"  - {r['ページ']} … {r['閲覧数']}" for r in c["よく見られたページ"]]
+        行.append("")
     return "\n".join(行).rstrip() + "\n"
 
 
 def main() -> None:
     key = os.environ.get("GA_SA_KEY", "").strip()
-    if not key:
-        print("::warning::GA_SA_KEY が未設定です。何もしません。")
+    cf_token = os.environ.get("CF_API_TOKEN", "").strip()
+    cf_account = os.environ.get("CF_ACCOUNT_ID", "").strip()
+    if not key and not (cf_token and cf_account):
+        print("::warning::GA_SA_KEY も CF_API_TOKEN・CF_ACCOUNT_ID も未設定です。何もしません。")
         return
-    よ = 読み手(json.loads(key))
     今日 = datetime.now(JST).date()
-    結果 = {"作った日": 今日.isoformat(), "GA": [], "SC": []}
-    try:
-        props = プロパティ一覧(よ)
-    except requests.HTTPError as e:
-        print(f"::error::GA のプロパティ一覧を読めません（{e.response.status_code}）。"
-              "Analytics Admin API が有効か、サービスアカウントが閲覧者に入っているかを確かめてください。")
-        sys.exit(1)
-    for p in props:
-        g = {**p, "計測ID": 計測ID(よ, p["property"])}
+    結果 = {"作った日": 今日.isoformat(), "GA": [], "SC": [], "CF": []}
+    if key:
+        よ = 読み手(json.loads(key))
         try:
-            g.update(GAを読む(よ, p["property"]))
+            props = プロパティ一覧(よ)
         except requests.HTTPError as e:
-            g["エラー"] = f"読めませんでした（{e.response.status_code}。Analytics Data API が有効か確かめてください）"
-        結果["GA"].append(g)
-    結果["SC"] = SCを読む(よ)
+            props = []
+            結果["GA"].append({"名前": "Google アナリティクス", "計測ID": [], "property": "",
+                              "エラー": f"プロパティ一覧を読めません（{e.response.status_code}）。Analytics Admin API が有効か、"
+                                       "サービスアカウントが閲覧者に入っているかを確かめてください"})
+        for p in props:
+            g = {**p, "計測ID": 計測ID(よ, p["property"])}
+            try:
+                g.update(GAを読む(よ, p["property"]))
+            except requests.HTTPError as e:
+                g["エラー"] = f"読めませんでした（{e.response.status_code}。Analytics Data API が有効か確かめてください）"
+            結果["GA"].append(g)
+        結果["SC"] = SCを読む(よ)
+    if cf_token and cf_account:
+        結果["CF"] = CFを読む(cf_token, cf_account)
 
     out = Path(os.environ.get("OUT_DIR", "insights/アクセス"))
     out.mkdir(parents=True, exist_ok=True)

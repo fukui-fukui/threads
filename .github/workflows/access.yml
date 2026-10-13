@@ -1,8 +1,8 @@
 name: アクセスの数字を読む
 
 # 2026-10-13 代表「読めるようにして」。Google アナリティクス（おでかけ福井・石川・エキマエ）と
-# Search Console の数字を読み、要点を insights/アクセス/最新.md に残す。毎日 9:10 JST と、手で起動したとき。
-# 鍵は Secrets の GA_SA_KEY（読むだけのサービスアカウント）。未設定なら何もしない。
+# Search Console・Cloudflare Web Analytics の数字を読み、要点を insights/アクセス/最新.md に残す。毎日 9:10 JST と、手で起動したとき。
+# 鍵は Secrets の GA_SA_KEY（読むだけのサービスアカウント）と CF_API_TOKEN・CF_ACCOUNT_ID。無いものは読まない。
 on:
   schedule:
     - cron: "10 0 * * *"
@@ -22,6 +22,8 @@ jobs:
       - name: 読む
         env:
           GA_SA_KEY: ${{ secrets.GA_SA_KEY }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: python "scripts/アクセス解析.py" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: コミットする
         run: |
