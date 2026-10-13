@@ -1,0 +1,29 @@
+name: 非公開の置き場に引っ越す（1回だけ・手で動かす）
+
+# 2026-10-14 代表「非公開リポジトリを作って管理して」「完成まで進めて」。
+# scripts/非公開の置き場.txt にあるもののうち、今このリポジトリにあるものを odekake-data に写す。
+# 写したあと、公開リポジトリから外すのは開発が別にする（写せたのを確かめてから）。
+# ログには道筋と「置いた／変更なし」だけが出る（中身は出さない）。
+on:
+  workflow_dispatch:
+
+jobs:
+  move:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 写す
+        run: |
+          set -euo pipefail
+          if [ -z "${DATA_REPO_TOKEN}" ]; then echo "::error::DATA_REPO_TOKEN がありません"; exit 1; fi
+          grep -v '^\s*#' scripts/非公開の置き場.txt | sed '/^\s*$/d' | while read -r p; do
+            if [ -e "$p" ]; then
+              ./scripts/非公開.sh push "$p" "chore: 公開リポジトリから引っ越し"
+            else
+              echo "${p} はありません（とばします）"
+            fi
+          done
