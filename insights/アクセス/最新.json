@@ -260,9 +260,9 @@
     "G-30WY9GJLB5"
    ],
    "直近7日": {
-    "screenPageViews": 44,
-    "activeUsers": 32,
-    "sessions": 41
+    "screenPageViews": 45,
+    "activeUsers": 33,
+    "sessions": 42
    },
    "その前の7日": {},
    "日ごと": [
@@ -283,8 +283,8 @@
     },
     {
      "date": "20261012",
-     "screenPageViews": 7,
-     "activeUsers": 4
+     "screenPageViews": 8,
+     "activeUsers": 5
     },
     {
      "date": "20261008",
@@ -295,7 +295,7 @@
    "どこから": [
     {
      "sessionDefaultChannelGroup": "Direct",
-     "sessions": 18
+     "sessions": 19
     },
     {
      "sessionDefaultChannelGroup": "Organic Social",
@@ -313,7 +313,7 @@
    "参照元": [
     {
      "sessionSource": "(direct)",
-     "sessions": 18
+     "sessions": 19
     },
     {
      "sessionSource": "threads",
@@ -331,7 +331,7 @@
    "よく見られたページ": [
     {
      "pagePath": "/",
-     "screenPageViews": 44
+     "screenPageViews": 45
     }
    ]
   }
@@ -439,7 +439,146 @@
  ],
  "CF": [
   {
-   "エラー": "Cloudflare を読めません（InvalidHeader）。トークンは 145 文字・英数字以外（空白・改行・記号など）が混ざっている。トークンの権限（Account Analytics: Read）と、貼った値を確かめてください"
+   "サイト": "ekimae.fukui-fukui.com",
+   "期間": "2026-10-06〜2026-10-12",
+   "閲覧数": 244,
+   "訪問": 176,
+   "よく見られたページ": [
+    {
+     "ページ": "/",
+     "閲覧数": 225
+    },
+    {
+     "ページ": "/katamachi/",
+     "閲覧数": 16
+    },
+    {
+     "ページ": "/privacy.html",
+     "閲覧数": 1
+    },
+    {
+     "ページ": "/tokushoho.html",
+     "閲覧数": 1
+    },
+    {
+     "ページ": "/terms.html",
+     "閲覧数": 1
+    }
+   ],
+   "参照元": [
+    {
+     "参照元": "l.threads.com",
+     "閲覧数": 79
+    },
+    {
+     "参照元": "ekimae.fukui-fukui.com",
+     "閲覧数": 68
+    },
+    {
+     "参照元": "www.facebook.com",
+     "閲覧数": 36
+    },
+    {
+     "参照元": "m.facebook.com",
+     "閲覧数": 32
+    },
+    {
+     "参照元": "（直接・不明）",
+     "閲覧数": 21
+    },
+    {
+     "参照元": "l.instagram.com",
+     "閲覧数": 6
+    },
+    {
+     "参照元": "www.google.com",
+     "閲覧数": 1
+    },
+    {
+     "参照元": "search.yahoo.co.jp",
+     "閲覧数": 1
+    }
+   ]
+  },
+  {
+   "サイト": "odekake.fukui-fukui.com",
+   "期間": "2026-10-06〜2026-10-12",
+   "閲覧数": 71,
+   "訪問": 51,
+   "よく見られたページ": [
+    {
+     "ページ": "/",
+     "閲覧数": 53
+    },
+    {
+     "ページ": "/month/2026-10/",
+     "閲覧数": 18
+    }
+   ],
+   "参照元": [
+    {
+     "参照元": "（直接・不明）",
+     "閲覧数": 31
+    },
+    {
+     "参照元": "odekake.fukui-fukui.com",
+     "閲覧数": 20
+    },
+    {
+     "参照元": "l.threads.com",
+     "閲覧数": 11
+    },
+    {
+     "参照元": "search.yahoo.co.jp",
+     "閲覧数": 4
+    },
+    {
+     "参照元": "m.facebook.com",
+     "閲覧数": 2
+    },
+    {
+     "参照元": "www.google.com",
+     "閲覧数": 2
+    },
+    {
+     "参照元": "www.bing.com",
+     "閲覧数": 1
+    }
+   ]
+  },
+  {
+   "サイト": "ishikawa-odekake.fukui-fukui.com",
+   "期間": "2026-10-06〜2026-10-12",
+   "閲覧数": 45,
+   "訪問": 45,
+   "よく見られたページ": [
+    {
+     "ページ": "/",
+     "閲覧数": 45
+    }
+   ],
+   "参照元": [
+    {
+     "参照元": "（直接・不明）",
+     "閲覧数": 24
+    },
+    {
+     "参照元": "l.threads.com",
+     "閲覧数": 16
+    },
+    {
+     "参照元": "m.facebook.com",
+     "閲覧数": 2
+    },
+    {
+     "参照元": "www.facebook.com",
+     "閲覧数": 2
+    },
+    {
+     "参照元": "search.yahoo.co.jp",
+     "閲覧数": 1
+    }
+   ]
   }
  ]
 }
