@@ -82,7 +82,7 @@ def 一本(post_id: str) -> bool:
         本文 = " ".join((r.get("text") or "").split())
         隠し = "（非表示）" if r.get("hide_status") not in (None, "NOT_HUSHED", "") else ""
         # 返信の ID は、返事の案（判断待ちダッシュボード）の宛先に使う
-        print(f"{i:>3}. [{誰}・{段}・いいね {数}{隠し}・ID {r['id']}] {本文}")
+        print(f"{i:>3}. [{誰}・{段}・いいね {数}{隠し}・ID {r['id']}・親 {先 or post_id}] {本文}")
     return True
 
 
