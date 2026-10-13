@@ -15,9 +15,19 @@ if [ "${DRY_RUN:-false}" = "true" ]; then
   exit 0
 fi
 
+# 外に見せない数字・記録は、非公開の置き場（odekake-data）に置く（2026-10-13 代表）。
+# 鍵（DATA_REPO_TOKEN）が無いあいだは、今まで通りこのリポジトリにコミットする。
+if "$(dirname "$0")/非公開.sh" is-private "${TARGET}"; then
+  set +e
+  "$(dirname "$0")/非公開.sh" push "${TARGET}" "${MESSAGE}"
+  rc=$?
+  set -e
+  if [ "$rc" -ne 2 ]; then exit "$rc"; fi
+fi
+
 # まだ git に入っていない新しいファイルも拾うため、add してから index で比べる
 # （2026-10-08 石川版で、初めての投稿の state/posted.json が「変更なし」と見なされ、記録が残らなかった）
-git add -- "${TARGET}" 2>/dev/null || true
+git add -f -- "${TARGET}" 2>/dev/null || true
 if git diff --cached --quiet -- "${TARGET}"; then
   echo "${TARGET} に変更なし。コミットはしません。"
   exit 0

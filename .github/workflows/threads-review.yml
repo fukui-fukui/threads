@@ -30,6 +30,7 @@ jobs:
     permissions:
       contents: write
     env:
+      DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
       PLATFORM: threads
       DRY_RUN: ${{ github.event.inputs.dry_run }}
       # 同じ日の2回目以降は既定でスキップする。叩き直したいときだけ true
@@ -40,6 +41,8 @@ jobs:
       REVIEW_HOLD_DAYS: ${{ vars.REVIEW_HOLD_DAYS }}
     steps:
       - uses: actions/checkout@v4
+      - name: 非公開の置き場から写す（odekake-data。鍵が無いあいだは何もしない）
+        run: ./scripts/非公開.sh pull
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

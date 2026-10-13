@@ -15,8 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+      - name: 非公開の置き場から写す（odekake-data。鍵が無いあいだは何もしない）
+        run: ./scripts/非公開.sh pull
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -25,3 +29,8 @@ jobs:
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           POST_ID: ${{ inputs.post_id }}
         run: python "scripts/返信を読む.py"
+      # 非公開の置き場があるときだけ、本文のファイルをそこへ置く（公開リポジトリには決してコミットしない）
+      - name: 非公開の置き場に置く
+        if: env.DATA_REPO_TOKEN != ''
+        run: |
+          ./scripts/非公開.sh push 返信 "chore(返信): 返信を読んだ結果"

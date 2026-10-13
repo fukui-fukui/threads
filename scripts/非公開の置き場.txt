@@ -1,0 +1,14 @@
+# 公開リポジトリに置かず、非公開の fukui-fukui/odekake-data に置くもの（2026-10-13 代表「非公開リポジトリを作って管理して」「完成まで進めて」）。
+# 1行に1つ。フォルダは中身ごと。odekake-data では <県>/ の下に同じ道筋で置く（例 fukui/insights/アクセス/最新.md）。
+insights/アクセス
+insights/利用者層
+insights/問いかけの記録.md
+insights/アフィリのクリック.jsonl
+insights/アフィリの成績.md
+insights/アフィリの学び.json
+state/インスタ新着.json
+state/usage.jsonl
+state/usage-summary.json
+state/balance.json
+返信
+削除の記録.jsonl

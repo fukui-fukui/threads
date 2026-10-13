@@ -27,6 +27,7 @@ jobs:
     permissions:
       contents: write
     env:
+      DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
       DRY_RUN: ${{ github.event.inputs.dry_run }}
       # 外部 cron からは client_payload.target_date で当日ぶんの作り直しができる
       TARGET_DATE: ${{ github.event.client_payload.target_date || github.event.inputs.target_date }}
@@ -45,6 +46,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: 非公開の置き場から写す（odekake-data。鍵が無いあいだは何もしない）
+        run: ./scripts/非公開.sh pull
 
       - uses: actions/setup-python@v5
         with:

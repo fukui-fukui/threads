@@ -16,6 +16,9 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime
+from pathlib import Path
+from zoneinfo import ZoneInfo
 
 API = "https://graph.threads.net/v1.0"
 # username は取らない（ログにも出さないため）
@@ -71,7 +74,12 @@ def 一本(post_id: str) -> bool:
         print("足りない権限の候補：threads_read_replies（返信を読む）。トークンを作るときにこの権限を足す必要があります。")
         return False
     自分 = sum(1 for r in 返信 if r.get("is_reply_owned_by_me"))
-    print(f"\n=== 投稿 {post_id} への返信：{len(返信)} 件（こちらの返信 {自分} 件・ほかの人 {len(返信) - 自分} 件）")
+    見出し = f"=== 投稿 {post_id} への返信：{len(返信)} 件（こちらの返信 {自分} 件・ほかの人 {len(返信) - 自分} 件）"
+    print("\n" + 見出し)
+    # 非公開の置き場（odekake-data）が使えるときは、本文はそちらのファイルにだけ書き、公開のログには件数だけ出す
+    # （2026-10-13 代表「非公開リポジトリを作って管理して」。公開リポジトリの Actions のログはだれでも見られるため）
+    非公開 = bool(os.environ.get("DATA_REPO_TOKEN"))
+    行たち = [見出し]
     いいねが取れた = False
     for i, r in enumerate(返信, 1):
         誰 = "こちら" if r.get("is_reply_owned_by_me") else "ほかの人"
@@ -82,7 +90,16 @@ def 一本(post_id: str) -> bool:
         本文 = " ".join((r.get("text") or "").split())
         隠し = "（非表示）" if r.get("hide_status") not in (None, "NOT_HUSHED", "") else ""
         # 返信の ID は、返事の案（判断待ちダッシュボード）の宛先に使う
-        print(f"{i:>3}. [{誰}・{段}・いいね {数}{隠し}・ID {r['id']}・親 {先 or post_id}] {本文}")
+        行 = f"{i:>3}. [{誰}・{段}・いいね {数}{隠し}・ID {r['id']}・親 {先 or post_id}] {本文}"
+        行たち.append(行)
+        if not 非公開:
+            print(行)
+    if 非公開:
+        d = Path("返信")
+        d.mkdir(exist_ok=True)
+        日 = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
+        (d / f"{日}_{post_id}.md").write_text("\n".join(行たち) + "\n", encoding="utf-8")
+        print(f"本文は非公開の置き場の 返信/{日}_{post_id}.md に書きました（公開のログには出しません）")
     return True
 
 
