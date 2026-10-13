@@ -170,7 +170,8 @@ def 返事を入れる(mine: list[dict], repo: Path) -> list[str]:
         if not 文 or not 宛先.isdigit() or len(文) > 500:
             print(f"::warning::返事の案 {a.get('id')} は、返事の文か宛先の ID が無いので入れません")
             continue
-        pid = f"r-{今:%Y%m%d}-{a['id'][:8]}"
+        # 宛先の ID はどれも別なので、それで印を作る（id の頭8文字だと「rep-1812…」が重なった。2026-10-14）
+        pid = f"r-{今:%Y%m%d}-{宛先}"
         if pid not in すでに:
             承認 = str(a.get("答えた時刻") or a.get("答えた日") or 今.isoformat(timespec="seconds"))
             行 = {"id": pid, "text": 文, "scheduled_at": 返事の時刻(今, len(行たち)), "approved_at": 承認}
@@ -215,9 +216,10 @@ def 反映(answers: list[dict], repos: dict[str, Path]) -> list[str]:
         if 載せない:
             p = repo / "neta" / "載せないもの.jsonl"
             with p.open("a", encoding="utf-8") as f:
+                # 公開リポジトリなので、URL と日付だけ残す（ほかのアカウントの文や代表の一言は書かない。2026-10-14）
                 for a in 載せない:
-                    f.write(json.dumps({"日": 今日, "中身": a["中身"], "url": a.get("url", ""), "一言": a.get("一言", "")},
-                                       ensure_ascii=False) + "\n")
+                    if a.get("url"):
+                        f.write(json.dumps({"日": 今日, "url": a["url"]}, ensure_ascii=False) + "\n")
         済み += [a["id"] for a in mine]
     return 済み
 
