@@ -30,7 +30,7 @@ from zoneinfo import ZoneInfo
 
 JST = ZoneInfo("Asia/Tokyo")
 見る日数 = 14
-出どころの名 = {"fukui": "ふくいおでかけ", "ishikawa": "いしかわおでかけ"}
+出どころの名 = {"fukui": "ふくいおでかけ", "ishikawa": "いしかわおでかけ", "ekimae": "ふくいエキマエ"}
 
 
 def 印(*部分: str) -> str:
@@ -116,7 +116,7 @@ def 集める(repos: dict[str, Path]) -> list[dict]:
     境目 = datetime.now(JST).date() - timedelta(days=見る日数)
     出 = []
     for 名, repo in repos.items():
-        if not repo or not repo.exists():
+        if not repo or not repo.exists() or 名 == "ekimae":
             continue
         出 += インスタを読む(repo, 出どころの名[名], 境目)
         出 += 外した候補を読む(repo, 出どころの名[名], 境目)
@@ -172,9 +172,15 @@ def 返事を入れる(mine: list[dict], repo: Path) -> list[str]:
             continue
         pid = f"r-{今:%Y%m%d}-{a['id'][:8]}"
         if pid not in すでに:
-            行たち.append(json.dumps({"id": pid, "text": 文, "scheduled_at": 返事の時刻(今, len(行たち)),
-                                     "reply_to": 宛先, "note": "読者の返信への返事（代表が判断待ちで「出す」）"},
-                                    ensure_ascii=False))
+            承認 = str(a.get("答えた時刻") or a.get("答えた日") or 今.isoformat(timespec="seconds"))
+            行 = {"id": pid, "text": 文, "scheduled_at": 返事の時刻(今, len(行たち)), "approved_at": 承認}
+            # エキマエのキューは reply_to_id（エキマエ開発の形）。おでかけは reply_to
+            if a.get("出どころ") == "ふくいエキマエ":
+                行["reply_to_id"] = 宛先
+            else:
+                行["reply_to"] = 宛先
+                行["note"] = "読者の返信への返事（代表が判断待ちで「出す」）"
+            行たち.append(json.dumps(行, ensure_ascii=False))
         済み.append(a["id"])
     if 行たち:
         with q.open("a", encoding="utf-8") as f:
@@ -190,6 +196,8 @@ def 反映(answers: list[dict], repos: dict[str, Path]) -> list[str]:
         if not repo:
             continue
         済み += 返事を入れる([a for a in answers if 名で.get(a.get("出どころ")) == 名], repo)
+        if 名 == "ekimae":
+            continue  # エキマエは返事だけ（ネタ帳は無い）
         mine = [a for a in answers if 名で.get(a.get("出どころ")) == 名 and a.get("答え") in ("載せる", "載せない")
                 and a.get("種類") != "返事の案"]
         if not mine:
@@ -220,8 +228,9 @@ def main() -> None:
     ap.add_argument("answers", nargs="?")
     ap.add_argument("--fukui", type=Path)
     ap.add_argument("--ishikawa", type=Path)
+    ap.add_argument("--ekimae", type=Path, help="エキマエのリポジトリ（返事の案だけ）")
     a = ap.parse_args()
-    repos = {"fukui": a.fukui, "ishikawa": a.ishikawa}
+    repos = {"fukui": a.fukui, "ishikawa": a.ishikawa, "ekimae": a.ekimae}
     if a.やること == "集める":
         print(json.dumps(集める(repos), ensure_ascii=False, indent=1))
     else:

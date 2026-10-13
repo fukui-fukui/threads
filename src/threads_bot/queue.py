@@ -36,6 +36,8 @@ class QueueItem:
     # 読者の返信への返事（2026-10-13 代表「進めてOK」）。入っていれば、1件目をこの投稿への返信として出す。
     # 代表が判断待ちダッシュボードで「出す」を押したものだけが、scripts/判断待ち.py からここに入る。
     reply_to: str | None = None
+    # 代表が「出す」を押した時刻。reply_to のある返事は、これが無いと出さない（2026-10-13 エキマエ開発のすすめ）
+    approved_at: str | None = None
     line_number: int = 0
 
     @property
@@ -118,6 +120,7 @@ def _parse_item(raw: dict, *, line_number: int, tz: ZoneInfo) -> QueueItem:
         thread=list(thread),
         thread_links=list(thread_links),
         reply_to=reply_to,
+        approved_at=raw.get("approved_at") or None,
         line_number=line_number,
     )
 
@@ -171,6 +174,8 @@ def select_due(
             if item.id not in posted_ids
             and item.scheduled_at is not None
             and item.scheduled_at <= now
+            # 読者の返信への返事は、代表が「出す」を押した印（approved_at）があるものだけ
+            and (item.reply_to is None or bool(item.approved_at))
         ),
         key=lambda i: (i.scheduled_at, i.line_number),
     )[: max(limit, 0)]
