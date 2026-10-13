@@ -3,3 +3,17 @@ __pycache__/
 *.egg-info/
 .venv/
 .pytest_cache/
+
+# 非公開の置き場（odekake-data）に置くもの。公開リポジトリには入れない（2026-10-13 代表。scripts/非公開の置き場.txt と同じ）
+/insights/アクセス
+/insights/利用者層
+/insights/問いかけの記録.md
+/insights/アフィリのクリック.jsonl
+/insights/アフィリの成績.md
+/insights/アフィリの学び.json
+/state/インスタ新着.json
+/state/usage.jsonl
+/state/usage-summary.json
+/state/balance.json
+/返信
+/削除の記録.jsonl
