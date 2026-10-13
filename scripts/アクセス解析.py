@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -172,6 +173,11 @@ CF_Q = """query($a: String!, $s: Date!, $e: Date!) { viewer { accounts(filter: {
 
 def CFを読む(token: str, account: str) -> list[dict]:
     """昨日までの7日間の、ホストごとの閲覧数・訪問・ページ・参照元。"""
+    # アカウント ID は32文字の英数字。違う形（トークンを入れ違えたなど）なら、中身は出さずに止める
+    # （2026-10-13 1回目、Cloudflare のエラー文に入れた値がそのまま返り、書き出しにトークンが載りかけた）
+    if not re.fullmatch(r"[0-9a-f]{32}", account):
+        return [{"エラー": "Secrets の CF_ACCOUNT_ID の形が違います（32文字の英数字のはず）。"
+                         "CF_API_TOKEN と CF_ACCOUNT_ID を入れ違えていないか確かめてください"}]
     今日 = datetime.now(JST).date()
     v = {"a": account, "s": (今日 - timedelta(days=7)).isoformat(), "e": (今日 - timedelta(days=1)).isoformat()}
     try:
@@ -180,9 +186,11 @@ def CFを読む(token: str, account: str) -> list[dict]:
         r.raise_for_status()
         d = r.json()
     except requests.RequestException as e:
-        return [{"エラー": f"Cloudflare を読めません（{e}）"}]
+        code = getattr(getattr(e, "response", None), "status_code", "通信エラー")
+        return [{"エラー": f"Cloudflare を読めません（{code}）。トークンの権限（Account Analytics: Read）を確かめてください"}]
     if d.get("errors"):
-        return [{"エラー": "Cloudflare を読めません（" + "; ".join(str(x.get("message")) for x in d["errors"])[:300] + "）"}]
+        return [{"エラー": f"Cloudflare を読めません（エラー {len(d['errors'])} 件）。"
+                         "トークンの権限（Account Analytics: Read）とアカウント ID を確かめてください"}]
     acc = ((d.get("data") or {}).get("viewer") or {}).get("accounts") or [{}]
     acc = acc[0] if acc else {}
     出 = []
@@ -269,7 +277,7 @@ def main() -> None:
             よ._h()
         except (ValueError, GoogleAuthError) as e:
             # 鍵が壊れている・消された・別の鍵などで、Google にログインできないとき。Cloudflare は続けて読む
-            print(f"::error::Google にログインできません（{str(e)[:200]}）")
+            print(f"::error::Google にログインできません（{type(e).__name__}）")
             結果["GA"].append({"名前": "Google アナリティクス・Search Console", "計測ID": [], "property": "",
                               "エラー": "Google にログインできません（鍵が正しくありません）。Google Cloud で新しい JSON の鍵を作り、"
                                        "Secrets の GA_SA_KEY を中身全部で入れ直してください"})
@@ -293,11 +301,15 @@ def main() -> None:
     if cf_token and cf_account:
         結果["CF"] = CFを読む(cf_token, cf_account)
 
+    md_json = json.dumps(結果, ensure_ascii=False, indent=1)
+    md = まとめる(結果)
+    for 秘密 in (cf_token, cf_account, key):
+        if 秘密 and len(秘密) >= 8:
+            md, md_json = md.replace(秘密, "＊＊＊"), md_json.replace(秘密, "＊＊＊")
     out = Path(os.environ.get("OUT_DIR", "insights/アクセス"))
     out.mkdir(parents=True, exist_ok=True)
-    md = まとめる(結果)
     (out / "最新.md").write_text(md, encoding="utf-8")
-    (out / "最新.json").write_text(json.dumps(結果, ensure_ascii=False, indent=1), encoding="utf-8")
+    (out / "最新.json").write_text(md_json, encoding="utf-8")
     if 今日.weekday() == 0:
         (out / f"{今日.isoformat()}.md").write_text(md, encoding="utf-8")
     print(md)
