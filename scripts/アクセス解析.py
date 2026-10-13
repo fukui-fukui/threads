@@ -86,7 +86,7 @@ def 計測ID(よ: 読み手, prop: str) -> list[str]:
 
 
 def _表(よ: 読み手, prop: str, 期間: tuple[str, str], 次元: list[str], 指標: list[str], 件: int = 10,
-       並べる: str | None = None) -> list[dict]:
+       並べる: str | None = None, イベント: str | None = None) -> list[dict]:
     body = {
         "dateRanges": [{"startDate": 期間[0], "endDate": 期間[1]}],
         "dimensions": [{"name": d} for d in 次元],
@@ -95,6 +95,8 @@ def _表(よ: 読み手, prop: str, 期間: tuple[str, str], 次元: list[str], 
     }
     if 並べる:
         body["orderBys"] = [{"metric": {"metricName": 並べる}, "desc": True}]
+    if イベント:
+        body["dimensionFilter"] = {"filter": {"fieldName": "eventName", "stringFilter": {"value": イベント}}}
     d = よ.post(f"{DATA}/{prop}:runReport", body)
     行 = []
     for r in d.get("rows", []):
@@ -125,7 +127,21 @@ def GAを読む(よ: 読み手, prop: str) -> dict:
         "どこから": _表(よ, prop, 今週, ["sessionDefaultChannelGroup"], ["sessions"], 10, "sessions"),
         "参照元": _表(よ, prop, 今週, ["sessionSource"], ["sessions"], 10, "sessions"),
         "よく見られたページ": _表(よ, prop, 今週, ["pagePath"], ["screenPageViews"], 10, "screenPageViews"),
+        "よく見られたお店": お店を読む(よ, prop, 今週),
     }
+
+
+def お店を読む(よ: 読み手, prop: str, 期間: tuple[str, str]) -> list[dict]:
+    """エキマエの「shop_view」イベントを店名ごとに数える（2026-10-13 代表が GA に shop_name・shop_zone・shop_genre を登録）。
+    そのカスタムディメンションが無いプロパティ（おでかけなど）では空にする。"""
+    try:
+        行 = _表(よ, prop, 期間, ["customEvent:shop_name", "customEvent:shop_zone", "customEvent:shop_genre"],
+                 ["eventCount"], 20, "eventCount", イベント="shop_view")
+    except requests.HTTPError:
+        return []
+    return [{"店名": r["customEvent:shop_name"], "エリア": r["customEvent:shop_zone"],
+             "ジャンル": r["customEvent:shop_genre"], "回数": r["eventCount"]}
+            for r in 行 if r.get("customEvent:shop_name") not in ("", "(not set)")]
 
 
 def SCを読む(よ: 読み手) -> list[dict]:
@@ -235,6 +251,9 @@ def まとめる(結果: dict) -> str:
         if g["よく見られたページ"]:
             行.append("- よく見られたページ：")
             行 += [f"  - {r['pagePath']} … {r['screenPageViews']}" for r in g["よく見られたページ"]]
+        if g.get("よく見られたお店"):
+            行.append("- よく見られたお店（shop_view の回数）：")
+            行 += [f"  - {r['店名']}（{r['エリア']}・{r['ジャンル']}） … {r['回数']}" for r in g["よく見られたお店"]]
         行.append("")
     for s in 結果["SC"]:
         行.append(f"## Search Console：{s.get('サイト', '')}")
