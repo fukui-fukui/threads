@@ -186,8 +186,11 @@ def CFを読む(token: str, account: str) -> list[dict]:
         r.raise_for_status()
         d = r.json()
     except requests.RequestException as e:
-        code = getattr(getattr(e, "response", None), "status_code", "通信エラー")
-        return [{"エラー": f"Cloudflare を読めません（{code}）。トークンの権限（Account Analytics: Read）を確かめてください"}]
+        code = getattr(getattr(e, "response", None), "status_code", None) or type(e).__name__
+        # トークンの中身は出さず、形だけ伝える（空白・改行・日本語などが混ざると送る前に失敗する）
+        形 = "英数字と - _ だけ" if re.fullmatch(r"[A-Za-z0-9_\-]+", token) else "英数字以外（空白・改行・記号など）が混ざっている"
+        return [{"エラー": f"Cloudflare を読めません（{code}）。トークンは {len(token)} 文字・{形}。"
+                         "トークンの権限（Account Analytics: Read）と、貼った値を確かめてください"}]
     if d.get("errors"):
         return [{"エラー": f"Cloudflare を読めません（エラー {len(d['errors'])} 件）。"
                          "トークンの権限（Account Analytics: Read）とアカウント ID を確かめてください"}]
