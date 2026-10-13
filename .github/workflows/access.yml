@@ -24,7 +24,9 @@ jobs:
           GA_SA_KEY: ${{ secrets.GA_SA_KEY }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: python "scripts/アクセス解析.py" | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          set -o pipefail
+          python "scripts/アクセス解析.py" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: コミットする
         run: |
           ./scripts/commit_file.sh insights/アクセス "chore(insights): アクセスの要点を更新"

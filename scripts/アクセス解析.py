@@ -27,6 +27,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import requests
+from google.auth.exceptions import GoogleAuthError
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 
@@ -208,7 +209,8 @@ def まとめる(結果: dict) -> str:
     行 = [f"# アクセスの要点（{結果['作った日']}）", "",
           "GA は昨日までの7日間。Search Console は3日前までの28日間（数字が2〜3日遅れるため）。", ""]
     for g in 結果["GA"]:
-        行.append(f"## {g['名前']}（{', '.join(g['計測ID']) or g['property']}）")
+        印 = ", ".join(g["計測ID"]) or g["property"]
+        行.append(f"## {g['名前']}" + (f"（{印}）" if 印 else ""))
         if "エラー" in g:
             行 += [f"- {g['エラー']}", ""]
             continue
@@ -260,8 +262,19 @@ def main() -> None:
         return
     今日 = datetime.now(JST).date()
     結果 = {"作った日": 今日.isoformat(), "GA": [], "SC": [], "CF": []}
+    よ = None
     if key:
-        よ = 読み手(json.loads(key))
+        try:
+            よ = 読み手(json.loads(key))
+            よ._h()
+        except (ValueError, GoogleAuthError) as e:
+            # 鍵が壊れている・消された・別の鍵などで、Google にログインできないとき。Cloudflare は続けて読む
+            print(f"::error::Google にログインできません（{str(e)[:200]}）")
+            結果["GA"].append({"名前": "Google アナリティクス・Search Console", "計測ID": [], "property": "",
+                              "エラー": "Google にログインできません（鍵が正しくありません）。Google Cloud で新しい JSON の鍵を作り、"
+                                       "Secrets の GA_SA_KEY を中身全部で入れ直してください"})
+            よ = None
+    if よ:
         try:
             props = プロパティ一覧(よ)
         except requests.HTTPError as e:
