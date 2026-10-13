@@ -124,6 +124,9 @@ def guess_kind(text: str) -> str:
 INSTAGRAM_MARK = re.compile(r"\s*［Instagram:\s*(https?://(?:www\.)?instagram\.com/[^\s］]+)\s*］")
 
 
+THREADS_MARK = re.compile(r"\s*［Threads:\s*@[A-Za-z0-9._]+\s*］")
+
+
 def split_instagram(line: str) -> tuple[str, str | None]:
     """行から［Instagram: URL］を外し、(残りの行, URL) を返す。URL の ? 以降は捨てる。"""
     m = INSTAGRAM_MARK.search(line)
@@ -166,6 +169,8 @@ def parse_neta(md: str) -> list[dict]:
 
         for i, line in enumerate(bullets):
             line, instagram = split_instagram(line)
+            # 新店の公式 Threads の印（2026-10-13）は投稿で使うもの。サイトには出さない
+            line = THREADS_MARK.sub("", line).strip()
             text, note = split_note(line)
             start, end = parse_dates(text, written)
             items.append({
