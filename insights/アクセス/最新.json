@@ -1,0 +1,17 @@
+{
+ "作った日": "2026-10-13",
+ "GA": [
+  {
+   "名前": "Google アナリティクス・Search Console",
+   "計測ID": [],
+   "property": "",
+   "エラー": "Google にログインできません（鍵が正しくありません）。Google Cloud で新しい JSON の鍵を作り、Secrets の GA_SA_KEY を中身全部で入れ直してください"
+  }
+ ],
+ "SC": [],
+ "CF": [
+  {
+   "エラー": "Cloudflare を読めません（通信エラー）。トークンの権限（Account Analytics: Read）を確かめてください"
+  }
+ ]
+}
