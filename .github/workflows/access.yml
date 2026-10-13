@@ -1,0 +1,28 @@
+name: アクセスの数字を読む
+
+# 2026-10-13 代表「読めるようにして」。Google アナリティクス（おでかけ福井・石川・エキマエ）と
+# Search Console の数字を読み、要点を insights/アクセス/最新.md に残す。毎日 9:10 JST と、手で起動したとき。
+# 鍵は Secrets の GA_SA_KEY（読むだけのサービスアカウント）。未設定なら何もしない。
+on:
+  schedule:
+    - cron: "10 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  access:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet google-auth requests
+      - name: 読む
+        env:
+          GA_SA_KEY: ${{ secrets.GA_SA_KEY }}
+        run: python "scripts/アクセス解析.py" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: コミットする
+        run: |
+          ./scripts/commit_file.sh insights/アクセス "chore(insights): アクセスの要点を更新"
