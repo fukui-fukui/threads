@@ -40,6 +40,8 @@ if (!existsSync(設定パス)) {
 }
 
 const 設定 = JSON.parse(readFileSync(設定パス, 'utf8'));
+// 新店のお店の公式 Threads を探すか（2026-10-13 代表「1,2,3OK」。region.json の 使う.メンション で県ごとに入れる）
+const Threadsを探す = (existsSync('region.json') ? JSON.parse(readFileSync('region.json', 'utf8')) : {})?.使う?.メンション === true;
 const 今日 = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }); // yyyy-mm-dd
 
 const ネタ帳 = existsSync(ネタ帳パス) ? readFileSync(ネタ帳パス, 'utf8') : 初期ネタ帳();
@@ -224,7 +226,13 @@ source にこの投稿の URL を使わない（他人の投稿の丸写しに�
 - 投稿（/p/…）ではなく、アカウントのトップのURLにする
 - 見つからなければ空でよい（入れないより、間違ったものを入れるほうが悪い）
 - source は記事や公式サイトを優先。インスタしか無いときは source にインスタを入れてもよい
+${Threadsを探す ? `
+## 新店は、お店の公式 Threads も探す（2026-10-13 代表了承）
 
+新店の行は、**お店の公式サイトか公式Instagramに Threads へのリンクがあるときだけ**、threads に「@ユーザー名」を入れてください。
+- 公式サイト・公式Instagramから辿れたものだけ。**名前が似ているだけのアカウントは入れない**。推測で作らない
+- 見つからなければ空でよい
+` : ''}
 ## 越えてはいけない線
 
 - 投稿文を書かない。集めた事実を置くだけ
@@ -289,7 +297,7 @@ ${今日}（日本時間）。集めるのは月曜と木曜の週2回なので�
 説明は要りません。source は必ず実在する、辿れるURLにしてください。
 
 \`\`\`json
-{"items":[{"line":"- 本文（→ 誰に何が起きるか）","source":"https://…","instagram":"https://www.instagram.com/…/（無ければ空）"}],"調べて分かったもの":[{"メモ":"元のメモの文","入れた行":"- items に入れた行とまったく同じ文"}],"外した":[{"何":"候補の出来事・店の名前","理由":"確かめられなかった理由（公式が見つからない、日付が出典に無い、など）","url":"見た候補のURL"}]}
+{"items":[{"line":"- 本文（→ 誰に何が起きるか）","source":"https://…","instagram":"https://www.instagram.com/…/（無ければ空）"${Threadsを探す ? ',"threads":"@ユーザー名（新店で確かめられたときだけ。無ければ空）"' : ''}}],"調べて分かったもの":[{"メモ":"元のメモの文","入れた行":"- items に入れた行とまったく同じ文"}],"外した":[{"何":"候補の出来事・店の名前","理由":"確かめられなかった理由（公式が見つからない、日付が出典に無い、など）","url":"見た候補のURL"}]}
 \`\`\`
 
 \`外した\` には、**使いたかったのに出典で確かめられず入れなかった**候補だけを書いてください（代表が後で自分で確かめます。2026-10-11 代表「不確定で省いている案件は私に知らせてください」）。
@@ -355,7 +363,11 @@ for (const item of 取れた.items) {
   const ig = String(item?.instagram ?? '').trim().replace(/\?.*$/, '');
   const インスタ = /^https:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._]+\/?$/.test(ig) && !/instagram\.com\/(p|reel|explore|stories)\//.test(ig)
     ? ig.replace(/\/?$/, '/') : '';
-  入れる.push({ line: インスタ && インスタ !== source ? `${line} ［Instagram: ${インスタ}］` : line, source });
+  const th = String(item?.threads ?? '').trim();
+  const スレッズ = Threadsを探す && /^@[A-Za-z0-9._]{1,30}$/.test(th) ? th : '';
+  let 行 = インスタ && インスタ !== source ? `${line} ［Instagram: ${インスタ}］` : line;
+  if (スレッズ) 行 = `${行} ［Threads: ${スレッズ}］`;
+  入れる.push({ line: 行, source });
 }
 
 console.log(`集まった: ${取れた.items.length}件 ／ 入れる: ${入れる.length}件 ／ とばした: ${とばした.length}件`);
@@ -646,7 +658,8 @@ function 印を取る(s) {
 
 function 整える(s) {
   return String(s ?? '')
-    .replace(/\s*［Instagram:[^］]*］/g, '')   // 同じ出来事かどうかは、インスタの印を外して比べる
+    .replace(/\s*［Instagram:[^］]*］/g, '')
+    .replace(/\s*［Threads:[^］]*］/g, '')   // 同じ出来事かどうかは、インスタの印を外して比べる
     .replace(/ /g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
