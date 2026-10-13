@@ -48,6 +48,15 @@ class PublishItemTest(unittest.TestCase):
         self.assertEqual(client.containers[1]["reply_to_id"], "p1")
         self.assertEqual(client.containers[2]["reply_to_id"], "p2")
 
+    def test_reply_to_makes_the_first_post_a_reply(self):
+        # 読者の返信への返事（2026-10-13）。reply_to が無い投稿は今まで通り
+        client = RecordingClient()
+        publish_item(client, QueueItem(id="r", text="ありがとうございます", reply_to="999"), CONFIG)
+        self.assertEqual(client.containers[0]["reply_to_id"], "999")
+        client = RecordingClient()
+        publish_item(client, QueueItem(id="a", text="本文"), CONFIG)
+        self.assertIsNone(client.containers[0]["reply_to_id"])
+
     def test_thread_links_become_link_cards(self):
         client = RecordingClient()
         item = QueueItem(id="a", text="宿5選", thread=["① 宿A", "② 宿B"],
