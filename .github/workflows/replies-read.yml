@@ -1,0 +1,27 @@
+name: 返信を読む（手で動かす）
+
+# 2026-10-13 運用部・石川担当（代表の依頼）。福井にも同じものを入れた（運用部・福井担当）。14時の問いかけ投稿への返信を集計するため、
+# 返信の本文・いいね数・こちらの返信かどうかをジョブのログにだけ出す。
+# リポジトリには書かない（代表「返信の本文そのものを外に出さない」）。ユーザー名は取らない。
+on:
+  workflow_dispatch:
+    inputs:
+      post_id:
+        description: "返信を読みたい投稿の ID（数字）。何本かならカンマか空白で区切る"
+        required: true
+
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 読む
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          POST_ID: ${{ inputs.post_id }}
+        run: python "scripts/返信を読む.py"
