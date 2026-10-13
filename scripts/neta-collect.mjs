@@ -90,11 +90,20 @@ if (existsSync(巡回先パス)) {
   // Instagram の投稿は、一度 AI に渡したものを覚えておき、次からは渡さない（2026-10-10 代表「重複で読まないように」）。
   // インスタの投稿の URL は出典にしない決まりなので、ネタ帳の URL では重複を見分けられないため。
   const インスタ既読 = new Set(existsSync(インスタ既読パス) ? JSON.parse(readFileSync(インスタ既読パス, 'utf8')) : []);
+  // 代表が「載せない」と答えたもの（判断待ちのダッシュボード、2026-10-13）は候補にしない
+  const 載せない = new Set(
+    existsSync('neta/載せないもの.jsonl')
+      ? readFileSync('neta/載せないもの.jsonl', 'utf8').split('\n').filter((l) => l.trim()).map((l) => {
+          try { return JSON.parse(l).url || ''; } catch { return ''; }
+        }).filter(Boolean)
+      : []
+  );
   // 同じ記事が2つの巡回先（カテゴリの RSS とサイト全体の RSS など）に出ることがある。先に書いた巡回先のほうを残す。
   const 見たURL = new Set();
   const 初めて = 候補
     .filter((c) => !String(c.区分 ?? '').startsWith('インスタ') || !インスタ既読.has(c.url))
-    .filter((c) => c.出典固定 || (見たURL.has(c.url) ? false : (見たURL.add(c.url), true)));
+    .filter((c) => c.出典固定 || (見たURL.has(c.url) ? false : (見たURL.add(c.url), true)))
+    .filter((c) => !載せない.has(c.url));
   if (初めて.length < 候補.length) console.log(`前に読んだインスタ・同じ記事の重なり ${候補.length - 初めて.length}件を外しました`);
 
   // すでにネタ帳に URL がある候補は外す
