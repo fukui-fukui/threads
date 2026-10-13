@@ -128,7 +128,18 @@ def GAを読む(よ: 読み手, prop: str) -> dict:
         "参照元": _表(よ, prop, 今週, ["sessionSource"], ["sessions"], 10, "sessions"),
         "よく見られたページ": _表(よ, prop, 今週, ["pagePath"], ["screenPageViews"], 10, "screenPageViews"),
         "よく見られたお店": お店を読む(よ, prop, 今週),
+        "投稿ごと": 投稿ごとを読む(よ, prop, 今週),
     }
+
+
+def 投稿ごとを読む(よ: 読み手, prop: str, 期間: tuple[str, str]) -> list[dict]:
+    """Threads の投稿から来た訪問を、投稿の id（utm_content）ごとに数える（2026-10-13 代表「つける」）。"""
+    try:
+        行 = _表(よ, prop, 期間, ["sessionManualAdContent", "sessionCampaignName"], ["sessions"], 15, "sessions")
+    except requests.HTTPError:
+        return []
+    return [{"投稿": r["sessionManualAdContent"], "キャンペーン": r["sessionCampaignName"], "訪問": r["sessions"]}
+            for r in 行 if r.get("sessionManualAdContent") not in ("", "(not set)")]
 
 
 def お店を読む(よ: 読み手, prop: str, 期間: tuple[str, str]) -> list[dict]:
@@ -142,6 +153,9 @@ def お店を読む(よ: 読み手, prop: str, 期間: tuple[str, str]) -> list[
     return [{"店名": r["customEvent:shop_name"], "エリア": r["customEvent:shop_zone"],
              "ジャンル": r["customEvent:shop_genre"], "回数": r["eventCount"]}
             for r in 行 if r.get("customEvent:shop_name") not in ("", "(not set)")]
+
+
+サイトの名前 = ["odekake.fukui-fukui.com", "ishikawa-odekake.fukui-fukui.com", "ekimae.fukui-fukui.com"]
 
 
 def SCを読む(よ: 読み手) -> list[dict]:
@@ -167,6 +181,20 @@ def SCを読む(よ: 読み手) -> list[dict]:
             d = よ.post(f"{GSC_Q}/sites/{enc}/searchAnalytics/query", {"startDate": 始, "endDate": 終})
             r = (d.get("rows") or [{}])[0]
             x["合計"] = {"クリック": r.get("clicks", 0), "表示": r.get("impressions", 0)}
+            # ドメインのプロパティ（sc-domain:）は、サイトごと（おでかけ福井・石川・エキマエ）にも分けて見る
+            # （2026-10-13 エキマエ開発「ekimae.fukui-fukui.com のページに絞って」）
+            if url.startswith("sc-domain:"):
+                x["サイトごと"] = []
+                for host in サイトの名前:
+                    f = {"dimensionFilterGroups": [{"filters": [
+                        {"dimension": "page", "operator": "contains", "expression": f"://{host}/"}]}]}
+                    合 = (よ.post(f"{GSC_Q}/sites/{enc}/searchAnalytics/query",
+                                 {"startDate": 始, "endDate": 終, **f}).get("rows") or [{}])[0]
+                    語 = よ.post(f"{GSC_Q}/sites/{enc}/searchAnalytics/query",
+                                {"startDate": 始, "endDate": 終, "dimensions": ["query"], "rowLimit": 10, **f}).get("rows", [])
+                    x["サイトごと"].append({"サイト": host, "クリック": 合.get("clicks", 0), "表示": 合.get("impressions", 0),
+                                         "検索語": [{"語": r["keys"][0], "クリック": r["clicks"], "表示": r["impressions"],
+                                                   "順位": round(r["position"], 1)} for r in 語]})
             sm = よ.get(f"{GSC}/sites/{enc}/sitemaps").get("sitemap", [])
             x["サイトマップ"] = [{"path": m.get("path"), "最後に読まれた日": m.get("lastDownloaded"),
                               "エラー": int(m.get("errors", 0)), "警告": int(m.get("warnings", 0))} for m in sm]
@@ -251,6 +279,8 @@ def まとめる(結果: dict) -> str:
         if g["よく見られたページ"]:
             行.append("- よく見られたページ：")
             行 += [f"  - {r['pagePath']} … {r['screenPageViews']}" for r in g["よく見られたページ"]]
+        if g.get("投稿ごと"):
+            行.append("- Threads の投稿ごとの訪問（UTM）：" + "、".join(f"{r['投稿']} {r['訪問']}" for r in g["投稿ごと"]))
         if g.get("よく見られたお店"):
             行.append("- よく見られたお店（shop_view の回数）：")
             行 += [f"  - {r['店名']}（{r['エリア']}・{r['ジャンル']}） … {r['回数']}" for r in g["よく見られたお店"]]
@@ -265,6 +295,9 @@ def まとめる(結果: dict) -> str:
         if s.get("検索語"):
             行.append("- 検索語（上位）：")
             行 += [f"  - {r['語']} … クリック {r['クリック']}・表示 {r['表示']}・平均順位 {r['順位']}" for r in s["検索語"][:15]]
+        for h in s.get("サイトごと", []):
+            行.append(f"- {h['サイト']}：クリック {h['クリック']:,}／検索結果に出た回数 {h['表示']:,}")
+            行 += [f"  - {r['語']} … クリック {r['クリック']}・表示 {r['表示']}・平均順位 {r['順位']}" for r in h["検索語"][:5]]
         for m in s.get("サイトマップ", []):
             行.append(f"- サイトマップ {m['path']}：エラー {m['エラー']}・警告 {m['警告']}（最後に読まれた日 {m['最後に読まれた日']}）")
         行.append("")
