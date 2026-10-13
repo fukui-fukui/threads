@@ -439,7 +439,7 @@
  ],
  "CF": [
   {
-   "エラー": "Cloudflare を読めません（通信エラー）。トークンの権限（Account Analytics: Read）を確かめてください"
+   "エラー": "Cloudflare を読めません（InvalidHeader）。トークンは 145 文字・英数字以外（空白・改行・記号など）が混ざっている。トークンの権限（Account Analytics: Read）と、貼った値を確かめてください"
   }
  ]
 }
