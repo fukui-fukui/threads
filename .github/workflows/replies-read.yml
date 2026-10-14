@@ -30,7 +30,8 @@ jobs:
           POST_ID: ${{ inputs.post_id }}
         run: python "scripts/返信を読む.py"
       # 非公開の置き場があるときだけ、本文のファイルをそこへ置く（公開リポジトリには決してコミットしない）
+      # 読めない投稿が1本あっても、読めた分は置く（always()。ジョブは赤のままにして失敗は見えるようにする。2026-10-14 運用部・石川担当）
       - name: 非公開の置き場に置く
-        if: env.DATA_REPO_TOKEN != ''
+        if: always() && env.DATA_REPO_TOKEN != ''
         run: |
           ./scripts/非公開.sh push 返信 "chore(返信): 返信を読んだ結果"
