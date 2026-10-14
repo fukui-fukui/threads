@@ -36,16 +36,21 @@ is_private() {
   return 1
 }
 
+# 毎回まっさらに取ってくる（空の置き場では reset が効かず、断られた前のコミットが残って
+# 「変更なし」のまま成功に見えたことがある。2026-10-14 エキマエ開発の気づき）
 clone() {
-  if [ -d "$CLONE/.git" ]; then
-    git -C "$CLONE" fetch -q origin
-    git -C "$CLONE" reset -q --hard "origin/$(git -C "$CLONE" rev-parse --abbrev-ref HEAD)" 2>/dev/null || true
-    return
-  fi
   rm -rf "$CLONE"
   git clone -q --depth 20 "${DATA_REPO_URL:-https://x-access-token:${DATA_REPO_TOKEN}@github.com/${DATA_REPO}.git}" "$CLONE"
   git -C "$CLONE" config user.name "github-actions[bot]"
   git -C "$CLONE" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+}
+
+# push したコミットが置き場の枝の先と同じか
+置けた() {
+  local b remote
+  b="$(git -C "$CLONE" symbolic-ref --short HEAD)"
+  remote="$(git -C "$CLONE" ls-remote origin "refs/heads/$b" | cut -f1)"
+  [ -n "$remote" ] && [ "$remote" = "$(git -C "$CLONE" rev-parse HEAD)" ]
 }
 
 # .jsonl は行を合わせる（別のジョブが同時に足した行を消さないため）。ほかは上書き
@@ -98,9 +103,10 @@ case "$cmd" in
       git -C "$CLONE" add -A "$k/$target"
       if git -C "$CLONE" diff --cached --quiet; then echo "${target} に変更なし。"; exit 0; fi
       git -C "$CLONE" commit -q -m "${message}（${GITHUB_REPOSITORY:-手元}）"
-      if git -C "$CLONE" push -q origin HEAD; then echo "非公開の置き場に ${target} を置きました。"; exit 0; fi
+      if git -C "$CLONE" push -q origin HEAD && 置けた; then echo "非公開の置き場に ${target} を置きました。"; exit 0; fi
       sleep $((2 ** attempt))
     done
+    echo "非公開の置き場に ${target} を置けませんでした。" >&2
     exit 1 ;;
   *)
     echo "使い方: $0 pull | push <道筋> [メッセージ] | is-private <道筋>" >&2; exit 1 ;;
