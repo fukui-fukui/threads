@@ -70,8 +70,12 @@ def 一本(post_id: str) -> bool:
     try:
         返信 = 返信を全部(post_id)
     except urllib.error.HTTPError as e:
-        print(f"::error::{post_id} の返信を読めません（{エラー文(e)}）")
-        print("足りない権限の候補：threads_read_replies（返信を読む）。トークンを作るときにこの権限を足す必要があります。")
+        文 = エラー文(e)  # 中身は1回しか読めないので、先に文にしておく
+        print(f"::error::{post_id} の返信を読めません（{文}）")
+        if "does not exist" in 文:
+            print("投稿が消えたか、ID が違う見込みです（state/posted.json の ID と、Threads 上で投稿が残っているかを確かめる）。")
+        else:
+            print("足りない権限の候補：threads_read_replies（返信を読む）。トークンを作るときにこの権限を足す必要があります。")
         return False
     自分 = sum(1 for r in 返信 if r.get("is_reply_owned_by_me"))
     見出し = f"=== 投稿 {post_id} への返信：{len(返信)} 件（こちらの返信 {自分} 件・ほかの人 {len(返信) - 自分} 件）"
