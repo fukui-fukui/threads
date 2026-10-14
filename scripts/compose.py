@@ -395,6 +395,26 @@ def 問いで終わる(entry: dict) -> bool:
     return False
 
 
+def 直近の問いかけ(entries: list[dict], target_date, days: int = 3) -> str:
+    """作る日の前 days 日と当日に入っている問いかけ（14時の枠と、問いで終わる投稿）の本文を全部返す。
+    1行目だけでは「場面＋食べもの4択」のような形の重なりが見えないので、本文ごと渡す
+    （2026-10-14 運用部・石川担当：10/13・10/14・10/15 と同じ形が続き、10/14 は代表が手で消した）。"""
+    始め = (target_date - timedelta(days=days)).isoformat()
+    終わり = (target_date + timedelta(days=1)).isoformat()
+    選んだ = sorted(
+        (e for e in entries
+         if isinstance(e.get("scheduled_at"), str) and 始め <= e["scheduled_at"] < 終わり
+         and not e.get("reply_to") and not e.get("reply_to_id")
+         and (e["scheduled_at"][11:13] == "14" or 問いで終わる(e))),
+        key=lambda e: e["scheduled_at"])
+    parts = []
+    for e in 選んだ:
+        when = e["scheduled_at"][5:16].replace("T", " ")
+        本文 = "\n".join("    " + l for l in (e.get("text") or "").strip().splitlines())
+        parts.append(f"- {when}\n{本文}")
+    return "\n".join(parts)
+
+
 def find_filled(entries: list[dict], target_date) -> dict[int, dict]:
     prefix = target_date.isoformat()
     filled: dict[int, dict] = {}
@@ -425,7 +445,7 @@ def describe_filled(filled: dict[int, dict]) -> str:
     return "\n".join(parts)
 
 
-def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, target_date, needed, filled, hotel=None, hotel_hour=None, mugi=None, kifu=None, 使えない: str = "", stay=None, 予備の数: int = 0, kifu_hour=None) -> str:
+def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, target_date, needed, filled, hotel=None, hotel_hour=None, mugi=None, kifu=None, 使えない: str = "", stay=None, 予備の数: int = 0, kifu_hour=None, 問い履歴: str = "") -> str:
     def _枠の行(hour, pillar, form, aim):
         行 = f"- {hour}:00 ｜ 深さ: {DEPTH.get(hour, 'B')} ｜ 柱: {pillar} ｜ 型: {form} ｜ ねらい: {aim}"
         # PR の枠は、9枠ぶんの指示に埋もれて読み飛ばされることがある。
@@ -595,6 +615,13 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "- 選択肢に店の名前（チェーン店・個人店）を入れない。料理・名所・行事の名前にする（特定の店の宣伝にならないように）",
         "- 出典元・URL は付けない。THREAD は付けない（本文だけで完結させる）",
         "- 同じ問いを14日以内にくり返さない。**同じ題材（例：加賀の温泉に1泊）も7日はあける**。季節（今の月）に合う話題を選ぶ",
+        "- **直近3日の問いかけ（下の一覧）と見比べて、①聞く題材の大きな分け方（食べもの／泊まる／出かける先／季節の行事 など）と ②選択肢の種類 の両方が重なる問いは作らない。** 言いまわしや場面（「県外の友だちと」「1回だけ」）を変えても、同じ形なら同じ問いです（2026-10-14 運用部・石川担当：「場面＋食べもの4択」が3日続き、10/14 の分は代表が手で消した）",
+        "  × 前日が「最初のひと口（新米・カニ・甘えび・ぶり）」なのに、今日「晩ごはん1回だけ（のどぐろ・おでん…）」",
+        "  ○ 前日が食べものなら、今日は出かける先（「金沢で半日空いたらどこへ」）や季節の行事にする",
+        "",
+        "#### 直近3日の問いかけ（本文）",
+        問い履歴 or "（なし）",
+        "",
         "- いくつも聞かない。聞くのは1つだけ（「1つだけ選ぶなら？」）",
         "- 本文は 60〜160 字。ほかの枠の「80 字以内」より長くてかまいません",
         "",
@@ -2014,6 +2041,7 @@ def main() -> None:
     model = pick_model(api_key)
     prompt = build_prompt(
         board, neta, articles, works, recent_texts(全投稿), target_date, needed, filled,
+        問い履歴=直近の問いかけ(全投稿, target_date),
         hotel=hotel,
         hotel_hour=HOTEL_HOUR if (hotel or mugi or stay) else None,
         kifu_hour=KIFU_HOUR if kifu else None,
