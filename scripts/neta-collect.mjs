@@ -349,6 +349,7 @@ if (!書かない) {
 // ==================================================================
 const 入れる = [];
 const とばした = [];
+const 日付なし = [];
 
 for (const item of 取れた.items) {
   const line = 整形(item?.line);
@@ -356,6 +357,12 @@ for (const item of 取れた.items) {
   if (!line) continue;
   if (!/^https?:\/\//.test(source)) {
     とばした.push(`${line}（出典URLが無い）`);
+    continue;
+  }
+  // 日付の無い催しの行は入れない（「〜の案内が出ている（日程は出典で確認）」だけでは投稿に日付を書けない）。
+  // 外した候補に回して、代表が確かめられるようにする（2026-10-15 運用部・石川担当）
+  if (日付が無い催し(line)) {
+    日付なし.push(`${印を取る(line).replace(/^[-*・]\s*/, '')}（行に日付が無い。出典で日付を確かめる） ${source}`);
     continue;
   }
   if (既存.has(整える(line)) || 既存.has(整える(印を取る(line)))) {
@@ -372,6 +379,7 @@ for (const item of 取れた.items) {
   let 行 = インスタ && インスタ !== source ? `${line} ［Instagram: ${インスタ}］` : line;
   if (スレッズ) 行 = `${行} ［Threads: ${スレッズ}］`;
   入れる.push({ line: 行, source });
+  if (時間の無い新店(line)) console.log(`::warning::新店の行に営業時間がありません（出典を開いて確かめてください）: ${line}`);
 }
 
 console.log(`集まった: ${取れた.items.length}件 ／ 入れる: ${入れる.length}件 ／ とばした: ${とばした.length}件`);
@@ -383,7 +391,8 @@ const 外した = [
     .map((x) => (typeof x === 'string' ? x : `${String(x?.何 ?? '').trim()}（${String(x?.理由 ?? '').trim()}）${x?.url ? ' ' + String(x.url).trim() : ''}`))
     .map((x) => x.replace(/^[-*・]\s*/, '').trim())
     .filter((x) => x && !/^（）$/.test(x)),
-  ...とばした.filter((x) => x.endsWith('（出典URLが無い）')).map((x) => x.replace(/^[-*・]\s*/, ''))
+  ...とばした.filter((x) => x.endsWith('（出典URLが無い）')).map((x) => x.replace(/^[-*・]\s*/, '')),
+  ...日付なし
 ];
 if (外した.length) {
   console.log(`確かめられず外した: ${外した.length}件`);
@@ -424,9 +433,24 @@ const 分かった = (取れた['調べて分かったもの'] ?? [])
   }))
   .filter((x) => x.メモ && 調べもの.some((m) => 整える(m) === 整える(x.メモ)))
   .filter((x) => {
-    if (x.行 && 入れた行.has(x.行)) return true;
-    console.log(`  消しません（ネタ帳に入っていない）: ${x.メモ}`);
-    return false;
+    if (!x.行 || !入れた行.has(x.行)) {
+      console.log(`  消しません（ネタ帳に入っていない）: ${x.メモ}`);
+      return false;
+    }
+    // メモに書いてある時刻・日付（運用部や代表が画面から書いた事実）が、入れた行に無ければ消さない
+    // （2026-10-15 O-SPICE：営業時間つきのメモが、時間の無い行に置きかわった）
+    const 抜けた = 事実の印(x.メモ).filter((t) => !整える(x.行).includes(整える(t)));
+    if (抜けた.length) {
+      console.log(`  消しません（メモの ${抜けた.join('・')} が行に無い）: ${x.メモ}`);
+      return false;
+    }
+    // 同じ回で「外した」に回したものは、分かったことにしない（2026-10-15 台南美食フェア）
+    const 名 = メモの名(x.メモ);
+    if (名 && 外した.some((y) => 整える(y).includes(整える(名)))) {
+      console.log(`  消しません（外した候補にも入っている）: ${x.メモ}`);
+      return false;
+    }
+    return true;
   })
   .map((x) => x.メモ);
 
@@ -471,7 +495,12 @@ async function claudeに聞く(prompt) {
         model: 設定.モデル ?? 'claude-sonnet-5-5',
         // 候補が多い日は 8000 では返しの JSON の途中で切れた（2026-10-08 石川版、候補130件）
         max_tokens: 16000,
-        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 設定.検索回数 ?? 8 }],
+        // web_fetch は出典のページを開いて読むため。検索だけだと一覧の見出ししか見えず、
+        // 新店の営業時間・催しの日付が行に入らなかった（2026-10-15 運用部・石川担当）
+        tools: [
+          { type: 'web_search_20260209', name: 'web_search', max_uses: 設定.検索回数 ?? 8 },
+          { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 設定.読む回数 ?? 10, max_content_tokens: 8000 }
+        ],
         messages
       })
     });
@@ -637,6 +666,36 @@ function 見出しの下に入れる(md, 見出し文字, 塊) {
   const 前 = md.slice(0, 改行 + 1);
   const 後 = md.slice(改行 + 1);
   return `${前}\n${塊}${後.startsWith('\n') ? 後 : '\n' + 後}`;
+}
+
+// 時刻（12:00、12時）と日付（6月5日、6/5、10月中旬）。行に事実が入っているかを見るのに使う
+const 時刻の形 = /\d{1,2}[:：]\d{2}|\d{1,2}時/g;
+const 日付の形 = /\d{1,2}月\d{1,2}日|\d{1,2}\/\d{1,2}|\d{1,2}月(上旬|中旬|下旬|初め|末)|\d{4}年\d{1,2}月/g;
+
+function 事実の印(s) {
+  return [...new Set([...(s.match(時刻の形) ?? []), ...(s.match(日付の形) ?? [])])];
+}
+
+/** 「日程は出典で確認」「案内が出ている」のように日付をよけた催しの行で、日付が1つも無いもの */
+export function 日付が無い催し(line) {
+  const 本文 = 印を取る(line);
+  if (!/日程は出典|日付は出典|案内が出て|日程は未定|日程未定/.test(本文)) return false;
+  return !(本文.match(日付の形) ?? []).length;
+}
+
+/** 新店（オープン・開店）の行で、営業時間が無いもの */
+export function 時間の無い新店(line) {
+  const 本文 = 印を取る(line);
+  if (!/オープン|開店|新店|グランドオープン/.test(本文)) return false;
+  return !/営業|\d{1,2}[:：]\d{2}|\d{1,2}時/.test(本文);
+}
+
+/** メモのいちばん大事な名前（「」の中、無ければ最初の区切りまで） */
+function メモの名(s) {
+  const か = s.match(/「([^」]{2,})」/);
+  if (か) return か[1];
+  const 頭 = s.split(/[（(、。:：]/)[0].trim().slice(0, 15);
+  return 頭.length >= 4 ? 頭 : '';
 }
 
 function 整形(s) {
