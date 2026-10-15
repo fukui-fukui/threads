@@ -302,17 +302,24 @@ def fetch_urala_design_works(limit: int = 15) -> str:
     print(f"URALA制作実績: {len(lines)} 件を読み込みました。")
     return "\n".join(lines)
 
-def api_request(method: str, path: str, api_key: str, body: dict | None = None) -> dict:
+class 道具が使えない(Exception):
+    pass
+
+
+def api_request(method: str, path: str, api_key: str, body: dict | None = None, 道具あり: bool = False) -> dict:
     data = json.dumps(body).encode("utf-8") if body is not None else None
     request = urllib.request.Request(API_BASE + path, data=data, method=method)
     request.add_header("x-api-key", api_key)
     request.add_header("anthropic-version", API_VERSION)
     request.add_header("content-type", "application/json")
     try:
-        with urllib.request.urlopen(request, timeout=180) as response:
+        # web_fetch でページを読むぶん返事が遅くなるので、長めに待つ（2026-10-15）
+        with urllib.request.urlopen(request, timeout=600) as response:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")[:500]
+        if 道具あり and exc.code == 400 and ("tool" in detail or "web_fetch" in detail):
+            raise 道具が使えない(detail)
         fail(f"Anthropic API エラー ({exc.code}): {detail}")
     except Exception as exc:
         fail(f"Anthropic API に接続できませんでした: {exc}")
@@ -796,7 +803,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "",
         "**12:00・19:00・21:00 も、同じ日に同じ催しを出さないこと。** それぞれ違う催しを選んでください。",
         "",
-        "## 使えない出典（直近14日で2回出した／3日以内に出した。機械で止めます）",
+        "## 使えない出典と、使えない店・催しの名前（出典は直近14日で2回／3日以内、名前は直近7日に出したもの。手で入れた投稿も含む。機械で止めます）",
         "",
         使えない or "（なし）",
         "",
@@ -836,6 +843,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "- 金額・社内事情・未公開情報は書かない",
         "- 申し込み・応募・抽選・予約の締め切りが、投稿する日より前のものは案内しない（2026-10-13、10/12 締め切りの抽選を 10/14 に案内しかけた）。締め切りが書かれていない募集は、締め切りに触れずに書く",
         "- 新しくできた店（オープン・新店）を紹介するときは、材料に営業時間・定休日があれば THREAD に書く（材料に無ければ書かない）",
+        "- **ネタ帳の行に営業時間・会場・時間が無いときは、その行の出典 URL を web_fetch で開いて確かめ、書いてあれば書く。** 「出典でご確認ください」で済ませるのは、開いても書いていなかったときだけ。開いたページに書いていないことは書かない（2026-10-15 運用部・石川担当）",
         "- 「5月にリニューアル」のように月だけの日付は、材料の年が今年でなければ年を書く（「2024年5月に」）。年が無いと今年の話に読める（2026-10-14 運用部・石川担当）",
         "- 対象の条件（「県内の小学4〜6年生と保護者」「県民は無料」など）と、締め切り・抽選の有無は、材料にあれば必ず本文か THREAD に書く。条件を落とすと、行けない人を誘うことになる（2026-10-14 運用部・石川担当）",
         "- 誇張しない、盛らない。自慢に読めないよう、学び・失敗・裏側の形で語る",
@@ -1029,20 +1037,29 @@ def parse_posts(text: str) -> list[dict]:
 
 
 def ask(api_key: str, model: str, prompt: str) -> str:
-    payload = api_request(
-        "POST",
-        "/messages",
-        api_key,
-        {
-            "model": model,
-            "max_tokens": 16000,
-            "messages": [{"role": "user", "content": prompt}],
-        },
-    )
-    使用量.記録("翌日ぶんの作成", model, payload.get("usage") or {})
-    出 = "".join(
-        block.get("text", "") for block in payload.get("content", []) if block.get("type") == "text"
-    ).strip()
+    # web_fetch で、ネタ帳の行の出典（URL は材料に入っている）を開いて、営業時間・会場などを確かめられるようにする。
+    # 今までは道具が無く、行に無いことは「出典でご確認ください」としか書けなかった（2026-10-15 運用部・石川担当）。
+    # サーバー側の道具は途中で pause_turn を返すことがあるので、続きを3回まで頼む。
+    messages = [{"role": "user", "content": prompt}]
+    道具 = [{"type": "web_fetch_20260209", "name": "web_fetch", "max_uses": 8, "max_content_tokens": 6000}]
+    文たち: list[str] = []  # 途中で止まった回の文も、つなげて使う
+    for _ in range(4):
+        body = {"model": model, "max_tokens": 16000, "messages": messages}
+        if 道具:
+            body["tools"] = 道具
+        try:
+            payload = api_request("POST", "/messages", api_key, body, 道具あり=bool(道具))
+        except 道具が使えない as e:
+            # 古いモデルなどで web_fetch が使えないときは、道具なしでやり直す（1日ぶんを落とさないため）
+            print(f"::warning::web_fetch が使えないので、道具なしで作ります（{str(e)[:200]}）")
+            道具, messages, 文たち = [], [{"role": "user", "content": prompt}], []
+            continue
+        使用量.記録("翌日ぶんの作成", model, payload.get("usage") or {})
+        文たち += [b.get("text", "") for b in payload.get("content", []) if b.get("type") == "text"]
+        if payload.get("stop_reason") != "pause_turn":
+            break
+        messages.append({"role": "assistant", "content": payload.get("content", [])})
+    出 = "".join(文たち).strip()
     # 1本も読めなかったときの手がかり（2026-09-30。1回目だけ0本になる原因を調べる）
     if "@@@POST" not in 出 or payload.get("stop_reason") != "end_turn":
         print(f"::warning::返答の状態: stop_reason={payload.get('stop_reason')} ／ {len(出)} 字 ／ "
@@ -1641,6 +1658,62 @@ def 出典の記録(投稿たち: list[dict], target_date) -> dict[str, list[tup
     return 記
 
 
+# 同じ店・同じ催しは、出典 URL が違っても直近7日は使わない（2026-10-15 運用部・石川担当：
+# 10/16 ぶんの12本のうち4本が、直近の投稿と同じ店・催しだった。URL が違うと上の数え方では止まらない）。
+同じ名を空ける日数 = 7
+# 石川だけ（region.json の 使う.同じ名を7日あける）。福井は 2026-09-29 代表了承の「14日で2回まで・3日あける」のまま
+同じ名を見る = 地域.使う("同じ名を7日あける")
+# 名所・地名そのもの（「兼六園」など）は、別の催しの会場として何度も出るので数えない
+_地名 = {x for 組 in 地域.地域.get("地名", []) for x in 組} | {"福井", "石川", "金沢", "越前", "若狭", "能登", "加賀"}
+_名の形 = re.compile(r"「([^「」\n]{2,60})」")
+_名でないもの = re.compile(r"[、。！？!?]|ください|ですか|ますか")
+_読みがな = re.compile(r"[（(][^）)]*[）)]")
+_名らしい字 = re.compile(r"[ァ-ヴー一-龥A-Za-z]")
+
+
+def 名前たち(e: dict) -> set[str]:
+    """投稿の本文・連投・note にある「」の名前（店・催し・施設）。
+    読みがなの（）は取る。言葉の引用（句読点を含む・ひらがなだけ）はのぞく。"""
+    found = set()
+    for part in [e.get("text") or "", *(e.get("thread") or []), e.get("note") or ""]:
+        for n in _名の形.findall(part):
+            n = _読みがな.sub("", n).strip()
+            if 2 <= len(n) <= 30 and n not in _地名 and not _名でないもの.search(n) and _名らしい字.search(n):
+                found.add(n)
+    return found
+
+
+def 名の記録(投稿たち: list[dict], target_date) -> dict[str, tuple[str, int]]:
+    """名前 → 直近に出した (日付, 時)。対象日より前の7日（手で入れた投稿も含む）。"""
+    記: dict[str, tuple[str, int]] = {}
+    for e in 投稿たち:
+        at = str(e.get("scheduled_at", ""))
+        d = at[:10]
+        if not d or d >= target_date.isoformat() or e.get("reply_to") or e.get("reply_to_id"):
+            continue
+        try:
+            差 = (target_date - datetime.strptime(d, "%Y-%m-%d").date()).days
+            時 = int(at[11:13])
+        except ValueError:
+            continue
+        if 差 > 同じ名を空ける日数:
+            continue
+        for n in 名前たち(e):
+            if n not in 記 or 記[n] < (d, 時):
+                記[n] = (d, 時)
+    return 記
+
+
+def 名で止める理由(e: dict, 名記: dict) -> str | None:
+    if not 同じ名を見る:
+        return None
+    for n in sorted(名前たち(e)):
+        if n in 名記:
+            d, 時 = 名記[n]
+            return f"「{n}」を {d} {時}:00 に出したばかり（同じ店・催しは{同じ名を空ける日数}日あける）"
+    return None
+
+
 def 出典で止める理由(urls: set[str], 記: dict, target_date) -> str | None:
     for u in sorted(urls):
         回 = 記.get(u) or []
@@ -1660,6 +1733,12 @@ def 使えない出典の一覧(記: dict, 投稿たち: list[dict], target_date
         if len(回) >= 同じ出典の上限 or 近い:
             行.append(f"- {u}（{len(回)}回・最後 {max(回)[0]}）")
     return "\n".join(行)
+
+
+def 使えない名の一覧(名記: dict) -> str:
+    if not 同じ名を見る:
+        return ""
+    return "\n".join(f"- 「{n}」（最後 {d} {時}:00）" for n, (d, 時) in sorted(名記.items(), key=lambda x: x[1], reverse=True))
 
 
 # ---- 15時：催し × 近くの宿1軒（福井だけ。2026-09-29 代表了承） -------------
@@ -1783,7 +1862,7 @@ def 予備にする(posts: list[dict], target_date, 記: dict, 今日の出典: 
     return 出
 
 
-def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出典: set[str], existing_ids: set[str]) -> list[str]:
+def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出典: set[str], existing_ids: set[str], 名記: dict | None = None) -> list[str]:
     """空いた枠を予備で埋める。15時（PR）は埋めない。使ったものは予備から消す。"""
     予備 = 予備を読む()
     残す, 行 = [], []
@@ -1799,7 +1878,7 @@ def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出�
             except ValueError:
                 continue
         urls = source_urls(x.get("text", ""), x.get("thread") or [])
-        if 空き and not (urls & 今日の出典) and not 出典で止める理由(urls, 記, target_date):
+        if 空き and not (urls & 今日の出典) and not 出典で止める理由(urls, 記, target_date) and not 名で止める理由(x, 名記 or {}):
             h = 空き.pop(0)
             item = {"id": new_id(h, existing_ids), "text": x["text"],
                     "scheduled_at": f"{target_date.isoformat()}T{h:02d}:00:00+09:00",
@@ -1876,6 +1955,7 @@ def main() -> None:
     全投稿 = list(全部.values())
     existing_ids = set(全部)
     記 = 出典の記録(全投稿, target_date)
+    名記 = 名の記録(全投稿, target_date)
 
     filled = find_filled(entries, target_date)
     needed = [slot for slot in SLOTS if slot[0] not in filled]
@@ -1927,7 +2007,7 @@ def main() -> None:
         今日の出典: set[str] = set()
         for e in filled.values():
             今日の出典 |= source_urls(e.get("text", ""), e.get("thread") or [])
-        行 = 予備で埋める(target_date, [h for h, *_ in needed], 記, 今日の出典, existing_ids)
+        行 = 予備で埋める(target_date, [h for h, *_ in needed], 記, 今日の出典, existing_ids, 名記)
         if 行 and not dry_run:
             with QUEUE_PATH.open("a", encoding="utf-8") as handle:
                 for line in 行:
@@ -2047,7 +2127,7 @@ def main() -> None:
         kifu_hour=KIFU_HOUR if kifu else None,
         mugi=mugi,
         kifu=kifu,
-        使えない=使えない出典の一覧(記, 全投稿, target_date),
+        使えない="\n".join(x for x in [使えない出典の一覧(記, 全投稿, target_date), 使えない名の一覧(名記)] if x),
         stay=stay,
         予備の数=予備の数,
     )
@@ -2261,7 +2341,8 @@ def main() -> None:
             # 同じ出来事は直近14日で2回まで・3日以上あける（6:00 の「今日で終わる」はのぞく）。
             # 2026-09-29 代表了承。前の「前の日だけ見る・先の予定は何度でも」を改めた。
             if hour != 6 and not (今週末まとめの日(target_date) and hour == WEEKEND_HOUR):
-                わけ = 出典で止める理由(source_urls(text, thread), 記, target_date)
+                わけ = 出典で止める理由(source_urls(text, thread), 記, target_date) or 名で止める理由(
+                    {"text": text, "thread": thread, "note": post.get("note")}, 名記)
                 if わけ:
                     print(f"::warning::{hour}:00 は{わけ}ので入れません。この枠はあとで予備で埋めます。")
                     continue
@@ -2320,7 +2401,7 @@ def main() -> None:
     if 新しい予備:
         予備を書く(予備を読む() + 新しい予備)
     if 空き:
-        new_lines += 予備で埋める(target_date, 空き, 記, set(出典の枠), existing_ids)
+        new_lines += 予備で埋める(target_date, 空き, 記, set(出典の枠), existing_ids, 名記)
 
     with QUEUE_PATH.open("a", encoding="utf-8") as handle:
         for line in new_lines:
