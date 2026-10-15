@@ -154,6 +154,8 @@ import 宿
 print(json.dumps([宿.市町({"住所": a, "エリア": "x"}) for a in sys.argv[1:]], ensure_ascii=False))
 """
         設定 = ROOT / "regions" / "gifu-aichi" / "region.json"
+        if not 設定.exists():
+            self.skipTest("regions/gifu-aichi が無いリポジトリ（石川などの写し）")
         env = {**os.environ, "REGION_FILE": str(設定)}
         住所 = ["愛知県名古屋市中村区名駅1-1-4", "岐阜県下呂市湯之島570", "愛知県蒲郡市三谷町鳶欠14-1",
                 "愛知県額田郡幸田町", "岐阜県大野郡白川村荻町"]
