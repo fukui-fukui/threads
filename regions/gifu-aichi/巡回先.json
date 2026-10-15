@@ -143,7 +143,8 @@
     {
       "名前": "愛知県（新着）",
       "区分": "県",
-      "url": "https://www.pref.aichi.jp/rss/10/list1.xml"
+      "url": "https://www.pref.aichi.jp/rss/10/list1.xml",
+      "取り方": "curl"
     },
     {
       "名前": "名駅経済新聞",
@@ -173,17 +174,20 @@
     {
       "名前": "春日井市（新着）",
       "区分": "市町",
-      "url": "https://www.city.kasugai.lg.jp/rss.rss"
+      "url": "https://www.city.kasugai.lg.jp/rss.rss",
+      "取り方": "curl"
     },
     {
       "名前": "犬山市（新着）",
       "区分": "市町",
-      "url": "https://www.city.inuyama.aichi.jp/news.rss"
+      "url": "https://www.city.inuyama.aichi.jp/news.rss",
+      "取り方": "curl"
     },
     {
       "名前": "瀬戸市（新着）",
       "区分": "市町",
-      "url": "https://www.city.seto.aichi.jp/index.xml"
+      "url": "https://www.city.seto.aichi.jp/index.xml",
+      "取り方": "curl"
     },
     {
       "名前": "せと・まるっとミュージアム",
@@ -193,17 +197,20 @@
     {
       "名前": "半田市（新着）",
       "区分": "市町",
-      "url": "https://www.city.handa.lg.jp/news.rss"
+      "url": "https://www.city.handa.lg.jp/news.rss",
+      "取り方": "curl"
     },
     {
       "名前": "常滑市（新着）",
       "区分": "市町",
-      "url": "https://www.city.tokoname.aichi.jp/news.rss"
+      "url": "https://www.city.tokoname.aichi.jp/news.rss",
+      "取り方": "curl"
     },
     {
       "名前": "岡崎市（新着）",
       "区分": "市町",
-      "url": "https://www.city.okazaki.lg.jp/news.rss"
+      "url": "https://www.city.okazaki.lg.jp/news.rss",
+      "取り方": "curl"
     },
     {
       "名前": "豊田市（イベント）",
@@ -213,12 +220,14 @@
     {
       "名前": "安城市（イベント）",
       "区分": "市町",
-      "url": "https://www.city.anjo.aichi.jp/event.xml"
+      "url": "https://www.city.anjo.aichi.jp/event.xml",
+      "取り方": "curl"
     },
     {
       "名前": "刈谷市（新着）",
       "区分": "市町",
-      "url": "https://www.city.kariya.lg.jp/news.rss"
+      "url": "https://www.city.kariya.lg.jp/news.rss",
+      "取り方": "curl"
     },
     {
       "名前": "西尾市（新着）",
@@ -233,17 +242,20 @@
     {
       "名前": "豊橋市（新着）",
       "区分": "市町",
-      "url": "https://www.city.toyohashi.lg.jp/services/rdf/rss10/11280.xml"
+      "url": "https://www.city.toyohashi.lg.jp/services/rdf/rss10/11280.xml",
+      "取り方": "curl"
     },
     {
       "名前": "豊川市（新着）",
       "区分": "市町",
-      "url": "https://www.city.toyokawa.lg.jp/cgi-bin/feed.php?siteNew=1&displayRange=90"
+      "url": "https://www.city.toyokawa.lg.jp/cgi-bin/feed.php?siteNew=1&displayRange=90",
+      "取り方": "curl"
     },
     {
       "名前": "蒲郡市（催し）",
       "区分": "市町",
-      "url": "https://www.city.gamagori.lg.jp/rss/10/list6.xml"
+      "url": "https://www.city.gamagori.lg.jp/rss/10/list6.xml",
+      "取り方": "curl"
     },
     {
       "名前": "がまごおり、ナビ",
@@ -439,5 +451,7 @@
   "_注": "市の新着は行政のお知らせが大半なので、捨てる語を石川より増やした（入札・工事・採用・パブコメ）。東山動植物園の訃報も落とす。",
   "_手元で読んだ結果": "2026-10-15 巡回.mjs で手元から読んだ。RSS 49本・HTML 20か所のうち、とこなめ観光ナビは Accept のせいで HTTP 500 だったので「受け取る形」で直した。岐阜の旅ガイドは「見出しを title から」で足した。アクア・トト・たじみDMO・せとまるっと・西尾観光・がまごおりナビは、更新がまれで10日以内の記事が0件だった（外さずに置く）。",
   "渡した候補を覚える": true,
-  "_渡した候補の注": "候補が400件ほどあり、AI に渡す上限120件を超える。続けて回したときに同じ候補を渡さないよう、渡した URL を state/渡した候補.json に覚える（2026-10-15 代表「件数の上限になるようなら、すぐに次を回して。」）。"
+  "_渡した候補の注": "候補が400件ほどあり、AI に渡す上限120件を超える。続けて回したときに同じ候補を渡さないよう、渡した URL を state/渡した候補.json に覚える（2026-10-15 代表「件数の上限になるようなら、すぐに次を回して。」）。",
+  "失敗したらもう一度": true,
+  "_取り方の注": "愛知の市のサイト12か所（Imperva の守り）は、GitHub の機械から Node の fetch だと「転送が多すぎる」で断られ、同じ機械の curl なら読める（2026-10-15 巡回の診断で確かめた）。その12か所は「取り方: curl」。同時につないだときの時間切れ（7か所）は「失敗したらもう一度」で最後に1本ずつ取り直す。"
 }

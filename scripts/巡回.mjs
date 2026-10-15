@@ -9,6 +9,8 @@
  * ------------------------------------------------------------------
  */
 
+import { execFile } from 'node:child_process';
+
 const 待ち時間 = 20000;
 // そっけない UA だと弾く（あるいは握手で切る）サイトがあるため、ふつうのブラウザに合わせる
 const ユーザーエージェント =
@@ -32,6 +34,15 @@ export async function 巡回(巡回先) {
   // 一度に全部つなぐと、相手側で接続が詰まって落ちる（44本にしたら11本が
   // UND_ERR_CONNECT_TIMEOUT になった）。同時に走らせる数を絞る。
   const 結果 = await 少しずつ(仕事, 8);
+  // 巡回先.json の「失敗したらもう一度」が true の県だけ：取れなかった先を、最後に1本ずつもう一度取りに行く
+  // （同時に8本つないだときだけ、相手側で時間切れになる先がある。2026-10-15 ぎふあいちで7か所）
+  if (巡回先['失敗したらもう一度'] === true) {
+    for (let i = 0; i < 結果.length; i += 1) {
+      if (!結果[i]?.error) continue;
+      const もう一度 = await 仕事[i]();
+      if (!もう一度.error) 結果[i] = もう一度;
+    }
+  }
 
   const 候補 = [];
   const 取れた = [];
@@ -71,7 +82,7 @@ function 捨てるか(タイトル, 捨てる語) {
 async function RSSを読む(先, 境目, 上限, 捨てる語 = []) {
   let xml;
   try {
-    xml = await 取る(先.url, 先['受け取る形']);
+    xml = await 取る(先.url, 先['受け取る形'], 先['取り方']);
   } catch (e) {
     return { 名前: 先.名前, items: [], error: String(e.message ?? e).slice(0, 160) };
   }
@@ -155,7 +166,7 @@ function 日付を読む(塊) {
 async function HTMLを読む(先, 捨てる語 = []) {
   let html;
   try {
-    html = await 取る(先.url, 先['受け取る形']);
+    html = await 取る(先.url, 先['受け取る形'], 先['取り方']);
   } catch (e) {
     return { 名前: 先.名前, items: [], error: String(e.message ?? e).slice(0, 160) };
   }
@@ -207,7 +218,7 @@ async function HTMLを読む(先, 捨てる語 = []) {
 async function リストを読む(先, 捨てる語 = []) {
   let html;
   try {
-    html = await 取る(先.url, 先['受け取る形']);
+    html = await 取る(先.url, 先['受け取る形'], 先['取り方']);
   } catch (e) {
     return { 名前: 先.名前, items: [], error: String(e.message ?? e).slice(0, 160) };
   }
@@ -289,7 +300,7 @@ async function リストを読む(先, 捨てる語 = []) {
 async function ネタ帳を読む(先, 捨てる語 = []) {
   let md;
   try {
-    md = await 取る(先.url, 先['受け取る形']);
+    md = await 取る(先.url, 先['受け取る形'], 先['取り方']);
   } catch (e) {
     return { 名前: 先.名前, items: [], error: String(e.message ?? e).slice(0, 160) };
   }
@@ -339,7 +350,8 @@ async function ネタ帳を読む(先, 捨てる語 = []) {
 
 // ------------------------------------------------------------------ 小物
 
-async function 取る(url, 受け取る形) {
+async function 取る(url, 受け取る形, 取り方) {
+  if (取り方 === 'curl') return curlで取る(url, 受け取る形);
   let 最後のエラー;
   // 1回目で切られることがあるので、少し待って2回まで試す
   for (let 回 = 1; 回 <= 3; 回 += 1) {
@@ -365,6 +377,30 @@ async function 取る(url, 受け取る形) {
     }
   }
   throw new Error(理由(最後のエラー));
+}
+
+/**
+ * 巡回先の「取り方」が 'curl' の先は、Node の fetch ではなく curl で取る。
+ * 愛知の市のサイト（Imperva の守り）は、GitHub の機械から Node の fetch だと「転送が多すぎる」で断られ、
+ * 同じ機械の curl なら読める（2026-10-15 ぎふあいちで確かめた）。送る中身（UA・Accept など）は fetch と同じ。
+ */
+function curlで取る(url, 受け取る形) {
+  return new Promise((resolve, reject) => {
+    const 引数 = [
+      '-s', '-L', '--max-redirs', '5', '--compressed', '--max-time', String(Math.round(待ち時間 / 1000) + 10),
+      '-A', ユーザーエージェント,
+      '-H', `Accept: ${受け取る形 ?? 'application/rss+xml, application/atom+xml, application/xml;q=0.9, text/html;q=0.8, */*;q=0.5'}`,
+      '-H', 'Accept-Language: ja,en;q=0.8',
+      '-w', '\n%{http_code}', url
+    ];
+    execFile('curl', 引数, { maxBuffer: 20 * 1024 * 1024, encoding: 'utf8' }, (err, stdout) => {
+      if (err) return reject(new Error(`curl: ${err.code ?? ''} ${String(err.message).split('\n')[0]}`.slice(0, 160)));
+      const i = stdout.lastIndexOf('\n');
+      const 状態 = Number(stdout.slice(i + 1));
+      if (状態 < 200 || 状態 >= 300) return reject(new Error(`HTTP ${状態}`));
+      resolve(stdout.slice(0, i));
+    });
+  });
 }
 
 /** Node の fetch は何でも「fetch failed」にするので、中の理由まで出す */
