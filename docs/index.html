@@ -463,7 +463,7 @@ footer a { color: var(--main); font-weight: 700; }
   function titleOf(it) {
     const m = it.text.match(/「([^」]{2,40})」/);
     if (m) return m[1];
-    const first = it.text.replace(/^[\d/()（）・\-〜～月火水木金土日祝時分\s]+/, "").split(/[。．]/)[0];
+    const first = it.text.replace(/^[\d/()（）・\-〜～月火水木金土日祝時分:：\s]+/, "").split(/[。．]/)[0];
     return first.length > 44 ? first.slice(0, 43) + "…" : first;
   }
 
