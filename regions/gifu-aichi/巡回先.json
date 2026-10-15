@@ -1,0 +1,441 @@
+{
+  "説明": "ぎふあいちおでかけ（岐阜県・愛知県版）の巡回先の下書き（2026-10-15 開発・ぎふあいち）。RSS は件数と新しい日付を、HTML は催しのリンクが並ぶことを確かめた。巡回.mjs で手元から読めることも確かめた（下の _確かめた結果）。",
+  "何日前まで": 10,
+  "1つの巡回先から渡す最大件数": 6,
+  "AIに渡す最大件数": 120,
+  "_AIに渡す最大件数の注": "ネタ帳に無い候補がこれより多い日は、巡回先ごとに新しい順で1件ずつ順に取って、この件数で止める（石川と同じ。費用の上限にもなる）。",
+  "RSS": [
+    {
+      "名前": "岐阜県（新着）",
+      "区分": "県",
+      "url": "https://www.pref.gifu.lg.jp/rss/10/list1.xml"
+    },
+    {
+      "名前": "岐阜県（県政ホットニュース）",
+      "区分": "県",
+      "url": "https://www.pref.gifu.lg.jp/rss/10/list6.xml"
+    },
+    {
+      "名前": "岐阜市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.gifu.lg.jp/news.rss"
+    },
+    {
+      "名前": "各務原市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.kakamigahara.lg.jp/news.rss"
+    },
+    {
+      "名前": "羽島市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.hashima.lg.jp/services/rdf/rss10/1035.xml"
+    },
+    {
+      "名前": "瑞穂市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.mizuho.lg.jp/services/rdf/rss10/1034.xml"
+    },
+    {
+      "名前": "本巣市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.motosu.lg.jp/rss/rss.xml"
+    },
+    {
+      "名前": "大垣市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.ogaki.lg.jp/rss/rss.xml"
+    },
+    {
+      "名前": "関市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.seki.lg.jp/rss/rss.xml"
+    },
+    {
+      "名前": "美濃加茂市（トピックス）",
+      "区分": "市町",
+      "url": "https://www.city.minokamo.lg.jp/rss/10/list6.xml"
+    },
+    {
+      "名前": "可児市（イベント）",
+      "区分": "市町",
+      "url": "https://www.city.kani.lg.jp/services/rdf/rss10/30570.xml"
+    },
+    {
+      "名前": "郡上市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.gujo.gifu.jp/rss.xml"
+    },
+    {
+      "名前": "多治見市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.tajimi.lg.jp/news.rss"
+    },
+    {
+      "名前": "土岐市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.toki.lg.jp/news.rss"
+    },
+    {
+      "名前": "瑞浪市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.mizunami.lg.jp/news.rss"
+    },
+    {
+      "名前": "恵那市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.ena.lg.jp/cgi-bin/feed.php?siteNew=1"
+    },
+    {
+      "名前": "高山市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.takayama.lg.jp/news.rss"
+    },
+    {
+      "名前": "飛騨市（イベント）",
+      "区分": "市町",
+      "url": "https://www.city.hida.gifu.jp/rss/10/list5.xml"
+    },
+    {
+      "名前": "飛騨市（まちの話題）",
+      "区分": "市町",
+      "url": "https://www.city.hida.gifu.jp/rss/10/list8.xml"
+    },
+    {
+      "名前": "下呂市（イベント）",
+      "区分": "市町",
+      "url": "https://www.city.gero.lg.jp/rss/10/list5.xml"
+    },
+    {
+      "名前": "号外NET 岐阜市（開店・閉店）",
+      "区分": "新店",
+      "url": "https://gifu.goguynet.jp/category/cat_openclose/feed/"
+    },
+    {
+      "名前": "号外NET 岐阜市（イベント）",
+      "区分": "地元メディア",
+      "url": "https://gifu.goguynet.jp/category/cat_event/feed/"
+    },
+    {
+      "名前": "号外NET 大垣市",
+      "区分": "新店",
+      "url": "https://ogaki.goguynet.jp/feed/"
+    },
+    {
+      "名前": "号外NET 可児市",
+      "区分": "新店",
+      "url": "https://kani.goguynet.jp/feed/"
+    },
+    {
+      "名前": "号外NET 多治見市",
+      "区分": "新店",
+      "url": "https://tajimi.goguynet.jp/feed/"
+    },
+    {
+      "名前": "アクア・トトぎふ",
+      "区分": "施設",
+      "url": "https://aquatotto.com/feed/"
+    },
+    {
+      "名前": "たじみDMO",
+      "区分": "観光協会",
+      "url": "https://tajimi-dmo.jp/feed/"
+    },
+    {
+      "名前": "愛知県（新着）",
+      "区分": "県",
+      "url": "https://www.pref.aichi.jp/rss/10/list1.xml"
+    },
+    {
+      "名前": "名駅経済新聞",
+      "区分": "新店",
+      "url": "https://meieki.keizai.biz/rss.xml"
+    },
+    {
+      "名前": "サカエ経済新聞",
+      "区分": "新店",
+      "url": "https://sakae.keizai.biz/rss.xml"
+    },
+    {
+      "名前": "豊田経済新聞",
+      "区分": "新店",
+      "url": "https://toyota.keizai.biz/rss.xml"
+    },
+    {
+      "名前": "名古屋市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.nagoya.jp/news.rss"
+    },
+    {
+      "名前": "一宮市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.ichinomiya.aichi.jp/news.rss"
+    },
+    {
+      "名前": "春日井市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.kasugai.lg.jp/rss.rss"
+    },
+    {
+      "名前": "犬山市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.inuyama.aichi.jp/news.rss"
+    },
+    {
+      "名前": "瀬戸市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.seto.aichi.jp/index.xml"
+    },
+    {
+      "名前": "せと・まるっとミュージアム",
+      "区分": "観光協会",
+      "url": "https://www.seto-marutto.info/feed/"
+    },
+    {
+      "名前": "半田市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.handa.lg.jp/news.rss"
+    },
+    {
+      "名前": "常滑市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.tokoname.aichi.jp/news.rss"
+    },
+    {
+      "名前": "岡崎市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.okazaki.lg.jp/news.rss"
+    },
+    {
+      "名前": "豊田市（イベント）",
+      "区分": "市町",
+      "url": "https://www.city.toyota.aichi.jp/eventrss.rss"
+    },
+    {
+      "名前": "安城市（イベント）",
+      "区分": "市町",
+      "url": "https://www.city.anjo.aichi.jp/event.xml"
+    },
+    {
+      "名前": "刈谷市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.kariya.lg.jp/news.rss"
+    },
+    {
+      "名前": "西尾市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.nishio.aichi.jp/news.rss"
+    },
+    {
+      "名前": "西尾観光",
+      "区分": "観光協会",
+      "url": "https://nishiokanko.com/feed/"
+    },
+    {
+      "名前": "豊橋市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.toyohashi.lg.jp/services/rdf/rss10/11280.xml"
+    },
+    {
+      "名前": "豊川市（新着）",
+      "区分": "市町",
+      "url": "https://www.city.toyokawa.lg.jp/cgi-bin/feed.php?siteNew=1&displayRange=90"
+    },
+    {
+      "名前": "蒲郡市（催し）",
+      "区分": "市町",
+      "url": "https://www.city.gamagori.lg.jp/rss/10/list6.xml"
+    },
+    {
+      "名前": "がまごおり、ナビ",
+      "区分": "観光協会",
+      "url": "https://www.gamagori.jp/feed/"
+    }
+  ],
+  "HTML": [
+    {
+      "名前": "岐阜の旅ガイド イベント",
+      "区分": "県",
+      "url": "https://www.kankou-gifu.jp/event/index.html",
+      "リンクの形": "^https://www\\.kankou-gifu\\.jp/event/detail_\\d+\\.html$",
+      "見出しを title から": true,
+      "最大件数": 15,
+      "_注": "リンクの文字がどれも「more」なので、<a title=\"…\"> を見出しにする（2026-10-15）。"
+    },
+    {
+      "名前": "岐阜観光コンベンション協会",
+      "区分": "観光協会",
+      "url": "https://www.gifucvb.or.jp/topics-list.php",
+      "リンクの形": "^https://www\\.gifucvb\\.or\\.jp/(topics_sightseeing|sightseeing/ukai)\\.php\\?eid=\\d+$",
+      "最大件数": 8
+    },
+    {
+      "名前": "カラフルタウン岐阜 イベント",
+      "区分": "施設",
+      "url": "https://www.colorfultown.jp/eventnews/",
+      "リンクの形": "^https://www\\.colorfultown\\.jp/eventnews/detail/\\?cd=\\d+$",
+      "最大件数": 8
+    },
+    {
+      "名前": "飛騨・高山観光コンベンション協会",
+      "区分": "観光協会",
+      "url": "https://www.hidatakayama.or.jp/news/index.html",
+      "リンクの形": "^https://www\\.hidatakayama\\.or\\.jp/news/detail_\\d+\\.html$",
+      "最大件数": 8
+    },
+    {
+      "名前": "飛騨の旅（飛騨市）イベント",
+      "区分": "観光協会",
+      "url": "https://www.hida-kankou.jp/event",
+      "リンクの形": "^https://www\\.hida-kankou\\.jp/event/\\d+$",
+      "最大件数": 12
+    },
+    {
+      "名前": "白川郷観光協会 お知らせ・イベント",
+      "区分": "観光協会",
+      "url": "https://shirakawa-go.gr.jp/events/",
+      "リンクの形": "^https://shirakawa-go\\.gr\\.jp/events/\\d+/$",
+      "最大件数": 8
+    },
+    {
+      "名前": "Aichi Now イベント",
+      "区分": "県",
+      "url": "https://aichinow.pref.aichi.jp/events/",
+      "リンクの形": "^https://aichinow\\.pref\\.aichi\\.jp/events/detail/\\d+/$",
+      "最大件数": 15
+    },
+    {
+      "名前": "名古屋コンシェルジュ イベント",
+      "区分": "観光協会",
+      "url": "https://www.nagoya-info.jp/event/",
+      "リンクの形": "^https://www\\.nagoya-info\\.jp/event/detail/\\d+/$",
+      "最大件数": 15
+    },
+    {
+      "名前": "名古屋港水族館 ニュース",
+      "区分": "施設",
+      "url": "https://nagoyaaqua.jp/news/",
+      "リンクの形": "^https://nagoyaaqua\\.jp/news/(news|event)/\\d+/$",
+      "最大件数": 6
+    },
+    {
+      "名前": "東山動植物園 お知らせ",
+      "区分": "施設",
+      "url": "https://www.higashiyama.city.nagoya.jp/news/",
+      "リンクの形": "^https://www\\.higashiyama\\.city\\.nagoya\\.jp/news/\\d{4}/\\d{2}/post-\\d+\\.html$",
+      "最大件数": 6
+    },
+    {
+      "名前": "名古屋城 イベント・特別展",
+      "区分": "施設",
+      "url": "https://www.nagoyajo.city.nagoya.jp/event/",
+      "リンクの形": "^https://www\\.nagoyajo\\.city\\.nagoya\\.jp/(event|special_exhibition)/\\d{4}/\\d{2}/\\d{8}_\\d+\\.html$",
+      "最大件数": 8
+    },
+    {
+      "名前": "名古屋PARCO 新店・ポップアップ",
+      "区分": "新店",
+      "url": "https://nagoya.parco.jp/news/",
+      "リンクの形": "^https://nagoya\\.parco\\.jp/(newrenewal|event)/detail/\\?id=\\d+$",
+      "最大件数": 10
+    },
+    {
+      "名前": "犬山観光ナビ イベント",
+      "区分": "観光協会",
+      "url": "https://inuyama.gr.jp/event/",
+      "リンクの形": "^https://inuyama\\.gr\\.jp/event/detail/\\d+/$",
+      "最大件数": 12,
+      "_注": "一覧の先頭は「通年」のものが多いので、見出しの形で外す。",
+      "見出しの形": "^(?!.*通年)"
+    },
+    {
+      "名前": "ジブリパーク 最新情報",
+      "区分": "施設",
+      "url": "https://ghibli-park.jp/info/",
+      "リンクの形": "^https://ghibli-park\\.jp/info/info\\d{8}(-\\d+)?\\.html$",
+      "最大件数": 6
+    },
+    {
+      "名前": "リトルワールド お知らせ",
+      "区分": "施設",
+      "url": "https://www.littleworld.jp/news/",
+      "リンクの形": "^https://www\\.littleworld\\.jp/news/p\\d+/$",
+      "最大件数": 6
+    },
+    {
+      "名前": "とこなめ観光ナビ イベント",
+      "区分": "観光協会",
+      "url": "https://www.tokoname-kankou.net/event/",
+      "リンクの形": "^https://www\\.tokoname-kankou\\.net/event/detail/\\d+/$",
+      "最大件数": 10,
+      "受け取る形": "text/html,application/xhtml+xml,*/*;q=0.8",
+      "_注": "RSS を先に頼む Accept だと HTTP 500 になる（2026-10-15 確認）。HTML だけを頼む。"
+    },
+    {
+      "名前": "岡崎おでかけナビ イベント",
+      "区分": "観光協会",
+      "url": "https://okazaki-kanko.jp/event",
+      "リンクの形": "^https://okazaki-kanko\\.jp/event/\\d+$",
+      "最大件数": 12
+    },
+    {
+      "名前": "ツーリズムとよた ニュース",
+      "区分": "観光協会",
+      "url": "https://www.tourismtoyota.jp/news/",
+      "リンクの形": "^https://www\\.tourismtoyota\\.jp/news/detail/\\d+/$",
+      "最大件数": 8
+    },
+    {
+      "名前": "ぐるっと豊川 お知らせ・イベント",
+      "区分": "観光協会",
+      "url": "https://www.toyokawa-map.net/",
+      "リンクの形": "^https://www\\.toyokawa-map\\.net/(news|event)/\\d+\\.html$",
+      "最大件数": 8
+    },
+    {
+      "名前": "渥美半島観光ビューロー イベント",
+      "区分": "観光協会",
+      "url": "https://www.taharakankou.gr.jp/event/index.php",
+      "リンクの形": "^https://www\\.taharakankou\\.gr\\.jp/event/detail\\.php\\?event_id=\\d+$",
+      "最大件数": 10
+    },
+    {
+      "名前": "東愛知新聞",
+      "区分": "地元メディア",
+      "url": "https://www.higashiaichi.co.jp/",
+      "リンクの形": "^https://www\\.higashiaichi\\.co\\.jp/news/detail\\.php\\?id=\\d{5,}$",
+      "最大件数": 10,
+      "_注": "東三河の地元紙。入口にだけ使い、事実は公式で取り直す。有料記事かどうかは未確認。"
+    }
+  ],
+  "RSSが無いので検索で補うもの": [
+    "中津川市・恵那市・大垣市の観光協会（URL を特定できなかった）",
+    "道の駅（岐阜・愛知とも、まとめて読める一覧が見つからなかった）",
+    "セントレア・博物館明治村（Cloudflare で 403）"
+  ],
+  "まだ調べること": [
+    "岐阜市・各務原・多治見・土岐・高山の event.js（開催日つきの催しが数百件）：今の巡回.mjs では読めない。読み取りを足すか",
+    "号外NET・ウォーカープラス・いこーよの利用規約（まだ読んでいない）。ウォーカープラス・いこーよは今は入れていない",
+    "愛知県の新着 RSS：Python で開いたときに 403 になったことがある。巡回.mjs（Node）で読めるかを試運転で見る",
+    "岐阜新聞Web：規約が厳しい（見出しも著作物とみなされうる）ので入れていない。中日新聞Web は robots で AI のクローラーを禁止しているので入れない",
+    "ぎふ清流里山公園（https://satoyama-park.gifu.jp/event/）：一覧が古い順に並ぶので、今の読み方では春の催しばかり取れる。外した"
+  ],
+  "見出しに入っていたら捨てる": [
+    "入札",
+    "公告",
+    "入札結果",
+    "工事",
+    "閉店",
+    "閉業",
+    "採用",
+    "職員募集",
+    "会計年度任用職員",
+    "パブリックコメント",
+    "訃報",
+    "亡くなりました",
+    "災害",
+    "被災",
+    "義援金"
+  ],
+  "_注": "市の新着は行政のお知らせが大半なので、捨てる語を石川より増やした（入札・工事・採用・パブコメ）。東山動植物園の訃報も落とす。",
+  "_手元で読んだ結果": "2026-10-15 巡回.mjs で手元から読んだ。RSS 49本・HTML 20か所のうち、とこなめ観光ナビは Accept のせいで HTTP 500 だったので「受け取る形」で直した。岐阜の旅ガイドは「見出しを title から」で足した。アクア・トト・たじみDMO・せとまるっと・西尾観光・がまごおりナビは、更新がまれで10日以内の記事が0件だった（外さずに置く）。"
+}

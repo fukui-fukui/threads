@@ -71,7 +71,7 @@ function 捨てるか(タイトル, 捨てる語) {
 async function RSSを読む(先, 境目, 上限, 捨てる語 = []) {
   let xml;
   try {
-    xml = await 取る(先.url);
+    xml = await 取る(先.url, 先['受け取る形']);
   } catch (e) {
     return { 名前: 先.名前, items: [], error: String(e.message ?? e).slice(0, 160) };
   }
@@ -155,7 +155,7 @@ function 日付を読む(塊) {
 async function HTMLを読む(先, 捨てる語 = []) {
   let html;
   try {
-    html = await 取る(先.url);
+    html = await 取る(先.url, 先['受け取る形']);
   } catch (e) {
     return { 名前: 先.名前, items: [], error: String(e.message ?? e).slice(0, 160) };
   }
@@ -176,7 +176,9 @@ async function HTMLを読む(先, 捨てる語 = []) {
       continue;
     }
     if (!形.test(url) || 見た.has(url)) continue;
-    const タイトル = ほぐす(m[2].replace(/<[^>]+>/g, ' '));
+    // リンクの文字が「more」だけの一覧（岐阜の旅ガイド）は、巡回先の「見出しを title から」で <a title="…"> を見出しにする
+    const 属性 = 先['見出しを title から'] ? /\btitle\s*=\s*["']([^"']*)["']/i.exec(m[0]) : null;
+    const タイトル = ほぐす(属性 ? 属性[1] : m[2].replace(/<[^>]+>/g, ' '));
     if (タイトル.length < 4) continue;
     if (見出しの形 && !見出しの形.test(タイトル)) continue;
     見た.add(url);
@@ -205,7 +207,7 @@ async function HTMLを読む(先, 捨てる語 = []) {
 async function リストを読む(先, 捨てる語 = []) {
   let html;
   try {
-    html = await 取る(先.url);
+    html = await 取る(先.url, 先['受け取る形']);
   } catch (e) {
     return { 名前: 先.名前, items: [], error: String(e.message ?? e).slice(0, 160) };
   }
@@ -287,7 +289,7 @@ async function リストを読む(先, 捨てる語 = []) {
 async function ネタ帳を読む(先, 捨てる語 = []) {
   let md;
   try {
-    md = await 取る(先.url);
+    md = await 取る(先.url, 先['受け取る形']);
   } catch (e) {
     return { 名前: 先.名前, items: [], error: String(e.message ?? e).slice(0, 160) };
   }
@@ -337,7 +339,7 @@ async function ネタ帳を読む(先, 捨てる語 = []) {
 
 // ------------------------------------------------------------------ 小物
 
-async function 取る(url) {
+async function 取る(url, 受け取る形) {
   let 最後のエラー;
   // 1回目で切られることがあるので、少し待って2回まで試す
   for (let 回 = 1; 回 <= 3; 回 += 1) {
@@ -346,7 +348,8 @@ async function 取る(url) {
       const res = await fetch(url, {
         headers: {
           'user-agent': ユーザーエージェント,
-          accept: 'application/rss+xml, application/atom+xml, application/xml;q=0.9, text/html;q=0.8, */*;q=0.5',
+          // RSS を先に頼むと HTTP 500 を返すサイトがある（とこなめ観光ナビ）。巡回先の「受け取る形」で上書きできる
+          accept: 受け取る形 ?? 'application/rss+xml, application/atom+xml, application/xml;q=0.9, text/html;q=0.8, */*;q=0.5',
           'accept-language': 'ja,en;q=0.8',
           'accept-encoding': 'gzip, deflate',
           connection: 'close'

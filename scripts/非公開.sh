@@ -22,7 +22,8 @@ try:
     d = json.load(open("region.json", encoding="utf-8"))
 except FileNotFoundError:
     d = {}
-print({"石川": "ishikawa", "福井": "fukui"}.get(d.get("県名", "福井"), d.get("県名", "fukui")))
+# 「データの置き場」があればそれを使う（県名が「岐阜・愛知」のような2県のサイト → gifu-aichi）
+print(d.get("データの置き場") or {"石川": "ishikawa", "福井": "fukui"}.get(d.get("県名", "福井"), d.get("県名", "fukui")))
 PY
 }
 
