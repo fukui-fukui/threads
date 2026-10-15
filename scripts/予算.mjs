@@ -58,10 +58,12 @@ const 割合 = 予算 ? 合計 / 予算 : 0;
 const まとめ = { 月, 合計ドル: 合計, 予算ドル: 予算, 割合: Math.round(割合 * 1000) / 10 + '%', 内訳, 作成: 今.toISOString().slice(0, 16).replace('T', ' ') + ' JST' };
 mkdirSync('state', { recursive: true });
 writeFileSync('state/usage-summary.json', JSON.stringify(まとめ, null, 2) + '\n');
-console.log(`${月}：概算 $${合計} ／ 予算 $${予算}（${まとめ.割合}）`);
+// 公開リポジトリのログ・ジョブの概要・Issue には金額を出さず、予算に対する割合だけにする（2026-10-15）。
+// 金額は非公開の置き場の state/usage-summary.json で見る
+console.log(`${月}：予算の ${まとめ.割合}`);
 if (process.env.GITHUB_STEP_SUMMARY) {
   const { appendFileSync } = await import('node:fs');
-  appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## AI の使用量（${月}）\n\n概算 $${合計} ／ 予算 $${予算}（${まとめ.割合}）\n\n` + Object.entries(内訳).map(([k, v]) => `- ${k}: $${v}`).join('\n') + '\n');
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## AI の使用量（${月}）\n\n予算の ${まとめ.割合}（金額は非公開の置き場の state/usage-summary.json）\n`);
 }
 
 await 知らせる(設定['知らせる割合'] ?? [], '', 合計, 予算, 割合, まとめ.割合, 内訳);
@@ -85,10 +87,10 @@ for (const 別 of 設定['別に数える'] ?? []) {
   const 別の割合 = 別.月の予算ドル ? 別の合計 / 別.月の予算ドル : 0;
   const 別のまとめ = { 割合: Math.round(別の割合 * 1000) / 10 + '%' };
   // まとめはファイルにしない（公開リポジトリに金額を残さない）。ログとジョブの概要にだけ出す
-  console.log(`${別.名} ${月}：概算 $${別の合計} ／ 予算 $${別.月の予算ドル}（${別のまとめ.割合}）`);
+  console.log(`${別.名} ${月}：予算の ${別のまとめ.割合}`);
   if (process.env.GITHUB_STEP_SUMMARY) {
     const { appendFileSync } = await import('node:fs');
-    appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n## AI の使用量・${別.名}（${月}）\n\n概算 $${別の合計} ／ 予算 $${別.月の予算ドル}（${別のまとめ.割合}）\n\n` + Object.entries(別の内訳).map(([k, v]) => `- ${k}: $${v}`).join('\n') + '\n');
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n## AI の使用量・${別.名}（${月}）\n\n予算の ${別のまとめ.割合}\n`);
   }
   await 知らせる(別.知らせる割合 ?? [], 別.名, 別の合計, 別.月の予算ドル, 別の割合, 別のまとめ.割合, 別の内訳);
 }
@@ -97,7 +99,7 @@ async function 知らせる(線たち, 名, 合計, 予算, 割合, 割合の字
   for (const 線 of 線たち) {
     if (割合 < 線) continue;
     const 題 = `【予算${名 ? '・' + 名 : ''}】${月} の AI 使用量が想定予算の${Math.round(線 * 100)}%を超えました`;
-    console.log(`::warning::${題}（概算 $${合計} ／ $${予算}）`);
+    console.log(`::warning::${題}（予算の ${割合の字}）`);
     if (!TOKEN || process.env.DRY_RUN === '1') continue;
     const gh = (path, opt = {}) => fetch(`https://api.github.com/repos/${REPO}${path}`, {
       ...opt, headers: { authorization: `Bearer ${TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' },
@@ -105,12 +107,10 @@ async function 知らせる(線たち, 名, 合計, 予算, 割合, 割合の字
     const 既に = await (await gh(`/issues?state=all&per_page=100&labels=`)).json();
     if (Array.isArray(既に) && 既に.some((i) => i.title === 題)) continue;
     const 本文 = [
-      `${月} の AI（Anthropic API）の使用量が、想定予算 $${予算} の${Math.round(線 * 100)}%を超えました。`,
+      `${月} の AI（Anthropic API）の使用量が、想定予算の${Math.round(線 * 100)}%を超えました（いま ${割合の字}）。`,
       '',
-      `- 概算：$${合計}（${割合の字}）`,
-      ...Object.entries(内訳).map(([k, v]) => `- ${k}：$${v}`),
-      '',
-      '金額は API の返事から見積もった概算です。正確な額は Anthropic の管理画面（Billing）で確かめてください。',
+      'このリポジトリは公開なので、金額と内訳はここに書きません。非公開の置き場（odekake-data）の state/usage-summary.json か、',
+      'Anthropic の管理画面（Billing）で確かめてください。',
       'この知らせは scripts/予算.mjs が毎晩の確認で出しています（予算・割合は 予算.json）。',
     ].join('\n');
     const r = await gh('/issues', { method: 'POST', body: JSON.stringify({ title: 題, body: 本文 }) });
