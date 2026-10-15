@@ -534,12 +534,11 @@ async function claudeに聞く(prompt) {
     if (data.stop_reason !== 'pause_turn') break;
     messages.push({ role: 'assistant', content: data.content });
   }
-  // 実際にいくら使ったかを毎回残す。見積りでなく実測で判断するため（続き呼び出しぶんも合算）。
-  // Sonnet 5.5: 入力 $2/Mtok、出力 $10/Mtok、Web検索 $10/1000回（2026-09 時点）
-  const 概算 = (入力 / 1e6) * 2 + (出力t / 1e6) * 10 + 検索した * 0.01;
+  // 使った量を毎回残す（続き呼び出しぶんも合算）。金額は非公開の置き場の state/usage.jsonl にだけ書き、
+  // 公開の Actions のログには出さない（2026-10-15 代表・統括「使用量の記録は非公開に移した」）
   console.log(
     `使った分: 入力 ${入力} tok ／ 出力 ${出力t} tok ／ Web検索 ${検索した} 回` +
-      `（上限 ${設定.検索回数 ?? 8}）／ 概算 $${概算.toFixed(4)}`
+      `（上限 ${設定.検索回数 ?? 8}）`
   );
   使用量を記録する(設定.モデル ?? 'claude-sonnet-5-5', 入力, 出力t, 検索した);
   if (data?.stop_reason === 'max_tokens') {
