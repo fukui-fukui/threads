@@ -107,12 +107,14 @@ def トップ(文: str, 地: dict) -> str:
     表 = 地区の表(地)
     行 = "\n".join(f"    {json.dumps(k, ensure_ascii=False)}: {json.dumps(v, ensure_ascii=False)}," for k, v in 表.items())
     文 = 正規(文, r"  const AREAS = \{\n.*?\n  \};", f"  const AREAS = {{\n{行}\n  }};")
-    ボタン = json.dumps([["", 県], *[[k, k] for k in 表]], ensure_ascii=False)
+    # 「地域ボタンの全体」があればそれを、無ければ県名を、全体のボタンの名前にする
+    ボタン = json.dumps([["", 地.get("地域ボタンの全体", 県)], *[[k, k] for k in 表]], ensure_ascii=False)
     文 = 置く(文, '[["", "福井県"], ["嶺北", "嶺北"], ["嶺南", "嶺南"]]', ボタン, 1)
     文 = 置く(文, '[...AREAS["嶺北"], ...AREAS["嶺南"]]', "Object.values(AREAS).flat()", 1)
-    # 地域ボタンの数（県全体＋地区）に合わせて1段に並べる
+    # 地域ボタンの数（県全体＋地区）に合わせて1段に並べる。
+    # 地区が多い県（2県で10地区など）は「地域ボタンの列数」で折り返す（スマホで1段に詰まると文字が縦に割れる）
     文 = 置く(文, ".seg { display: grid; grid-template-columns: repeat(3, 1fr);",
-             f".seg {{ display: grid; grid-template-columns: repeat({len(表) + 1}, 1fr);", 1)
+             f".seg {{ display: grid; grid-template-columns: repeat({地.get('地域ボタンの列数', len(表) + 1)}, 1fr);", 1)
     # 宿を使わない県は「泊まる」のタブと楽天の表示を外す
     if not 地.get("使う", {}).get("宿", True):
         文 = 正規(文, r'\n    \["stay", "泊まる", "i-bed", "[^"]*"\],', "")

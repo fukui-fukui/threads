@@ -54,25 +54,56 @@ if (process.env.GITHUB_STEP_SUMMARY) {
   appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## AI の使用量（${月}）\n\n概算 $${合計} ／ 予算 $${予算}（${まとめ.割合}）\n\n` + Object.entries(内訳).map(([k, v]) => `- ${k}: $${v}`).join('\n') + '\n');
 }
 
-for (const 線 of 設定['知らせる割合'] ?? []) {
-  if (割合 < 線) continue;
-  const 題 = `【予算】${月} の AI 使用量が想定予算の${Math.round(線 * 100)}%を超えました`;
-  console.log(`::warning::${題}（概算 $${合計} ／ $${予算}）`);
-  if (!TOKEN || process.env.DRY_RUN === '1') continue;
-  const gh = (path, opt = {}) => fetch(`https://api.github.com/repos/${REPO}${path}`, {
-    ...opt, headers: { authorization: `Bearer ${TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' },
-  });
-  const 既に = await (await gh(`/issues?state=all&per_page=100&labels=`)).json();
-  if (Array.isArray(既に) && 既に.some((i) => i.title === 題)) continue;
-  const 本文 = [
-    `${月} の AI（Anthropic API）の使用量が、想定予算 $${予算} の${Math.round(線 * 100)}%を超えました。`,
-    '',
-    `- 概算：$${合計}（${まとめ.割合}）`,
-    ...Object.entries(内訳).map(([k, v]) => `- ${k}：$${v}`),
-    '',
-    '金額は API の返事から見積もった概算です。正確な額は Anthropic の管理画面（Billing）で確かめてください。',
-    'この知らせは scripts/予算.mjs が毎晩の確認で出しています（予算・割合は 予算.json）。',
-  ].join('\n');
-  const r = await gh('/issues', { method: 'POST', body: JSON.stringify({ title: 題, body: 本文 }) });
-  console.log(r.ok ? `Issue を立てました：${題}` : `::warning::Issue を立てられませんでした（${r.status}）`);
+await 知らせる(設定['知らせる割合'] ?? [], '', 合計, 予算, 割合, まとめ.割合, 内訳);
+
+/**
+ * 「別に数える」：予算を分けて見るサイト（ぎふあいちなど。2026-10-15 代表「API キーは別で用意します」「月50ドル」）。
+ * 非公開の置き場（odekake-data。budget-check の最初の pull で手元に取ってある）の <置き場>/state/usage.jsonl を読む。
+ * Issue の題には【予算・名】と付けて、福井＋石川の予算とは混ぜない。
+ */
+for (const 別 of 設定['別に数える'] ?? []) {
+  const パス = `${process.env.DATA_CLONE || (process.env.RUNNER_TEMP || '/tmp') + '/odekake-data'}/${別.置き場}/state/usage.jsonl`;
+  if (!existsSync(パス)) console.log(`::notice::${別.名} の使用量はまだありません（${パス}）`);
+  const 別の内訳 = {};
+  let 別の合計 = 0;
+  for (const x of existsSync(パス) ? 行を読む(readFileSync(パス, 'utf8')) : []) {
+    if (!String(x.時刻 || '').startsWith(月)) continue;
+    別の内訳[x.何] = Math.round(((別の内訳[x.何] ?? 0) + (x.ドル ?? 0)) * 1e4) / 1e4;
+    別の合計 += x.ドル ?? 0;
+  }
+  別の合計 = Math.round(別の合計 * 100) / 100;
+  const 別の割合 = 別.月の予算ドル ? 別の合計 / 別.月の予算ドル : 0;
+  const 別のまとめ = { 割合: Math.round(別の割合 * 1000) / 10 + '%' };
+  // まとめはファイルにしない（公開リポジトリに金額を残さない）。ログとジョブの概要にだけ出す
+  console.log(`${別.名} ${月}：概算 $${別の合計} ／ 予算 $${別.月の予算ドル}（${別のまとめ.割合}）`);
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    const { appendFileSync } = await import('node:fs');
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n## AI の使用量・${別.名}（${月}）\n\n概算 $${別の合計} ／ 予算 $${別.月の予算ドル}（${別のまとめ.割合}）\n\n` + Object.entries(別の内訳).map(([k, v]) => `- ${k}: $${v}`).join('\n') + '\n');
+  }
+  await 知らせる(別.知らせる割合 ?? [], 別.名, 別の合計, 別.月の予算ドル, 別の割合, 別のまとめ.割合, 別の内訳);
+}
+
+async function 知らせる(線たち, 名, 合計, 予算, 割合, 割合の字, 内訳) {
+  for (const 線 of 線たち) {
+    if (割合 < 線) continue;
+    const 題 = `【予算${名 ? '・' + 名 : ''}】${月} の AI 使用量が想定予算の${Math.round(線 * 100)}%を超えました`;
+    console.log(`::warning::${題}（概算 $${合計} ／ $${予算}）`);
+    if (!TOKEN || process.env.DRY_RUN === '1') continue;
+    const gh = (path, opt = {}) => fetch(`https://api.github.com/repos/${REPO}${path}`, {
+      ...opt, headers: { authorization: `Bearer ${TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' },
+    });
+    const 既に = await (await gh(`/issues?state=all&per_page=100&labels=`)).json();
+    if (Array.isArray(既に) && 既に.some((i) => i.title === 題)) continue;
+    const 本文 = [
+      `${月} の AI（Anthropic API）の使用量が、想定予算 $${予算} の${Math.round(線 * 100)}%を超えました。`,
+      '',
+      `- 概算：$${合計}（${割合の字}）`,
+      ...Object.entries(内訳).map(([k, v]) => `- ${k}：$${v}`),
+      '',
+      '金額は API の返事から見積もった概算です。正確な額は Anthropic の管理画面（Billing）で確かめてください。',
+      'この知らせは scripts/予算.mjs が毎晩の確認で出しています（予算・割合は 予算.json）。',
+    ].join('\n');
+    const r = await gh('/issues', { method: 'POST', body: JSON.stringify({ title: 題, body: 本文 }) });
+    console.log(r.ok ? `Issue を立てました：${題}` : `::warning::Issue を立てられませんでした（${r.status}）`);
+  }
 }

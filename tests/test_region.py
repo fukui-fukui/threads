@@ -108,8 +108,11 @@ class RegionTest(unittest.TestCase):
                                cwd=ROOT, check=True, capture_output=True)
                 for 名 in ("docs/index.html", "docs/about/index.html", "docs/robots.txt"):
                     文 = (Path(先) / 名).read_text(encoding="utf-8")
+                    # 地区の表（AREAS の行）は、その県の region.json の市町そのもの。
+                    # 愛知にも美浜町・高浜市があるので、福井の言葉の見張りからは外す
                     残り = [l for l in 文.splitlines()
-                           if w.search(l) and "姉妹サイト" not in l]
+                           if w.search(l) and "姉妹サイト" not in l
+                           and not re.match(r'^\s+"[^"]+": \[.*\],$', l)]
                     self.assertEqual(残り, [], f"{名} に福井の言葉が残っている")
                 self.assertFalse((Path(先) / "neta" / "ふるさと納税_リンク.jsonl").exists())
                 self.assertTrue((Path(先) / "neta" / "ネタ帳.md").exists())
