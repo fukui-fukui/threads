@@ -2138,6 +2138,12 @@ def main() -> None:
     # その日すでにキューに入っている投稿の出典も数に入れる。
     # YU さんが手で入れたものは例外なので、ここには含めない（note に「指示」と書く）。
     出典の枠: dict[str, int] = {}
+    # 同じ日の店・催しの名前（手で入れた投稿も含む。2026-10-15 運用部「手で入れたものも含めて」）
+    今日の名: dict[str, int] = {}
+    for h, e in filled.items():
+        if h != 6 and not (今週末まとめの日(target_date) and h == WEEKEND_HOUR) and not e.get("reply_to"):
+            for n in 名前たち(e):
+                今日の名.setdefault(n, h)
     for h, e in filled.items():
         if "指示" in str(e.get("note", "")):
             continue
@@ -2341,8 +2347,13 @@ def main() -> None:
             # 同じ出来事は直近14日で2回まで・3日以上あける（6:00 の「今日で終わる」はのぞく）。
             # 2026-09-29 代表了承。前の「前の日だけ見る・先の予定は何度でも」を改めた。
             if hour != 6 and not (今週末まとめの日(target_date) and hour == WEEKEND_HOUR):
-                わけ = 出典で止める理由(source_urls(text, thread), 記, target_date) or 名で止める理由(
-                    {"text": text, "thread": thread, "note": post.get("note")}, 名記)
+                この名 = {"text": text, "thread": thread, "note": post.get("note")}
+                わけ = 出典で止める理由(source_urls(text, thread), 記, target_date) or 名で止める理由(この名, 名記)
+                if not わけ and 同じ名を見る:
+                    # 同じ日の別の枠と同じ店・催しも止める
+                    重 = sorted(名前たち(この名) & set(今日の名))
+                    if 重:
+                        わけ = f"「{重[0]}」を同じ日の {今日の名[重[0]]}:00 にも入れている"
                 if わけ:
                     print(f"::warning::{hour}:00 は{わけ}ので入れません。この枠はあとで予備で埋めます。")
                     continue
@@ -2359,6 +2370,9 @@ def main() -> None:
                 continue
             for u in source_urls(text, thread):
                 出典の枠[u] = hour
+            if hour != 6 and not (今週末まとめの日(target_date) and hour == WEEKEND_HOUR):
+                for n in 名前たち({"text": text, "thread": thread, "note": post.get("note")}):
+                    今日の名.setdefault(n, hour)
 
             item = {
                 "id": new_id(hour, existing_ids),
