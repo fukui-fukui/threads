@@ -22,10 +22,20 @@ function 行を読む(text) {
 }
 
 const 出どころ = [{ 名: REPO, 行: existsSync('state/usage.jsonl') ? 行を読む(readFileSync('state/usage.jsonl', 'utf8')) : [] }];
+// 使用量は 10/13 から非公開の置き場（odekake-data）に移った。公開リポジトリの state/usage.jsonl は 404 になり、
+// 石川の分が黙って0として数えられていた（2026-10-15 気づいて直す）。置き場の写しがあればそちらを読む
+const 置き場 = process.env.DATA_CLONE || (process.env.RUNNER_TEMP || '/tmp') + '/odekake-data';
+const 置き場の名 = { 'yu-fukui/ishikawa-odekake': 'ishikawa', ...(設定['置き場の名'] ?? {}) };
 for (const r of 設定['合わせて数えるリポジトリ'] ?? []) {
+  const 写し = 置き場の名[r] ? `${置き場}/${置き場の名[r]}/state/usage.jsonl` : '';
+  if (写し && existsSync(写し)) {
+    出どころ.push({ 名: r, 行: 行を読む(readFileSync(写し, 'utf8')) });
+    continue;
+  }
   try {
     const res = await fetch(`https://raw.githubusercontent.com/${r}/main/state/usage.jsonl?t=${Date.now()}`);
-    出どころ.push({ 名: r, 行: res.ok ? 行を読む(await res.text()) : [] });
+    if (!res.ok) console.log(`::warning::${r} の使用量を読めませんでした（${res.status}。非公開の置き場の写しも無い）`);
+    出どころ.push({ 名: r, 行: res.ok ? 行を読む(await res.text()) : [], 読めず: !res.ok });
   } catch (e) {
     console.log(`::warning::${r} の使用量を読めませんでした（${e.message}）`);
     出どころ.push({ 名: r, 行: [], 読めず: true });
