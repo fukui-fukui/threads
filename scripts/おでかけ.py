@@ -43,10 +43,16 @@ SPOT_WORDS = ("オープン", "開業", "新店", "グランドオープン", "�
 EVENT_WORDS = ("開催", "まつり", "祭", "フェス", "展", "イベント", "マルシェ",
                "フェア", "ツアー", "体験", "募集", "公開", "ライブ", "開館")
 
-_MD = r"(\d{1,2})/(\d{1,2})(?:\s*\([月火水木金土日祝・]+\))?"
+# 曜日のかっこは半角・全角どちらも（ぎふあいちの収集は「10/10（土）〜18（日）」と書く。2026-10-15）
+_DOW = r"(?:\s*[(（][月火水木金土日祝・]+[)）])?"
+_MD = r"(\d{1,2})/(\d{1,2})" + _DOW
 # 9/26-10/12、10/3-4、9/10〜11/3 のような期間
 RANGE = re.compile(_MD + r"\s*[-〜～－–]\s*(?:(\d{1,2})/)?(\d{1,2})(?!\d)")
 SINGLE = re.compile(_MD)
+# 「10/17・18」「10/24（土）・25（日）」のように、同じ月の日だけを「・」で続けたもの
+SAME_MONTH_DAYS = re.compile(r"\s*・\s*(\d{1,2})(?![\d/])" + _DOW)
+# 「11/29まで」「12月6日まで」のように終わりだけ書いたもの。始まりは書いた日とみなす
+UNTIL = re.compile(r"^\s*(?:まで|迄)")
 JP_DATE = re.compile(r"(?:(\d{4})年)?(\d{1,2})月(\d{1,2})日")
 
 
@@ -81,18 +87,31 @@ def parse_dates(text: str, base: date) -> tuple[date | None, date | None]:
         if start and end:
             return start, end
 
+    until = False
     for m in SINGLE.finditer(text):
-        dt = _mk(_year_for(int(m.group(1)), base), int(m.group(1)), int(m.group(2)))
+        month = int(m.group(1))
+        dt = _mk(_year_for(month, base), month, int(m.group(2)))
         if dt:
             found.append(dt)
+        pos = m.end()
+        while n := SAME_MONTH_DAYS.match(text, pos):
+            dt2 = _mk(_year_for(month, base), month, int(n.group(1)))
+            if dt2:
+                found.append(dt2)
+            pos = n.end()
+        until = until or bool(UNTIL.match(text[pos:]))
     if not found:
         for m in JP_DATE.finditer(text):
             y = int(m.group(1)) if m.group(1) else _year_for(int(m.group(2)), base)
             dt = _mk(y, int(m.group(2)), int(m.group(3)))
             if dt:
                 found.append(dt)
+                until = until or bool(UNTIL.match(text[m.end():]))
     if not found:
         return None, None
+    if until and len(found) == 1 and base < found[0]:
+        # 「◯日まで」だけのときは、書いた日から続いているものとして扱う
+        return base, found[0]
     # 9/25・10/2・10/9 のように並んでいるときは、最初から最後までを期間とみなす
     return min(found), max(found)
 

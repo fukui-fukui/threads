@@ -55,6 +55,20 @@ class ParseDatesTest(unittest.TestCase):
     def test_listed_dates_become_span(self):
         self.assertEqual(odekake.parse_dates("9/25・10/2・10/30に実施", BASE), (date(2026, 9, 25), date(2026, 10, 30)))
 
+    def test_fullwidth_weekday_range(self):
+        # ぎふあいちの収集は全角のかっこで書く（2026-10-15 運用部・ぎふあいち担当）
+        self.assertEqual(odekake.parse_dates("10/10（土）〜18（日）展示", BASE), (date(2026, 10, 10), date(2026, 10, 18)))
+
+    def test_same_month_days_with_dot(self):
+        self.assertEqual(odekake.parse_dates("10/17・18 クラフトフェア", BASE), (date(2026, 10, 17), date(2026, 10, 18)))
+        self.assertEqual(odekake.parse_dates("10/24（土）・25（日）祭り", BASE), (date(2026, 10, 24), date(2026, 10, 25)))
+
+    def test_until_starts_from_written_day(self):
+        self.assertEqual(odekake.parse_dates("11/29までの金・土・日に開催", BASE), (BASE, date(2026, 11, 29)))
+        self.assertEqual(odekake.parse_dates("12月6日まで展示", BASE), (BASE, date(2026, 12, 6)))
+        # 書いた日より前の「まで」は今まで通り
+        self.assertEqual(odekake.parse_dates("9/20まで募集", BASE), (date(2026, 9, 20), date(2026, 9, 20)))
+
     def test_single_with_weekday_and_time(self):
         self.assertEqual(odekake.parse_dates("10/25(日)10時〜15時30分 そばまつり", BASE), (date(2026, 10, 25), date(2026, 10, 25)))
 
