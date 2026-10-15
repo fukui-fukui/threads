@@ -208,7 +208,10 @@ def 反映(answers: list[dict], repos: dict[str, Path]) -> list[str]:
         載せる行 = []
         for a in [a for a in mine if a["答え"] == "載せる"]:
             一言 = str(a.get("一言") or "").strip()
-            行 = f"- 【代表：載せる】{a['中身']}" + (f" {a['url']}" if a.get("url") else "") + (f"（代表の一言：{一言}）" if 一言 else "")
+            # 中身や一言に改行があると、ネタ帳の箇条書きが割れるので1行にする（2026-10-16）
+            中身 = " ".join(str(a.get("中身") or "").split())
+            一言 = " ".join(一言.split())
+            行 = f"- 【代表：載せる】{中身}" + (f" {a['url']}" if a.get("url") else "") + (f"（代表の一言：{一言}）" if 一言 else "")
             載せる行.append(行)
         if 載せる行:
             ネタ帳p.write_text(_調べもの節に足す(ネタ帳, 載せる行), encoding="utf-8")
