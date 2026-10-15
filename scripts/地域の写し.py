@@ -27,6 +27,8 @@ SKIP = {
     ".git", "regions", "posts", "state", "insights", "__pycache__",
     "neta/ネタ帳.md", "neta/巡回先.json", "neta/設定.json",
     "neta/ふるさと納税_リンク.jsonl", "neta/ふるさと納税_切り口リンク.jsonl",
+    # 福井の中身なので写さない（どれも無ければ仕組みが自分で作る。2026-10-15 ぎふあいち開発の気づき）
+    "neta/外した候補.md", "neta/楽天の成果.jsonl", "neta/載せないもの.jsonl",
     "docs/data.json", "docs/hotels.json", "docs/month", "docs/sitemap.xml", "docs/CNAME",
     "scripts/_アーカイブ", "scripts/地域の写し.py",
     # 予算の見張りは福井のリポジトリでまとめて行う（石川の分も足す）
