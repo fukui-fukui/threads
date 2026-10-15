@@ -15,7 +15,7 @@ Metaで収集と、おでかけ2つの収集で、判断に迷ったものを表
       出さない・保留 → 何もしない
 
 使い方:
-  python scripts/判断待ち.py 集める --fukui . --ishikawa ../odekake-ishikawa > items.json
+  python scripts/判断待ち.py 集める --fukui . --ishikawa ../odekake-ishikawa --gifuaichi ../gifu-aichi-odekake > items.json
   python scripts/判断待ち.py 反映 answers.json --fukui . --ishikawa ../odekake-ishikawa
 """
 from __future__ import annotations
@@ -30,7 +30,7 @@ from zoneinfo import ZoneInfo
 
 JST = ZoneInfo("Asia/Tokyo")
 見る日数 = 14
-出どころの名 = {"fukui": "ふくいおでかけ", "ishikawa": "いしかわおでかけ", "ekimae": "ふくいエキマエ"}
+出どころの名 = {"fukui": "ふくいおでかけ", "ishikawa": "いしかわおでかけ", "gifuaichi": "ぎふあいちおでかけ", "ekimae": "ふくいエキマエ"}
 
 
 def 印(*部分: str) -> str:
@@ -230,9 +230,10 @@ def main() -> None:
     ap.add_argument("answers", nargs="?")
     ap.add_argument("--fukui", type=Path)
     ap.add_argument("--ishikawa", type=Path)
+    ap.add_argument("--gifuaichi", type=Path, help="ぎふあいちおでかけのリポジトリ（2026-10-15 代表「判断待ちを同じく表示させるように」）")
     ap.add_argument("--ekimae", type=Path, help="エキマエのリポジトリ（返事の案だけ）")
     a = ap.parse_args()
-    repos = {"fukui": a.fukui, "ishikawa": a.ishikawa, "ekimae": a.ekimae}
+    repos = {"fukui": a.fukui, "ishikawa": a.ishikawa, "gifuaichi": a.gifuaichi, "ekimae": a.ekimae}
     if a.やること == "集める":
         print(json.dumps(集める(repos), ensure_ascii=False, indent=1))
     else:
