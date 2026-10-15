@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ふくいおでかけ｜福井の今週末のイベント・新しいお店まとめ</title>
-<meta name="description" content="福井県内の今週末のイベント、開催中の展示やフェア、新しくオープンしたお店を毎朝まとめて更新。市町・日付で探せます。主催者や自治体などの出典つき。">
+<title>ふくいおでかけ｜福井のおでかけ情報・今週末のイベントと新しいお店</title>
+<meta name="description" content="福井のおでかけ情報を毎朝まとめて更新。福井県内の今週末のイベント、開催中の展示やフェア、新しくオープンしたお店を、市町・日付で探せます。主催者や自治体などの出典つき。">
 <link rel="canonical" href="https://odekake.fukui-fukui.com/">
 <meta name="theme-color" content="#1f7a57">
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -12,13 +12,13 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:title" content="ふくいおでかけ">
-<meta property="og:description" content="福井のイベント・新スポットを毎朝まとめて更新。Threads @fukui._.fukui のおでかけ情報サイト">
+<meta property="og:description" content="福井のおでかけ情報（イベント・新スポット）を毎朝まとめて更新。Threads @fukui._.fukui のおでかけ情報サイト">
 <meta property="og:image" content="https://odekake.fukui-fukui.com/icon-192.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://odekake.fukui-fukui.com/">
 <meta property="og:site_name" content="ふくいおでかけ">
 <meta property="og:locale" content="ja_JP">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://odekake.fukui-fukui.com/#site","name":"ふくいおでかけ","url":"https://odekake.fukui-fukui.com/","inLanguage":"ja","description":"福井県内の今週末のイベントと新しいお店のまとめ","publisher":{"@id":"https://odekake.fukui-fukui.com/#org"}},{"@type":"Organization","@id":"https://odekake.fukui-fukui.com/#org","name":"ふくふくプロジェクト","url":"https://odekake.fukui-fukui.com/about/","logo":"https://odekake.fukui-fukui.com/icon-192.png","sameAs":["https://www.threads.com/@fukui._.fukui","https://ekimae.fukui-fukui.com/"]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://odekake.fukui-fukui.com/#site","name":"ふくいおでかけ","alternateName":["福井おでかけ","福井のおでかけ情報"],"url":"https://odekake.fukui-fukui.com/","inLanguage":"ja","description":"福井県内の今週末のイベントと新しいお店のまとめ","publisher":{"@id":"https://odekake.fukui-fukui.com/#org"}},{"@type":"Organization","@id":"https://odekake.fukui-fukui.com/#org","name":"ふくふくプロジェクト","url":"https://odekake.fukui-fukui.com/about/","logo":"https://odekake.fukui-fukui.com/icon-192.png","sameAs":["https://www.threads.com/@fukui._.fukui","https://ekimae.fukui-fukui.com/"]}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
@@ -147,7 +147,11 @@ main { max-width: 1280px; margin: 0 auto; padding: 18px 16px 40px; }
 .today b { color: var(--accent); }
 .ttl { display: flex; align-items: center; gap: 12px; margin: 6px 0 4px; }
 .ttl .ic { width: 44px; height: 44px; border-radius: 14px; background: var(--main); color: #fff; display: grid; place-items: center; flex: none; transform: rotate(-4deg); }
-.ttl h1 { margin: 0; font-size: clamp(1.05rem, 4.3vw, 1.7rem); font-weight: 800; line-height: 1.3; }
+/* サイト全体の見出し（検索で「福井 おでかけ」と読まれるように。2026-10-15 代表「福井 おでかけで上位に」） */
+.intro { margin: 4px 0 8px; }
+.intro h1 { margin: 0; font-size: .95rem; font-weight: 800; color: var(--main-deep); letter-spacing: .02em; }
+.intro p { margin: 2px 0 0; font-size: .8rem; color: var(--muted); line-height: 1.6; }
+.ttl h2 { margin: 0; font-size: clamp(1.05rem, 4.3vw, 1.7rem); font-weight: 800; line-height: 1.3; }
 .ttl .n { margin-left: auto; font-size: .82rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
 .ttl .n b { font-size: 1.3rem; color: var(--main); margin-right: 2px; }
 .route { height: 10px; margin: 8px 0 4px; background: radial-gradient(circle, var(--main) 2px, transparent 2.5px) 0 50% / 12px 10px repeat-x; opacity: .35; }
@@ -336,7 +340,8 @@ footer a { color: var(--main); font-weight: 700; }
 
 <main>
   <div class="today" id="today"></div>
-  <div class="ttl" id="ttl"><h1>福井の今週末のイベント・新しいお店</h1></div>
+  <div class="intro"><h1>福井のおでかけ情報</h1><p>今週末のイベント、開催中の展示やフェア、新しくできたお店を、毎朝まとめています。市町・日付で探せます。</p></div>
+  <div class="ttl" id="ttl"><h2>開催中・これからのイベント</h2></div>
   <div class="route" aria-hidden="true"></div>
   <div class="days" id="days" role="group" aria-label="日付で絞る"></div>
   <div class="active" id="active"></div>
@@ -811,7 +816,7 @@ footer a { color: var(--main); font-weight: 700; }
     const ttl = $("#ttl"); ttl.textContent = "";
     const ic = el("span", "ic"); ic.append(icon("i-bed"));
     const cnt = el("span", "n"); cnt.append(el("b", null, String(list.length)), "軒");
-    ttl.append(ic, el("h1", null, "福井に泊まる"), cnt);
+    ttl.append(ic, el("h2", null, "福井に泊まる"), cnt);
 
     const active = $("#active"); active.textContent = "";
     const pill = (label, clear) => { const x = el("button"); x.append(label, icon("i-x")); x.onclick = () => { clear(); render(); }; active.append(x); };
@@ -853,7 +858,7 @@ footer a { color: var(--main); font-weight: 700; }
     const ttl = $("#ttl"); ttl.textContent = "";
     const ic = el("span", "ic"); ic.append(icon(tab[2]));
     const cnt = el("span", "n"); cnt.append(el("b", null, String(list.length)), "件");
-    ttl.append(ic, el("h1", null, state.day ? `${fmt(pd(state.day))}のおでかけ` : tab[3]), cnt);
+    ttl.append(ic, el("h2", null, state.day ? `${fmt(pd(state.day))}のおでかけ` : tab[3]), cnt);
 
     const active = $("#active"); active.textContent = "";
     const pill = (label, clear) => { const b = el("button"); b.append(label, icon("i-x")); b.setAttribute("aria-label", label + " を外す"); b.onclick = () => { clear(); render(); }; active.append(b); };
