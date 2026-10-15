@@ -155,7 +155,7 @@ def お店を読む(よ: 読み手, prop: str, 期間: tuple[str, str]) -> list[
             for r in 行 if r.get("customEvent:shop_name") not in ("", "(not set)")]
 
 
-サイトの名前 = ["odekake.fukui-fukui.com", "ishikawa-odekake.fukui-fukui.com", "ekimae.fukui-fukui.com"]
+サイトの名前 = ["odekake.fukui-fukui.com", "ishikawa-odekake.fukui-fukui.com", "gifu-aichi-odekake.fukui-fukui.com", "ekimae.fukui-fukui.com"]
 
 
 def SCを読む(よ: 読み手) -> list[dict]:
