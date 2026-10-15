@@ -134,5 +134,6 @@ jobs:
         continue-on-error: true
         run: |
           if [ -e "state/インスタ既読.json" ]; then ./scripts/commit_file.sh "state/インスタ既読.json" "chore(insta): 読んだ投稿を記録"; fi
+          if [ -e "state/渡した候補.json" ]; then ./scripts/commit_file.sh "state/渡した候補.json" "chore(neta): AI に渡した候補を記録"; fi
           if [ -e "neta/外した候補.md" ]; then ./scripts/commit_file.sh "neta/外した候補.md" "chore(neta): 確かめられず外した候補を記録"; fi
           if [ -e "state/インスタ新着.json" ]; then ./scripts/commit_file.sh "state/インスタ新着.json" "chore(insta): 今回の新しい投稿"; fi

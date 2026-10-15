@@ -77,6 +77,11 @@ let 候補一覧 = '（巡回先の設定がありません）';
 let 新店の先 = '';
 const インスタ既読パス = 'state/インスタ既読.json';
 let インスタを渡した = [];
+// 巡回先.json の「渡した候補を覚える」が true の県だけ：一度 AI に渡した候補（URL）を覚えて、次からは渡さない。
+// 候補が上限（AIに渡す最大件数）より多い県で、続けて回したときに同じ候補をまた渡さないため（2026-10-15 ぎふあいち。代表「件数の上限になるようなら、すぐに次を回して。」）
+const 渡した候補パス = 'state/渡した候補.json';
+let 渡した候補を覚える = false;
+let 今回渡した = [];
 let 候補件数 = 0;
 
 if (existsSync(巡回先パス)) {
@@ -112,13 +117,16 @@ if (existsSync(巡回先パス)) {
   const 使い済みURL = new Set([...ネタ帳.matchAll(/https?:\/\/[^\s)）]+/g)].map((m) => m[0].replace(/[.,、。]+$/, '')));
   // 出典を一覧ページに固定した先（ふーぽ新店速報など）は、全部が同じURLになる。
   // URL で落とすと2回目以降まるごと消えるので、対象から外す。重複は行の文面で弾く。
-  const 新しい = 初めて.filter((c) => c.出典固定 || !使い済みURL.has(c.url));
+  渡した候補を覚える = 巡回先['渡した候補を覚える'] === true;
+  const 渡した = new Set(渡した候補を覚える && existsSync(渡した候補パス) ? JSON.parse(readFileSync(渡した候補パス, 'utf8')) : []);
+  const 新しい = 初めて.filter((c) => c.出典固定 || (!使い済みURL.has(c.url) && !渡した.has(c.url)));
   // 多すぎると AI の返しが途中で切れる（2026-10-08 石川版で130件）。上限を決めて、
   // 巡回先ごとに1件ずつ順に取って（新しい順）、どの巡回先も落とさないようにする。
   const 渡す上限 = 巡回先['AIに渡す最大件数'] ?? 80;
   const 残り = 順に取る(新しい, 渡す上限);
   候補件数 = 残り.length;
   インスタを渡した = 残り.filter((c) => String(c.区分 ?? '').startsWith('インスタ'));
+  今回渡した = 残り.filter((c) => !c.出典固定).map((c) => c.url);
   console.log(`候補: ${候補.length}件 → ネタ帳に無いもの ${新しい.length}件 → AI に渡す ${残り.length}件（上限 ${渡す上限}）`);
 
   候補一覧 = 残り.length
@@ -334,6 +342,15 @@ if (!書かない && インスタを渡した.length) {
   mkdirSync('state', { recursive: true });
   writeFileSync(インスタ既読パス, JSON.stringify(全部, null, 0) + '\n', 'utf8');
   console.log(`インスタ: ${インスタを渡した.length}件を読んだものとして覚えました（${インスタ既読パス}）`);
+}
+// 「渡した候補を覚える」県：AI に渡して返事が取れた候補を、ネタ帳に入れたかどうかに関わらず覚える
+if (!書かない && 渡した候補を覚える && 今回渡した.length) {
+  const 前 = existsSync(渡した候補パス) ? JSON.parse(readFileSync(渡した候補パス, 'utf8')) : [];
+  // 古いものから捨てて 3000 件まで（巡回は10日以内しか見ないので、それより古い URL は要らない）
+  const 全部 = [...new Set([...前, ...今回渡した])].slice(-3000);
+  mkdirSync('state', { recursive: true });
+  writeFileSync(渡した候補パス, JSON.stringify(全部, null, 0) + '\n', 'utf8');
+  console.log(`渡した候補: ${今回渡した.length}件を覚えました（${渡した候補パス}）`);
 }
 // 今回初めて見た投稿の一覧（無ければ空）。Claude の定期のお知らせ（引用の候補）がここを読む（2026-10-10 代表）
 if (!書かない) {
