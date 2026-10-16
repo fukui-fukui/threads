@@ -329,7 +329,7 @@ def main() -> None:
         print("::warning::GA_SA_KEY も CF_API_TOKEN・CF_ACCOUNT_ID も未設定です。何もしません。")
         return
     今日 = datetime.now(JST).date()
-    結果 = {"作った日": 今日.isoformat(), "GA": [], "SC": [], "CF": []}
+    結果 = {"作った日": 今日.isoformat(), "作った時刻": datetime.now(JST).isoformat(timespec="minutes"), "GA": [], "SC": [], "CF": []}
     よ = None
     if key:
         try:
