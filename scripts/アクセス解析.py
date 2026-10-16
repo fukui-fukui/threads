@@ -120,9 +120,14 @@ def GAを読む(よ: 読み手, prop: str) -> dict:
     合計 = ["screenPageViews", "activeUsers", "sessions"]
     t = _表(よ, prop, 今週, [], 合計, 1)
     p = _表(よ, prop, 前週, [], 合計, 1)
+    # 30日ぶん（2026-10-16 代表「3地域の状況ダッシュボード」：日ごとの推移と、7日・30日の合計）
+    月 = ("30daysAgo", "yesterday")
+    m = _表(よ, prop, 月, [], 合計, 1)
     return {
         "直近7日": t[0] if t else {},
         "その前の7日": p[0] if p else {},
+        "直近30日": m[0] if m else {},
+        "日ごと30日": sorted(_表(よ, prop, 月, ["date"], ["screenPageViews", "activeUsers"], 31), key=lambda r: r["date"]),
         "日ごと": _表(よ, prop, 今週, ["date"], ["screenPageViews", "activeUsers"], 7),
         "どこから": _表(よ, prop, 今週, ["sessionDefaultChannelGroup"], ["sessions"], 10, "sessions"),
         "参照元": _表(よ, prop, 今週, ["sessionSource"], ["sessions"], 10, "sessions"),
