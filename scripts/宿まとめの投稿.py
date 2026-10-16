@@ -77,7 +77,7 @@ def 見出し(まとめ: dict) -> str:
 
 
 def 場所(h: dict) -> str:
-    return f"{宿.県}・{宿.市町(h)}"
+    return f"{宿.県の名(h)}・{宿.市町(h)}"
 
 
 def 本文(まとめ: dict) -> str:

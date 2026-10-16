@@ -151,7 +151,7 @@ print(json.dumps({"URL": f.リストのURL, "切り口": 名, "決まり": 決�
 import json, sys
 sys.path.insert(0, "scripts")
 import 宿
-print(json.dumps([宿.市町({"住所": a, "エリア": "x"}) for a in sys.argv[1:]], ensure_ascii=False))
+print(json.dumps([宿.市町({"住所": a, "エリア": "x"}) for a in sys.argv[1:]] + [宿.県の名({"住所": a}) for a in sys.argv[1:3]], ensure_ascii=False))
 """
         設定 = ROOT / "regions" / "gifu-aichi" / "region.json"
         if not 設定.exists():
@@ -160,7 +160,7 @@ print(json.dumps([宿.市町({"住所": a, "エリア": "x"}) for a in sys.argv[
         住所 = ["愛知県名古屋市中村区名駅1-1-4", "岐阜県下呂市湯之島570", "愛知県蒲郡市三谷町鳶欠14-1",
                 "愛知県額田郡幸田町", "岐阜県大野郡白川村荻町"]
         出 = subprocess.run([sys.executable, "-c", 式, *住所], cwd=ROOT, env=env, capture_output=True, text=True, check=True)
-        self.assertEqual(json.loads(出.stdout.strip().splitlines()[-1]), ["名古屋市", "下呂市", "蒲郡市", "幸田町", "白川村"])
+        self.assertEqual(json.loads(出.stdout.strip().splitlines()[-1]), ["名古屋市", "下呂市", "蒲郡市", "幸田町", "白川村", "愛知県", "岐阜県"])
 
     def test_furusato_noto_rules(self):
         """石川：切り口は上から順、札は写さない、能登だけの日も立つ（2026-10-09 代表）、1/1・9/21の前後は能登の切り口を使わない。"""
