@@ -2,6 +2,7 @@
 # 1行に1つ。フォルダは中身ごと。odekake-data では <県>/ の下に同じ道筋で置く（例 fukui/insights/アクセス/最新.md）。
 insights/アクセス
 insights/利用者層
+insights/状況
 insights/問いかけの記録.md
 insights/アフィリのクリック.jsonl
 insights/アフィリの成績.md

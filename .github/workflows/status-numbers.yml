@@ -1,0 +1,34 @@
+name: 状況の数字を残す
+
+# 2026-10-16 代表（統括経由）「福井、石川、岐阜の状況を見れるダッシュボードを作って」。
+# サイトの掲載件数と Threads の数字（再生数・いいね・返信・リポスト・引用・フォロワー数）を
+# 非公開の置き場（odekake-data）の insights/状況/ に書く。毎朝 7:50 JST（8:27 の定例でダッシュボードに入れる）と、手で起動したとき。
+# 数字は公開のログにもリポジトリにも出さない（DATA_REPO_TOKEN が無いときは書かない）。
+on:
+  schedule:
+    - cron: "50 22 * * *"
+  workflow_dispatch:
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 非公開の置き場がないときは止める（数字を公開のリポジトリに置かないため）
+        if: env.DATA_REPO_TOKEN == ''
+        run: echo "::error::DATA_REPO_TOKEN が無いので書きません" && exit 1
+      - name: 非公開の置き場から写す
+        run: ./scripts/非公開.sh pull
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 取る
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+        run: python "scripts/状況の数字.py"
+      - name: 非公開の置き場に置く
+        run: ./scripts/非公開.sh push insights/状況 "chore(insights): 状況の数字を更新"
