@@ -324,6 +324,15 @@ def 宿のリンク先(宿: dict, 短縮: dict[int, str] | None = None) -> str:
 )
 
 
+def 県の名(宿: dict) -> str:
+    """その宿の県。1県のサイトは今まで通り 県。2県のサイト（「岐阜県・愛知県」）は住所の頭の県（2026-10-16）。"""
+    住 = str(宿.get("住所") or "")
+    for k in 県.split("・"):
+        if 住.startswith(k):
+            return k
+    return 県
+
+
 def 市町(宿: dict) -> str:
     """住所から市町名だけ取り出す。取れなければエリア名。
 
