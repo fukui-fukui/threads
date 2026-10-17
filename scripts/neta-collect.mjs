@@ -563,7 +563,9 @@ function 使用量を記録する(モデル, 入力, 出力, 検索) {
     const ドル = Math.round(((入力 / 1e6) * 入 + (出力 / 1e6) * 出 + 検索 * 0.01) * 1e5) / 1e5;
     const 時刻 = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 19) + '+09:00';
     mkdirSync('state', { recursive: true });
-    appendFileSync('state/usage.jsonl', JSON.stringify({ 時刻, 何: '情報集め', モデル, 入力, 出力, 検索, ドル }) + '\n');
+    // 定期（cron-job.org・schedule）か手動・追加か（2026-10-18 代表「定期実行分と…分けて計れませんか？」。scripts/使用量.py と同じ）
+    const 起動 = ['repository_dispatch', 'schedule'].includes(process.env.GITHUB_EVENT_NAME) ? '定期' : '手動';
+    appendFileSync('state/usage.jsonl', JSON.stringify({ 時刻, 何: '情報集め', モデル, 入力, 出力, 検索, ドル, 起動 }) + '\n');
   } catch (e) {
     console.log(`::warning::使用量を記録できませんでした（${e.message}）`);
   }

@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -34,6 +35,12 @@ def ドル(モデル: str, usage: dict, 検索: int = 0) -> float:
     return 入力 / 1e6 * 入 + (u.get("output_tokens") or 0) / 1e6 * 出 + 検索 * 検索の単価
 
 
+def 起動() -> str:
+    """定期（cron-job.org の repository_dispatch と GitHub の schedule）か、手動・追加（Run workflow・push・手元）か。
+    2026-10-18 代表「定期実行分と、私の指示や追加で必要な対応をした分と分けて計れませんか？」"""
+    return "定期" if os.environ.get("GITHUB_EVENT_NAME") in ("repository_dispatch", "schedule") else "手動"
+
+
 def 記録(何: str, モデル: str, usage: dict, 検索: int = 0) -> None:
     """1行足す。記録に失敗しても本来の仕事は止めない。"""
     try:
@@ -46,6 +53,7 @@ def 記録(何: str, モデル: str, usage: dict, 検索: int = 0) -> None:
             "出力": u.get("output_tokens") or 0,
             "検索": 検索,
             "ドル": round(ドル(モデル, u, 検索), 5),
+            "起動": 起動(),
         }
         置き場.parent.mkdir(parents=True, exist_ok=True)
         with 置き場.open("a", encoding="utf-8") as f:
