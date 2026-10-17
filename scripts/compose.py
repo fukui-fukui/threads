@@ -1678,7 +1678,8 @@ def 名前たち(e: dict) -> set[str]:
     for part in [e.get("text") or "", *(e.get("thread") or []), e.get("note") or ""]:
         for n in _名の形.findall(part):
             n = _読みがな.sub("", n).strip()
-            if 2 <= len(n) <= 30 and n not in _地名 and not _名でないもの.search(n) and _名らしい字.search(n):
+            # 50字まで（10/17、32字の「BON BON OYATSU MARKET in KOMATSU」が名と見なされず、4日あけで2回出た）
+            if 2 <= len(n) <= 50 and n not in _地名 and not _名でないもの.search(n) and _名らしい字.search(n):
                 found.add(n)
     return found
 
