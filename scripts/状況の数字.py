@@ -100,6 +100,27 @@ def 合計(日ごと: list[dict], n: int) -> dict:
     return {k: sum(r[k] for r in 日ごと[-n:]) for k in ("投稿", *指標)}
 
 
+def アカウントのviews(今日) -> list[dict] | None:
+    """アカウント全体の views を日ごとに（直近 日数 日、今日を入れない）。
+    ドキュメントでは「プロフィールが見られた回数」だが、アプリのインサイトの「再生数」と同じかを比べるために取る
+    （2026-10-17 統括：何日か比べて、同じならダッシュボードの再生数をアプリと同じ数え方にそろえる）"""
+    始め = datetime.combine(今日 - timedelta(days=日数), datetime.min.time(), JST)
+    終わり = datetime.combine(今日, datetime.min.time(), JST)
+    d = get("me/threads_insights", metric="views", since=int(始め.timestamp()), until=int(終わり.timestamp()))
+    if "error" in d:
+        return None
+    出 = {}
+    for item in d.get("data", []):
+        for v in item.get("values") or []:
+            t = v.get("end_time")
+            if not t:
+                continue
+            # end_time はその日の終わり（次の日の 0 時、太平洋時間のことがある）。1秒前の日本の日付にする
+            日 = (datetime.fromisoformat(t.replace("+0000", "+00:00")) - timedelta(seconds=1)).astimezone(JST).date()
+            出[日.isoformat()] = 出.get(日.isoformat(), 0) + int(v.get("value") or 0)
+    return [{"日": k, "views": 出[k]} for k in sorted(出)]
+
+
 def フォロワーを足す(path: Path, 日: str, 数: int | None) -> list[dict]:
     行 = {}
     if path.exists():
@@ -138,6 +159,8 @@ def main() -> None:
         数たち[pid] = {i.get("name"): 値(i) for i in d.get("data", [])}
     日ごと = 日ごとに足す(投稿, 数たち, 今日)
 
+    全体 = アカウントのviews(今日)
+
     fc = get("me/threads_insights", metric="followers_count")
     フォロワー = next((値(i) for i in fc.get("data", [])), None) if "error" not in fc else None
     推移 = フォロワーを足す(out / "フォロワー.jsonl", 今日.isoformat(), フォロワー)
@@ -154,6 +177,12 @@ def main() -> None:
             "30日": 合計(日ごと, 30),
             "取れなかった投稿": 取れない,
             "フォロワー": フォロワー,
+            "アカウントのviews": None if 全体 is None else {
+                "説明": "アカウント全体の views（API の threads_insights）。アプリの再生数と同じか比べるため",
+                "日ごと": 全体,
+                "7日": sum(r["views"] for r in 全体[-7:]),
+                "30日": sum(r["views"] for r in 全体),
+            },
             "フォロワーの推移": 推移[-日数:],
         },
     }
