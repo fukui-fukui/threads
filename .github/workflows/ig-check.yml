@@ -12,6 +12,7 @@ jobs:
     permissions:
       contents: read
     steps:
+      - uses: actions/checkout@v4
       - name: 確かめる
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
@@ -37,4 +38,21 @@ jobs:
           print("アカウント:", a.get("username") or a.get("error"))
           lim = get(f"{uid}/content_publishing_limit", fields="quota_usage,config")
           print("投稿の権限（instagram_content_publish）:", "あり" if "error" not in lim else f"なし（{lim['error']}）")
+          # 鍵の期限（自分の鍵で自分を調べる。値は出さない）
+          dbg = get("debug_token", input_token=key).get("data") or {}
+          if dbg:
+              exp = dbg.get("expires_at")
+              print("鍵の期限:", "なし" if exp in (0, None) else __import__("datetime").datetime.fromtimestamp(exp).isoformat())
+              print("鍵の種類:", dbg.get("type"), "／有効:", dbg.get("is_valid"))
+              print("権限:", ", ".join(sorted(dbg.get("scopes") or [])))
+          else:
+              print("鍵の期限: 読めません")
+          # 毎朝のお店の新着読み（business_discovery）が使えるか。巡回先の1つ目で試す
+          import pathlib
+          try:
+              先 = json.loads(pathlib.Path("neta/巡回先.json").read_text(encoding="utf-8")).get("インスタ", [])[0]["ユーザー名"]
+          except Exception:
+              先 = "instagram"
+          bd = get(uid, fields=f"business_discovery.username({先}){{username,media.limit(1){{timestamp}}}}")
+          print(f"お店の新着読み（{先}）:", "読めた" if "error" not in bd else f"読めない（{bd['error']}）")
           PY
