@@ -62,3 +62,17 @@ jobs:
 
       - name: 投稿済み記録をコミットする
         run: ./scripts/commit_file.sh
+
+      # 2026-10-17 代表（統括経由）：リール動画を Instagram（@fukui._fukui）にも出す。posts/ig-queue.jsonl の予約時刻が来たものだけ。
+      # 鍵のアカウントが region.json の「インスタ」とちがえば出さない
+      - name: Instagram に予約時刻が来たリールを出す
+        if: hashFiles('posts/ig-queue.jsonl') != ''
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: python "scripts/インスタ投稿.py"
+
+      - name: Instagram の投稿済み記録をコミットする
+        if: always() && hashFiles('state/ig-posted.json') != ''
+        run: |
+          ./scripts/commit_file.sh state/ig-posted.json "chore: Instagram の投稿済み記録を更新"
