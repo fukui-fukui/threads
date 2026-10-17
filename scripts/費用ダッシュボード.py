@@ -7,6 +7,9 @@
   python scripts/費用ダッシュボード.py <odekake-data のフォルダ> <書き出し先>
 
 予算は 予算.json（福井＋石川で1つ、「別に数える」の地域は別）。
+定期（cron-job.org・schedule）と手動・追加（Run workflow など）を分けて足す（記録の「起動」。
+2026-10-18 代表「定期実行分と、私の指示や追加で必要な対応をした分と分けて計れませんか？」）。
+「起動」の無い古い行は「不明」に入れる。
 """
 from __future__ import annotations
 
@@ -38,6 +41,19 @@ def 読む(p: Path) -> list[dict]:
     return 出
 
 
+def 起動(r: dict) -> str:
+    return r.get("起動") if r.get("起動") in ("定期", "手動") else "不明"
+
+
+def 分ける(行たち: list[dict]) -> dict:
+    出 = {"定期": 0.0, "手動": 0.0, "不明": 0.0}
+    for r in 行たち:
+        出[起動(r)] += float(r.get("ドル") or 0)
+    if not 出["不明"]:
+        del 出["不明"]
+    return {k: round(v, 2) for k, v in 出.items()}
+
+
 def まとめる(data: Path, 予算設定: dict, 今: datetime) -> dict:
     月 = 今.strftime("%Y-%m")
     別 = {b["置き場"]: b for b in 予算設定.get("別に数える", [])}
@@ -47,12 +63,16 @@ def まとめる(data: Path, 予算設定: dict, 今: datetime) -> dict:
         if not 行たち and (key, 名) in ほか:
             continue
         日 = defaultdict(float)
-        仕事 = defaultdict(lambda: {"回数": 0, "ドル": 0.0, "入力": 0, "出力": 0, "検索": 0, "モデル": set()})
+        日の手動 = defaultdict(float)
+        仕事 = defaultdict(lambda: {"回数": 0, "ドル": 0.0, "入力": 0, "出力": 0, "検索": 0, "モデル": set(), "起動": []})
         for r in 行たち:
             日[r["時刻"][:10]] += float(r.get("ドル") or 0)
+            if 起動(r) == "手動":
+                日の手動[r["時刻"][:10]] += float(r.get("ドル") or 0)
             w = 仕事[r.get("何") or "その他"]
             w["回数"] += 1
             w["ドル"] += float(r.get("ドル") or 0)
+            w["起動"].append(r)
             for k in ("入力", "出力", "検索"):
                 w[k] += int(r.get(k) or 0)
             if r.get("モデル"):
@@ -60,18 +80,27 @@ def まとめる(data: Path, 予算設定: dict, 今: datetime) -> dict:
         地域たち.append({
             "key": key, "名": 名, "グループ": 別[key]["名"] if key in 別 else "福井＋石川",
             "ドル": round(sum(日.values()), 2),
+            "起動別": 分ける(行たち),
             "回数": len(行たち),
             "入力": sum(int(r.get("入力") or 0) for r in 行たち),
             "出力": sum(int(r.get("出力") or 0) for r in 行たち),
             "検索": sum(int(r.get("検索") or 0) for r in 行たち),
-            "日ごと": [{"日": d, "ドル": round(日[d], 3)} for d in sorted(日)],
-            "仕事": sorted(({"何": k, **{**v, "ドル": round(v["ドル"], 2), "モデル": "・".join(sorted(v["モデル"]))}}
+            "日ごと": [{"日": d, "ドル": round(日[d], 3), "手動": round(日の手動[d], 3)} for d in sorted(日)],
+            "仕事": sorted(({"何": k, **{**{k2: x for k2, x in v.items() if k2 != "起動"}, "ドル": round(v["ドル"], 2), "モデル": "・".join(sorted(v["モデル"])),
+                                                 "起動別": 分ける(v["起動"]),
+                                                 "手動回数": sum(1 for r in v["起動"] if 起動(r) == "手動")}}
                           for k, v in 仕事.items()), key=lambda x: -x["ドル"]),
         })
     グループ = []
     for 名, 予算 in [("福井＋石川", 予算設定.get("月の予算ドル"))] + [(b["名"], b.get("月の予算ドル")) for b in 別.values()]:
         ドル = round(sum(r["ドル"] for r in 地域たち if r["グループ"] == 名), 2)
-        グループ.append({"名": 名, "予算": 予算, "ドル": ドル, "割合": round(ドル / 予算 * 100, 1) if 予算 else None})
+        起 = defaultdict(float)
+        for r in 地域たち:
+            if r["グループ"] == 名:
+                for k, v in r["起動別"].items():
+                    起[k] += v
+        グループ.append({"名": 名, "予算": 予算, "ドル": ドル, "割合": round(ドル / 予算 * 100, 1) if 予算 else None,
+                       "起動別": {k: round(v, 2) for k, v in 起.items()}})
     return {
         "月": 月,
         "時点": 今.isoformat(timespec="minutes"),
