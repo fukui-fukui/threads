@@ -1,0 +1,40 @@
+name: Instagram の投稿の権限を確かめる
+
+# 2026-10-17 統括（代表の依頼：リール動画を Threads と Instagram に自動で出したい）。
+# Secrets の IG_USER_ID・IG_ACCESS_TOKEN がどの Instagram アカウントのものか、動画（リール）を出す権限があるかを、
+# 読むだけで確かめる。何も投稿しない。ログに出すのはアカウント名と「できる／できない」だけ（鍵は出さない）。
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 確かめる
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request, urllib.error, urllib.parse
+          uid, key = os.environ.get("IG_USER_ID", "").strip(), os.environ.get("IG_ACCESS_TOKEN", "").strip()
+          if not uid or not key:
+              print("IG_USER_ID か IG_ACCESS_TOKEN が未設定です"); raise SystemExit(1)
+          def get(path, **p):
+              p["access_token"] = key
+              try:
+                  with urllib.request.urlopen(f"https://graph.facebook.com/v26.0/{path}?{urllib.parse.urlencode(p)}", timeout=30) as r:
+                      return json.load(r)
+              except urllib.error.HTTPError as e:
+                  try:
+                      err = json.load(e).get("error", {})
+                  except Exception:
+                      err = {}
+                  return {"error": f"{err.get('code', e.code)} {str(err.get('message', ''))[:120]}".replace(key, "＊＊＊")}
+          a = get(uid, fields="username,name,followers_count")
+          print("アカウント:", a.get("username") or a.get("error"))
+          lim = get(f"{uid}/content_publishing_limit", fields="quota_usage,config")
+          print("投稿の権限（instagram_content_publish）:", "あり" if "error" not in lim else f"なし（{lim['error']}）")
+          PY
