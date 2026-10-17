@@ -8,6 +8,7 @@
 
 posts/ig-queue.jsonl の1行：
   {"id": "ig-...", "scheduled_at": "2026-10-23T18:00:00+09:00", "video_url": "https://...mp4", "caption": "..."}
+  画像1枚なら video_url の代わりに "image_url": "https://...jpg"
 
 環境変数: IG_USER_ID・IG_ACCESS_TOKEN（Secrets）、DRY_RUN=true なら出さない
 """
@@ -54,10 +55,14 @@ def 読む_queue() -> list[dict]:
 
 
 def 出す(item: dict, uid: str) -> dict:
-    c = 呼ぶ("POST", f"{uid}/media", media_type="REELS", video_url=item["video_url"],
-            caption=item.get("caption", ""), share_to_feed="true")
+    if item.get("image_url"):
+        # 画像1枚の投稿（2026-10-17 代表「Instagram の固定投稿を自動で出して」）
+        c = 呼ぶ("POST", f"{uid}/media", image_url=item["image_url"], caption=item.get("caption", ""))
+    else:
+        c = 呼ぶ("POST", f"{uid}/media", media_type="REELS", video_url=item["video_url"],
+                caption=item.get("caption", ""), share_to_feed="true")
     cid = c["id"]
-    # 動画の処理を待つ（最大10分）
+    # 処理を待つ（最大10分。動画は時間がかかる）
     for _ in range(60):
         st = 呼ぶ("GET", cid, fields="status_code,status").get("status_code")
         if st == "FINISHED":
@@ -97,7 +102,7 @@ def main() -> None:
     失敗 = False
     for item in 出すもの:
         if dry:
-            print(f"[dry-run] 出しません {item['id']} {item['video_url']}")
+            print(f"[dry-run] 出しません {item['id']} {item.get('video_url') or item.get('image_url')}")
             continue
         try:
             posted["posted"][item["id"]] = 出す(item, uid)
