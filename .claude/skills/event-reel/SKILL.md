@@ -1,6 +1,6 @@
 ---
 name: event-reel
-description: ふくいおでかけの「来週末の福井おでかけ3選」リール（Threads @fukui._.fukui／Instagram @fukui._fukui）を作り、投稿の準備までする手順。候補選び→Runway で画像・動画→scripts/リール.py でテロップ・BGM→キャプション→代表の OK→おでかけ開発が投稿。イベント3選のリール、来週末のおすすめ動画を作るときに使う。
+description: ふくいおでかけの「来週末の福井おでかけ3選」リール（Threads @fukui._.fukui／Instagram @fukui._fukui）を作り、投稿の準備までする手順。候補選び→Gemini（Runway の nano-banana-pro）で画像→Runway で動画→scripts/リール.py でテロップ・BGM→キャプション→代表の OK→おでかけ開発が投稿。イベント3選のリール、来週末のおすすめ動画を作るときに使う。
 ---
 
 # 来週末の福井おでかけ3選リール
@@ -16,7 +16,7 @@ description: ふくいおでかけの「来週末の福井おでかけ3選」リ
 - お店のロゴ・看板の文字・実在の人の顔は作らない。プロンプトに必ず `no text, no letters, no logos, no recognizable faces` を入れる。
 - 鍵・トークンは書かない。Runway のアップロード用の URL もログ・リポジトリ・連絡に残さない（渡すのはセッション間の send_message だけ）。
 - BGM は公開リポジトリに入れない。
-- 費用は Runway のクレジット（Standard プラン、月 625。更新日は毎月29日なので、29日〜次の28日の区切りで数える）。1回の目安は約 135（画像1枚 20、動画5秒 25（gen-4-turbo）×3）。作り直しも予算に入れる。区切りの合計が 625 を超えそうなとき（作る日の水曜が5回ある区切り：12/29〜1/28、3/29〜4/28、6/29〜7/28 など）は、作る前に統括に知らせる。
+- 費用は Runway のクレジット（Standard プラン、月 625。更新日は毎月29日なので、29日〜次の28日の区切りで数える）。1回の目安は約 135（10/17 の回の実績：画像1枚 20（gpt-image-2）、動画5秒 25（gen-4-turbo）×3）。画像を Gemini（nano-banana-pro）に替えたので、画像1枚のクレジットは次の回に作る前後の残りの差で確かめ、ここを直す。作り直しも予算に入れる。区切りの合計が 625 を超えそうなとき（作る日の水曜が5回ある区切り：12/29〜1/28、3/29〜4/28、6/29〜7/28 など）は、作る前に統括に知らせる。
 
 ## 毎週の流れ（代表 10/17「はい」）
 
@@ -38,8 +38,11 @@ description: ふくいおでかけの「来週末の福井おでかけ3選」リ
 - 統括経由で代表が3つ選ぶ。ジャンルと地域が重ならないように。
 - 選んだ3つを公式で確かめ、台本.json を書く（下の形）。
 
-### 2. 画像（Runway generate_image）
-- model `gpt-image-2`、ratio `9:16`。
+### 2. 画像（Gemini。Runway generate_image の nano-banana-pro）
+- 代表 10/17「画像生成をgeminiで作って、runwayで動画つくる流れにしたい」。
+- Runway の中の Gemini の画像モデル（`nano-banana-pro`）で作る。別の鍵は要らず、クレジットは Runway のものを使う。taskId をそのまま動画の startFrame に渡せる。
+- model `nano-banana-pro`、ratio `9:16`、imageSize `1K`（動画は 720×1280 なので 2K・4K は要らない）。
+- 作る前と後に whoami で残りのクレジットを見て、1枚いくらかを記録に残す。
 - テロップを上にのせるので、**画面の上 1/3 は空や建物**、料理などの主役は下に置く。
 - プロンプトの例：`Vertical photo of a cozy autumn food festival in a Japanese city plaza, steaming bowls of soba on wooden tables in the lower half, clear evening sky in the upper third, warm light, photorealistic, no text, no letters, no logos, no recognizable faces`
 - 出来を見て、文字・ロゴ・顔が出ていたら作り直す。
