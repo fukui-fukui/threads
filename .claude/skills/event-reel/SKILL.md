@@ -1,0 +1,102 @@
+---
+name: event-reel
+description: ふくいおでかけの「来週末の福井おでかけ3選」リール（Threads @fukui._.fukui／Instagram @fukui._fukui）を作り、投稿の準備までする手順。候補選び→Runway で画像・動画→scripts/リール.py でテロップ・BGM→キャプション→代表の OK→おでかけ開発が投稿。イベント3選のリール、来週末のおすすめ動画を作るときに使う。
+---
+
+# 来週末の福井おでかけ3選リール
+
+代表 2026-10-17「イベント3選のリール作成投稿のチームを作って、必要ならスキルで登録しておいて。」
+担当は【制作部】イベント3選リール。報告・相談は【統括】へ。投稿はおでかけ開発の仕組み（posts/queue.jsonl・posts/ig-queue.jsonl）で出す。
+
+## 決まり（必ず守る）
+
+- **代表の OK が出るまで投稿しない**（代表 10/17「OK出すまで、投稿しないこと」）。統括を通して、動画2本とキャプションを見せて OK をもらう。
+- **書くのは出典にある事実だけ**。日付・場所・時間は、neta/ネタ帳.md とお店・主催者の公式で1つずつ確かめる。食い違ったら公式が正（10/17 の回はネタ帳の行がまちがっていて、鉄道ふくいフェスタの会場を神明駅に直した）。ネタ帳の行も直す。
+- 画像は AI のイメージ。どの場面にも「※画像はイメージです」、終わりに「日時・内容は公式の情報をご確認ください」（scripts/リール.py が自動で入れる）。
+- お店のロゴ・看板の文字・実在の人の顔は作らない。プロンプトに必ず `no text, no letters, no logos, no recognizable faces` を入れる。
+- 鍵・トークンは書かない。Runway のアップロード用の URL もログ・リポジトリ・連絡に残さない（渡すのはセッション間の send_message だけ）。
+- 費用は Runway のクレジット。代表が決めた予算の中で。目安は画像1枚 20、動画5秒 25（gen-4-turbo）、3選で約 135。作り直しも予算に入れる。新しい回を作るのは、統括から頻度・予算の返事が来てから。
+- BGM は公開リポジトリに入れない。
+
+## 手順
+
+### 1. 選ぶ
+- 運用部・福井に、来週末（土日）の候補5つを表で出してもらう（名前・日時・場所・見どころ・出典 URL）。
+- 統括経由で代表が3つ選ぶ。ジャンルと地域が重ならないように。
+- 選んだ3つを公式で確かめ、台本.json を書く（下の形）。
+
+### 2. 画像（Runway generate_image）
+- model `gpt-image-2`、ratio `9:16`。
+- テロップを上にのせるので、**画面の上 1/3 は空や建物**、料理などの主役は下に置く。
+- プロンプトの例：`Vertical photo of a cozy autumn food festival in a Japanese city plaza, steaming bowls of soba on wooden tables in the lower half, clear evening sky in the upper third, warm light, photorealistic, no text, no letters, no logos, no recognizable faces`
+- 出来を見て、文字・ロゴ・顔が出ていたら作り直す。
+
+### 3. 動画（Runway generate_video）
+- model `gen-4-turbo`、startFrame は画像の taskId、duration `5`、ratio `720:1280`。
+- 動きは小さく：ゆっくり寄る、葉がゆれる、湯気が上がる、など。
+- できた mp4 を作業フォルダ（スクラッチ）に 1.mp4・2.mp4・3.mp4 として落とす。
+
+### 4〜7. テロップ・はじめ・おわり・つなぎ・BGM（scripts/リール.py）
+
+```
+python scripts/リール.py 作業/台本.json 作業/out --bgm 作業/bgm.mp3
+```
+
+- 作業/out/threads.mp4（おわりが @fukui._.fukui）と ig.mp4（@fukui._fukui（プロフィールのリンクから））ができる。
+- 中身：はじめ 2.5秒（1本目をぼかして「来週末の福井／おでかけ3選／日付」）→ 各5秒×3 → おわり 2.5秒（オレンジの地に「くわしくは ふくいおでかけ で」）。約20秒・24fps・720×1280・yuv420p。
+- テロップ：上に帯（black@0.45、y=40〜400）。見出し「来週末の福井 おでかけ3選 n/3」（オレンジ 0xE8873A の箱）、イベント名 56px、日にち 40px（黄 0xFFD54F）、場所 34px、見どころ 34px。右下に「※画像はイメージです」。長い文字は横幅に収まるよう自動で小さくなる。フォントは IPAPゴシック（/usr/share/fonts/opentype/ipafont-gothic/ipagp.ttf）。
+- BGM：代表のフリーBGM（作者しゃろう。10/17 は「しゅわしゅわハニーレモン350ml」）。volume 0.8、頭 0.5秒フェードイン、最後 2.5秒フェードアウト。作者名の表記は不要（代表 10/17）。
+  - ファイルは Google ドライブ AI会社/BGM に置いてもらう予定。無ければ統括に知らせる（`--bgm` なしだと無音で作る）。
+- できたら何コマか切り出して自分の目で確かめる（文字のはみ出し・誤字・注記）：
+  `ffmpeg -ss 4 -i out/ig.mp4 -frames:v 1 f4.png`
+
+台本.json：
+
+```json
+{
+  "date": "10/24(土)・25(日)",
+  "scenes": [
+    {"clip": "1.mp4", "name": "福井そば博2026", "date": "10/24(土)・25(日)",
+     "place": "福井駅前 ハピリン", "point": "そばの食べ比べ9ブース"},
+    {"clip": "2.mp4", "name": "鉄道ふくいフェスタ2026", "date": "10/24(土) 10:00〜16:00",
+     "place": "鯖江市 福井鉄道 神明駅", "point": "スタンプラリー・こども縁日など"},
+    {"clip": "3.mp4", "name": "第75回 たけふ菊人形", "date": "11/8(日)まで",
+     "place": "越前市 武生中央公園", "point": "テーマは「越前妖怪物語」"}
+  ]
+}
+```
+
+### 8. 渡す
+- mp4 を Runway の `init_upload` → PUT → `complete_upload` で一時 URL にする（約1日で切れる）。URL はログに出さない。
+- その URL をおでかけ開発（send_message）に渡し、`docs/reel/<来週末の土曜の日付>.mp4`（Threads 用）と `docs/reel/<日付>-ig.mp4`（Instagram 用）に置いてもらう。公開 URL は `https://odekake.fukui-fukui.com/reel/<日付>.mp4`。
+
+### 9. キャプション（①②③で行を分ける形。代表が「A」を選んだ）
+- Threads（posts/queue.jsonl。`video_url` と、返信 `thread` に出典元のリンク）：
+
+```
+来週末 10/24(土)・25(日) の福井おでかけ3選🍂
+
+① 福井そば博2026
+10/24(土)・25(日)／福井駅前 ハピリン
+そばの食べ比べ9ブース
+
+② …
+
+③ …
+
+※画像はイメージです。日時・内容は公式の情報をご確認ください。
+```
+
+  返信：`出典元：\n<名前> <公式URL>\n…`
+- Instagram（posts/ig-queue.jsonl の `caption`）：本文は同じで、最後に「くわしくはプロフィールのリンクから」と注記、ハッシュタグ（#福井 #福井イベント #福井おでかけ #ふくいおでかけ ＋イベント・地域のもの）。
+
+### 10. OK をもらって出す
+- 統括に「動画2本（URL）・キャプション2つ・出典」を送る。代表の OK（言葉をそのまま）をもらう。
+- OK が出たら、おでかけ開発が queue.jsonl と ig-queue.jsonl に足して両方に出す（note に代表の OK の言葉を残す。例：`代表 10/17 OK（統括経由「A」「両方出してOK」）`）。
+- 出たら統括に投稿の URL と使ったクレジットを報告し、引き継ぎ（AI会社/引き継ぎ）を最新にする。
+
+## 記録
+
+| 回 | 3選 | 投稿 | クレジット |
+| --- | --- | --- | --- |
+| 10/24・25（10/17 作成） | 福井そば博2026／鉄道ふくいフェスタ2026／第75回たけふ菊人形 | Threads https://www.threads.com/@fukui._.fukui/post/Delj9ZVjpd0 ・Instagram https://www.instagram.com/reel/DelkDRDlM-m/ | 135（画像3＋動画3） |
