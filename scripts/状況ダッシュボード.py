@@ -48,6 +48,7 @@ def まとめる(data: Path) -> dict[str, dict]:
     for key, 設定 in 地域.items():
         s = 読む(data / key / "insights" / "状況" / "最新.json")
         t = s.get("Threads", {})
+        全体 = t.get("アカウントのviews")
         g = next((x for x in アクセス.get("GA", []) if 設定["GA"] in (x.get("計測ID") or [])), None)
         doc = {
             "名前": s.get("サイト名") or 設定["名前"],
@@ -55,9 +56,11 @@ def まとめる(data: Path) -> dict[str, dict]:
             "掲載": {**(s.get("掲載") or {}), "時点": s.get("作った時刻")},
             "Threads": {
                 "時点": s.get("作った時刻"),
-                "7日": t.get("7日"),
-                "30日": t.get("30日"),
-                "日ごと": [{"日": r["日"], "views": r["views"]} for r in t.get("日ごと", [])],
+                # 再生数はアカウント全体の views（その日に見られた回数。アプリのインサイトの再生数と同じ数え方）。
+                # 2026-10-17 代表「はい」：出した投稿の再生数の合計は外す。いいね・返信などは投稿ごとの合計のまま
+                "7日": {**(t.get("7日") or {}), "views": (全体 or {}).get("7日")},
+                "30日": {**(t.get("30日") or {}), "views": (全体 or {}).get("30日")},
+                "日ごと": [{"日": r["日"], "views": r["views"]} for r in (全体 or {}).get("日ごと", [])],
                 "フォロワー": t.get("フォロワー"),
                 "フォロワーの推移": t.get("フォロワーの推移", []),
             },
