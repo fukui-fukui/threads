@@ -94,8 +94,16 @@ def 返信(i: int, h: dict) -> str:
     return "\n".join(行)
 
 
-def 組み立てる(日, 宿たち: list[dict], 時: int) -> dict | None:
-    まとめ = 宿.今日のまとめ(日, 宿たち, いくつ=宿.今日の件数(日, 5, 7))
+def 直近に出した宿(すでに: list[dict], 日, 宿たち: list[dict], 日数: int = 7) -> set[str]:
+    """対象日の前 日数 日の宿まとめ（note が「宿まとめ」）の本文に出ている宿の名前。"""
+    始め = (日 - timedelta(days=日数)).isoformat()
+    本文たち = [str(e.get("text") or "") for e in すでに
+               if str(e.get("note") or "").startswith(印) and 始め <= str(e.get("scheduled_at") or "")[:10] < 日.isoformat()]
+    return {宿.見せる名(h) for h in 宿たち if any(宿.見せる名(h) in t for t in 本文たち)}
+
+
+def 組み立てる(日, 宿たち: list[dict], 時: int, 避ける: set[str] = frozenset()) -> dict | None:
+    まとめ = 宿.今日のまとめ(日, 宿たち, いくつ=宿.今日の件数(日, 5, 7), 避ける=避ける)
     if not まとめ:
         return None
     # 1本目が長すぎるときは下から減らす（見出しの数も合わせる）
@@ -133,7 +141,8 @@ def main() -> None:
         print(f"{日} {時}:00 はすでに埋まっています。宿まとめは足しません。")
         return
     宿たち = 宿.読む()
-    投稿 = 組み立てる(日, 宿たち, 時) if 宿たち else None
+    避ける = 直近に出した宿(すでに, 日, 宿たち) if 宿たち else set()
+    投稿 = 組み立てる(日, 宿たち, 時, 避ける) if 宿たち else None
     if not 投稿:
         print(f"::warning::{日} の宿まとめは作れませんでした（5軒そろう切り口が無い・リンクが無いなど）。")
         return
