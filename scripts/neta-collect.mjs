@@ -18,6 +18,7 @@
  * ------------------------------------------------------------------
  */
 
+import { request as httpsRequest } from 'node:https';
 import { readFileSync, writeFileSync, existsSync, appendFileSync, mkdirSync } from 'node:fs';
 import { 巡回 } from './巡回.mjs';
 
@@ -498,6 +499,21 @@ if (書かない) {
 //  小物
 // ==================================================================
 
+// POST して返事の本文を受け取る。待ち時間は15分（返事が遅くても切らない）
+function 長く待って送る(url, headers, body, 待つ = 15 * 60 * 1000) {
+  return new Promise((ok, ng) => {
+    const req = httpsRequest(url, { method: 'POST', headers: { ...headers, 'content-length': Buffer.byteLength(body) } }, (res) => {
+      const 塊たち = [];
+      res.on('data', (c) => 塊たち.push(c));
+      res.on('end', () => ok({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, text: Buffer.concat(塊たち).toString('utf8') }));
+      res.on('error', ng);
+    });
+    req.setTimeout(待つ, () => req.destroy(new Error(`Anthropic API の返事が ${待つ / 60000} 分来ませんでした`)));
+    req.on('error', ng);
+    req.end(body);
+  });
+}
+
 async function claudeに聞く(prompt) {
   // web_search（サーバー側ツール）は途中で stop_reason: "pause_turn" を返して
   // 「続きを頼む」ことがある。その場合は返ってきた content をそのまま assistant として
@@ -506,14 +522,13 @@ async function claudeに聞く(prompt) {
   let data = null;
   let 検索した = 0, 入力 = 0, 出力t = 0;
   for (let 回 = 0; 回 < 4; 回++) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': APIキー,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
+    // fetch は返事の頭が5分来ないと切れる（undici の headersTimeout）。web_fetch で何ページも読む日は
+    // 5分を超えて「HeadersTimeoutError」で止まった（2026-10-19 福井 run 39170318771）。node:https で15分まで待つ
+    const res = await 長く待って送る('https://api.anthropic.com/v1/messages', {
+      'content-type': 'application/json',
+      'x-api-key': APIキー,
+      'anthropic-version': '2023-06-01'
+    }, JSON.stringify({
         model: 設定.モデル ?? 'claude-sonnet-5-5',
         // 候補が多い日は 8000 では返しの JSON の途中で切れた（2026-10-08 石川版、候補130件）
         max_tokens: 16000,
@@ -524,13 +539,12 @@ async function claudeに聞く(prompt) {
           { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 設定.読む回数 ?? 10, max_content_tokens: 8000 }
         ],
         messages
-      })
-    });
+      }));
 
     if (!res.ok) {
-      throw new Error(`Anthropic API が ${res.status} を返しました: ${(await res.text()).slice(0, 500)}`);
+      throw new Error(`Anthropic API が ${res.status} を返しました: ${res.text.slice(0, 500)}`);
     }
-    data = await res.json();
+    data = JSON.parse(res.text);
     console.log(`API 応答: stop_reason=${data.stop_reason} / content=${(data.content ?? []).length}ブロック（${回 + 1}回目）`);
     const u = data.usage ?? {};
     検索した += u.server_tool_use?.web_search_requests ?? 0;
