@@ -22,6 +22,12 @@ import { request as httpsRequest } from 'node:https';
 import { readFileSync, writeFileSync, existsSync, appendFileSync, mkdirSync } from 'node:fs';
 import { 巡回 } from './巡回.mjs';
 
+// 時刻（12:00、12時）と日付（6月5日、6/5、10月中旬）。行に事実が入っているかを見るのに使う。
+// 上の処理（本体）から呼ぶ関数が使うので、ここ（本体より前）で決める。下に置くと、日付の無い催しの行が
+// 出た日に「Cannot access '日付の形' before initialization」で止まった（2026-10-19）
+const 時刻の形 = /\d{1,2}[:：]\d{2}|\d{1,2}時/g;
+const 日付の形 = /\d{1,2}月\d{1,2}日|\d{1,2}\/\d{1,2}|\d{1,2}月(上旬|中旬|下旬|初め|末)|\d{4}年\d{1,2}月/g;
+
 const 設定パス = 'neta/設定.json';
 const ネタ帳パス = 'neta/ネタ帳.md';
 const 見出し = '## 書き足す場所';
@@ -705,9 +711,6 @@ function 見出しの下に入れる(md, 見出し文字, 塊) {
   return `${前}\n${塊}${後.startsWith('\n') ? 後 : '\n' + 後}`;
 }
 
-// 時刻（12:00、12時）と日付（6月5日、6/5、10月中旬）。行に事実が入っているかを見るのに使う
-const 時刻の形 = /\d{1,2}[:：]\d{2}|\d{1,2}時/g;
-const 日付の形 = /\d{1,2}月\d{1,2}日|\d{1,2}\/\d{1,2}|\d{1,2}月(上旬|中旬|下旬|初め|末)|\d{4}年\d{1,2}月/g;
 
 function 事実の印(s) {
   return [...new Set([...(s.match(時刻の形) ?? []), ...(s.match(日付の形) ?? [])])];
