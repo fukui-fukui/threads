@@ -540,9 +540,11 @@ async function claudeに聞く(prompt) {
         max_tokens: 16000,
         // web_fetch は出典のページを開いて読むため。検索だけだと一覧の見出ししか見えず、
         // 新店の営業時間・催しの日付が行に入らなかった（2026-10-15 運用部・石川担当）
+        // 読んだページは続きの呼び出しのたびに入力に積み重なる。10回×8000で1回の入力が80万〜130万トークンに
+        // ふくらみ、10/19 に API の残高が尽きた。6回×4000に絞る
         tools: [
           { type: 'web_search_20260209', name: 'web_search', max_uses: 設定.検索回数 ?? 8 },
-          { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 設定.読む回数 ?? 10, max_content_tokens: 8000 }
+          { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 設定.読む回数 ?? 6, max_content_tokens: 4000 }
         ],
         messages
       }));
