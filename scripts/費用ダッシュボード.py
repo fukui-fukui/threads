@@ -4,7 +4,10 @@
 ダッシュボードは代表しか開けないので金額を載せてよい（代表）。ただし、このスクリプトは
 金額を公開のログやリポジトリに書かない（出力は引数で渡したフォルダの JSON だけ。標準出力には件数だけ）。
 
-  python scripts/費用ダッシュボード.py <odekake-data のフォルダ> <書き出し先>
+  python scripts/費用ダッシュボード.py <odekake-data のフォルダ> <書き出し先> [yu の usage.jsonl]
+
+yu（yu-fukui/threads_yu-fukui）は公開リポジトリなので、記録に金額が無い（トークン数だけ）。
+3つめの引数で yu の state/usage.jsonl を渡すと、ここで単価から金額を計算して足す（2026-10-19 代表「おすすめの設定で」）。
 
 予算は 予算.json（福井＋石川で1つ、「別に数える」の地域は別）。
 定期（cron-job.org・schedule）と手動・追加（Run workflow など）を分けて足す（記録の「起動」。
@@ -15,9 +18,13 @@ from __future__ import annotations
 
 import json
 import sys
+
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import 使用量  # noqa: E402  単価（金額の無い記録の計算に使う）
 
 JST = timezone(timedelta(hours=9))
 地域 = [
@@ -29,15 +36,20 @@ JST = timezone(timedelta(hours=9))
 ほか = [("ekimae", "ふくいエキマエ"), ("yu", "yu")]
 
 
-def 読む(p: Path) -> list[dict]:
-    if not p.exists():
+def 読む(p: Path | None) -> list[dict]:
+    if not p or not p.exists():
         return []
     出 = []
     for l in p.read_text(encoding="utf-8").splitlines():
         try:
-            出.append(json.loads(l))
+            r = json.loads(l)
         except ValueError:
             continue
+        if r.get("ドル") is None:
+            # 金額の無い記録（yu）は単価から計算する
+            r["ドル"] = 使用量.ドル(r.get("モデル") or "", {"input_tokens": r.get("入力") or 0, "output_tokens": r.get("出力") or 0},
+                               int(r.get("検索") or 0))
+        出.append(r)
     return 出
 
 
@@ -54,12 +66,13 @@ def 分ける(行たち: list[dict]) -> dict:
     return {k: round(v, 2) for k, v in 出.items()}
 
 
-def まとめる(data: Path, 予算設定: dict, 今: datetime) -> dict:
+def まとめる(data: Path, 予算設定: dict, 今: datetime, 場所: dict[str, Path] | None = None) -> dict:
     月 = 今.strftime("%Y-%m")
     別 = {b["置き場"]: b for b in 予算設定.get("別に数える", [])}
     地域たち = []
     for key, 名 in 地域 + ほか:
-        行たち = [r for r in 読む(data / key / "state" / "usage.jsonl") if str(r.get("時刻", "")).startswith(月)]
+        元 = (場所 or {}).get(key) or data / key / "state" / "usage.jsonl"
+        行たち = [r for r in 読む(元) if str(r.get("時刻", "")).startswith(月)]
         if not 行たち and (key, 名) in ほか:
             continue
         日 = defaultdict(float)
@@ -78,7 +91,9 @@ def まとめる(data: Path, 予算設定: dict, 今: datetime) -> dict:
             if r.get("モデル"):
                 w["モデル"].add(r["モデル"])
         地域たち.append({
-            "key": key, "名": 名, "グループ": 別[key]["名"] if key in 別 else "福井＋石川",
+            "key": key, "名": 名,
+            # 予算の無いもの（エキマエ・yu）は、それぞれ自分の名前のグループにする
+            "グループ": 別[key]["名"] if key in 別 else ("福井＋石川" if (key, 名) in 地域 else 名),
             "ドル": round(sum(日.values()), 2),
             "起動別": 分ける(行たち),
             "回数": len(行たち),
@@ -92,7 +107,9 @@ def まとめる(data: Path, 予算設定: dict, 今: datetime) -> dict:
                           for k, v in 仕事.items()), key=lambda x: -x["ドル"]),
         })
     グループ = []
-    for 名, 予算 in [("福井＋石川", 予算設定.get("月の予算ドル"))] + [(b["名"], b.get("月の予算ドル")) for b in 別.values()]:
+    予算たち = [("福井＋石川", 予算設定.get("月の予算ドル"))] + [(b["名"], b.get("月の予算ドル")) for b in 別.values()]
+    予算たち += [(r["名"], None) for r in 地域たち if r["グループ"] not in {n for n, _ in 予算たち}]
+    for 名, 予算 in 予算たち:
         ドル = round(sum(r["ドル"] for r in 地域たち if r["グループ"] == 名), 2)
         起 = defaultdict(float)
         for r in 地域たち:
@@ -113,8 +130,9 @@ def まとめる(data: Path, 予算設定: dict, 今: datetime) -> dict:
 
 def main() -> None:
     data, out = Path(sys.argv[1]), Path(sys.argv[2])
+    場所 = {"yu": Path(sys.argv[3])} if len(sys.argv) > 3 else {}
     予算設定 = json.loads(Path("予算.json").read_text(encoding="utf-8"))
-    d = まとめる(data, 予算設定, datetime.now(JST))
+    d = まとめる(data, 予算設定, datetime.now(JST), 場所)
     out.mkdir(parents=True, exist_ok=True)
     (out / "今月.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     # 金額は出さない（公開のログに残らないように）
