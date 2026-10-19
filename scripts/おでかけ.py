@@ -421,7 +421,8 @@ def prerender(data: dict, today: date, limit_events: int = 40, limit_spots: int 
 
 # ---- 月別ページ（2026-10-04 SEO 第2段階） ----
 # 「福井 イベント 10月」のような検索を受けるページ。中身の薄いページを量産しないよう、
-# 今月以降で、短い催しが MONTH_MIN 件以上ある月だけ作る。過ぎた月のページは消す。
+# 今月以降で、短い催しが MONTH_MIN 件以上ある月だけ作る。一度作った月のページは、月が過ぎても残して
+# 作り直す（2026-10-20 代表：検索で来る人のほとんどが月のページから。消すと積み上げた評価がなくなる）。
 MONTH_DIR = ROOT / "docs" / "month"
 MONTH_MIN = 5
 MONTHS_MARK = ("<!--months:start-->", "<!--months:end-->")
@@ -462,8 +463,8 @@ def _is_long(sp: tuple[date, date]) -> bool:
     return (sp[1] - sp[0]).days >= 7
 
 
-def month_pages(data: dict, today: date) -> dict[str, dict]:
-    """作る月 → {"short": [...], "long": [...]}。今月以降で短い催しが MONTH_MIN 件以上の月だけ。"""
+def month_pages(data: dict, today: date, keep: set[str] = frozenset()) -> dict[str, dict]:
+    """作る月 → {"short": [...], "long": [...]}。今月以降（と keep の月）で短い催しが MONTH_MIN 件以上の月だけ。"""
     out: dict[str, dict] = {}
     for it in data["items"]:
         sp = _span(it)
@@ -471,7 +472,7 @@ def month_pages(data: dict, today: date) -> dict[str, dict]:
             continue
         y, m = sp[0].year, sp[0].month
         while (y, m) <= (sp[1].year, sp[1].month):
-            if (y, m) >= (today.year, today.month):
+            if (y, m) >= (today.year, today.month) or f"{y}-{m:02d}" in keep:
                 b = out.setdefault(f"{y}-{m:02d}", {"short": [], "long": []})
                 b["long" if _is_long(sp) else "short"].append(it)
             y, m = (y + 1, 1) if m == 12 else (y, m + 1)
@@ -495,7 +496,8 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
     area_txt = "、".join(f"{a}（{n}件）" for a, n in areas)
     url = f"{SITE}/month/{key}/"
     title = f"{KEN}のイベント {label}｜{SITE_NAME}"
-    desc = (f"{label}に{KEN}県内で開かれるイベント・祭り・マルシェ・展示を日付順にまとめました。"
+    past = (y, m) < (today.year, today.month)
+    desc = (f"{label}に{KEN}県内で{'開かれた' if past else '開かれる'}イベント・祭り・マルシェ・展示を日付順にまとめました。"
             f"全{len(short) + len(long_)}件、主催者や自治体などの出典つき。")
 
     def card(it: dict) -> str:
@@ -597,14 +599,10 @@ footer {{ color: var(--muted); font-size: .78rem; text-align: center; padding: 0
 
 
 def write_months(data: dict, today: date) -> list[str]:
-    pages = month_pages(data, today)
+    # 前に作った月（docs/month/ にあるもの）は、過ぎても作り直して残す。消さない
+    made = {d.name for d in MONTH_DIR.iterdir() if d.is_dir()} if MONTH_DIR.exists() else set()
+    pages = month_pages(data, today, keep=made)
     keys = list(pages)
-    if MONTH_DIR.exists():
-        for d in MONTH_DIR.iterdir():
-            if d.is_dir() and d.name not in pages:
-                for f in d.iterdir():
-                    f.unlink()
-                d.rmdir()
     for k, b in pages.items():
         (MONTH_DIR / k).mkdir(parents=True, exist_ok=True)
         (MONTH_DIR / k / "index.html").write_text(render_month(k, b, keys, today), encoding="utf-8")
