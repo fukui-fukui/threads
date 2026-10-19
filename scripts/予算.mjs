@@ -74,6 +74,8 @@ await 知らせる(設定['知らせる割合'] ?? [], '', 合計, 予算, 割�
  * Issue の題には【予算・名】と付けて、福井＋石川の予算とは混ぜない。
  */
 for (const 別 of 設定['別に数える'] ?? []) {
+  // 金額の記録が非公開の置き場に無いもの（yu）は、費用ダッシュボードと毎朝の定例で見る（2026-10-19）
+  if (別.毎晩の見張り === false) continue;
   const パス = `${process.env.DATA_CLONE || (process.env.RUNNER_TEMP || '/tmp') + '/odekake-data'}/${別.置き場}/state/usage.jsonl`;
   if (!existsSync(パス)) console.log(`::notice::${別.名} の使用量はまだありません（${パス}）`);
   const 別の内訳 = {};
