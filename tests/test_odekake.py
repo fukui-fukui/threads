@@ -266,6 +266,12 @@ class MonthPageTest(unittest.TestCase):
         self.assertEqual(len(pages["2026-10"]["short"]), 5)
         self.assertEqual(len(pages["2026-10"]["long"]), 1)
 
+    def test_keeps_past_months_already_made(self):
+        items = [self._ev(f"2026-09-{d:02d}", f"2026-09-{d:02d}") for d in range(1, 6)]
+        items += [self._ev(f"2026-10-{d:02d}", f"2026-10-{d:02d}") for d in range(1, 6)]
+        pages = odekake.month_pages({"items": items}, date(2026, 11, 2), keep={"2026-09", "2026-10"})
+        self.assertEqual(list(pages), ["2026-09", "2026-10"])
+
     def test_render_month_escapes_and_marks_ended(self):
         b = {"short": [self._ev("2026-10-01", "2026-10-01", text="「<b>祭</b>」開催")], "long": []}
         html = odekake.render_month("2026-10", b, ["2026-10"], date(2026, 10, 4))
