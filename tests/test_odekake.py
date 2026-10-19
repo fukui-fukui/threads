@@ -286,3 +286,38 @@ class MonthPageTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class InlineSourceTest(unittest.TestCase):
+    def test_inline_source_is_taken_out_of_text(self):
+        line = "10/25 福井市で「テスト祭」 ［出典: 福井テレビ（Yahoo!ニュース） https://news.yahoo.co.jp/articles/abc と、代表が送った画面］"
+        text, url = odekake.split_inline_source(line)
+        self.assertEqual(text, "10/25 福井市で「テスト祭」")
+        self.assertEqual(url, "https://news.yahoo.co.jp/articles/abc")
+
+    def test_no_inline_source(self):
+        self.assertEqual(odekake.split_inline_source("「テスト祭」"), ("「テスト祭」", None))
+
+
+class DiscreteDaysTest(unittest.TestCase):
+    def test_jp_same_month_days(self):
+        self.assertEqual(odekake.parse_dates("11月7日・8日に開催", date(2026, 10, 10)),
+                         (date(2026, 11, 7), date(2026, 11, 8)))
+
+    def test_discrete_days_are_kept(self):
+        items = odekake.parse_neta("## 書き足す場所\n\n### 2026-10-10\n\n- 10/17・24・31 に福井市で「テスト市」開催\n")
+        self.assertEqual(items[0]["days"], ["2026-10-17", "2026-10-24", "2026-10-31"])
+        self.assertEqual(odekake._when(items[0]), "10月17日（土）・24日（土）・31日（土）")
+
+    def test_consecutive_days_have_no_days_field(self):
+        items = odekake.parse_neta("## 書き足す場所\n\n### 2026-10-10\n\n- 10/17・18 に福井市で「テスト市」開催\n")
+        self.assertNotIn("days", items[0])
+
+    def test_discrete_with_to_and_months(self):
+        self.assertEqual(odekake.discrete_days("10/18(日)と10/25(日)に開催", date(2026, 10, 10)),
+                         [date(2026, 10, 18), date(2026, 10, 25)])
+        self.assertEqual(odekake.discrete_days("10/4 開催。次回は12/5", date(2026, 10, 10)), [])
+
+    def test_jp_range_is_not_discrete(self):
+        items = odekake.parse_neta("## 書き足す場所\n\n### 2026-10-10\n\n- 9月15日〜12月15日に中能登町で「テスト」開催\n")
+        self.assertNotIn("days", items[0])

@@ -54,6 +54,10 @@ SAME_MONTH_DAYS = re.compile(r"\s*・\s*(\d{1,2})(?![\d/])" + _DOW)
 # 「11/29まで」「12月6日まで」のように終わりだけ書いたもの。始まりは書いた日とみなす
 UNTIL = re.compile(r"^\s*(?:まで|迄)")
 JP_DATE = re.compile(r"(?:(\d{4})年)?(\d{1,2})月(\d{1,2})日")
+# 「10/17・24・31」「10/18(日)と10/25(日)」「11月7日・8日」のように、日を「・」「と」で並べたもの
+DISCRETE = re.compile(r"(\d{1,2})/(\d{1,2})(?!\d)" + _DOW + r"((?:\s*[・と]\s*(?:\d{1,2}/)?\d{1,2}(?![\d/])" + _DOW + r")+)")
+JP_DISCRETE = re.compile(r"(\d{1,2})月(\d{1,2})日" + _DOW + r"((?:\s*[・と]\s*(?:\d{1,2}月)?\d{1,2}日" + _DOW + r")+)")
+JP_SAME_MONTH_DAYS = re.compile(r"\s*・\s*(\d{1,2})日" + _DOW)
 
 
 def _year_for(month: int, base: date) -> int:
@@ -70,6 +74,29 @@ def _mk(y: int, m: int, d: int) -> date | None:
         return date(y, m, d)
     except ValueError:
         return None
+
+
+def discrete_days(text: str, base: date) -> list[date]:
+    """「10/17・24・31」のように飛び飛びの日を並べた書き方から、その日を返す。無ければ []。
+
+    期間（10/17〜10/31）と別に、開く日だけを出すため（2026-10-20 SEO 調査：期間として出ていた）。
+    続いている日（10/17・18）は期間のままでよいので [] を返す。
+    """
+    for pat, sep in ((DISCRETE, "/"), (JP_DISCRETE, "月")):
+        m = pat.search(text)
+        if not m:
+            continue
+        month = int(m.group(1))
+        out = [_mk(_year_for(month, base), month, int(m.group(2)))]
+        for part in re.finditer(r"(?:(\d{1,2})" + sep + r")?(\d{1,2})", re.sub(r"[(（][^)）]*[)）]", "", m.group(3))):
+            if part.group(1):
+                month = int(part.group(1))
+            out.append(_mk(_year_for(month, base), month, int(part.group(2))))
+        out = sorted({d for d in out if d})
+        if len(out) >= 2 and (out[-1] - out[0]).days + 1 > len(out):
+            return out
+        return []
+    return []
 
 
 def parse_dates(text: str, base: date) -> tuple[date | None, date | None]:
@@ -106,7 +133,14 @@ def parse_dates(text: str, base: date) -> tuple[date | None, date | None]:
             dt = _mk(y, int(m.group(2)), int(m.group(3)))
             if dt:
                 found.append(dt)
-                until = until or bool(UNTIL.match(text[m.end():]))
+            pos = m.end()
+            # 「11月7日・8日」のように、同じ月の日を「・」で続けたもの（2026-10-20：8日が落ちていた）
+            while n := JP_SAME_MONTH_DAYS.match(text, pos):
+                dt2 = _mk(y, int(m.group(2)), int(n.group(1)))
+                if dt2:
+                    found.append(dt2)
+                pos = n.end()
+            until = until or bool(UNTIL.match(text[pos:]))
     if not found:
         return None, None
     if until and len(found) == 1 and base < found[0]:
@@ -165,6 +199,20 @@ def split_note(line: str) -> tuple[str, str]:
     return line[: m.start()].strip(), m.group(1).strip()
 
 
+# 行の中に書いた出典「［出典: 名前 https://… ・ https://…］」（2026-10 から運用部がこの形で書く）。
+# 本文から外して、最初の URL を出典にする（2026-10-20 SEO 調査：生の URL が本文に残り、スマホで横にはみ出していた）
+INLINE_SOURCE = re.compile(r"\s*［出典[:：]\s*([^］]*)］")
+
+
+def split_inline_source(line: str) -> tuple[str, str | None]:
+    """行から［出典: …］を外し、(残りの行, 最初の URL) を返す。"""
+    m = INLINE_SOURCE.search(line)
+    if not m:
+        return line, None
+    url = re.search(r"https?://[^\s　、・）］]+", m.group(1))
+    return (line[: m.start()] + line[m.end():]).strip(), url.group(0) if url else None
+
+
 def parse_neta(md: str) -> list[dict]:
     """ネタ帳の「書き足す場所」から項目を取り出す。"""
     items: list[dict] = []
@@ -190,8 +238,10 @@ def parse_neta(md: str) -> list[dict]:
             line, instagram = split_instagram(line)
             # 新店の公式 Threads の印（2026-10-13）は投稿で使うもの。サイトには出さない
             line = THREADS_MARK.sub("", line).strip()
+            line, inline = split_inline_source(line)
             text, note = split_note(line)
             start, end = parse_dates(text, written)
+            days = discrete_days(text, written)
             items.append({
                 "text": text,
                 "note": note,
@@ -199,7 +249,9 @@ def parse_neta(md: str) -> list[dict]:
                 "area": guess_area(text),
                 "start": start.isoformat() if start else None,
                 "end": end.isoformat() if end else None,
-                "source": sources[i] if paired else None,
+                # 飛び飛びの日（「10/17・24・31」）。続いている日（10/17・18）は期間のままでよいので入れない
+                **({"days": [d.isoformat() for d in days]} if days else {}),
+                "source": inline or (sources[i] if paired else None),
                 "instagram": instagram,
                 "written": written.isoformat(),
                 "pick": pick,
@@ -385,6 +437,9 @@ def _when(it: dict) -> str:
     f = lambda d: f"{d.month}月{d.day}日（{WD[d.weekday()]}）"
     if it["kind"] == "スポット":
         return f"{s.year}年{s.month}月{s.day}日オープン"
+    if it.get("days"):
+        ds = [date.fromisoformat(x) for x in it["days"]]
+        return "・".join(f(d) if i == 0 or d.month != ds[i - 1].month else f"{d.day}日（{WD[d.weekday()]}）" for i, d in enumerate(ds))
     return f(s) if s == e else f"{f(s)}〜{f(e)}"
 
 
@@ -549,7 +604,8 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
 <meta property="og:url" content="{url}">
 <meta property="og:site_name" content="{h(SITE_NAME)}">
 <meta property="og:locale" content="ja_JP">
-<meta property="og:image" content="{SITE}/icon-192.png">
+<meta property="og:image" content="{SITE}/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../../favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="../../apple-touch-icon.png">
 <meta name="theme-color" content="#1f7a57">
@@ -558,7 +614,7 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
 :root {{ --bg: #f5f1e8; --surface: #fff; --ink: #22302a; --muted: #6d7570; --main: #1f7a57; --line: #e4ddcf; }}
 @media (prefers-color-scheme: dark) {{ :root {{ --bg: #141815; --surface: #1d231f; --ink: #e8eee9; --muted: #a2aba5; --main: #4cc292; --line: #2e3631; }} }}
 * {{ box-sizing: border-box; }}
-body {{ margin: 0; background: var(--bg); color: var(--ink); font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; line-height: 1.8; }}
+body {{ margin: 0; background: var(--bg); color: var(--ink); font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; line-height: 1.8; overflow-wrap: anywhere; }}
 header {{ background: #1f7a57; color: #fff; padding: 14px 16px; }}
 header a {{ color: #fff; text-decoration: none; font-weight: 700; }}
 main {{ max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }}
@@ -609,8 +665,44 @@ def write_months(data: dict, today: date) -> list[str]:
     return keys
 
 
+def render_404(months: list[str], today: date) -> str:
+    """見つからないページ。消えた月のページなどから来た人を、トップと月のページへ案内する（2026-10-20）。"""
+    ym = f"{today.year}-{today.month:02d}"
+    near = [k for k in months if k >= ym][:2] or months[-2:]
+    links = "".join(f'<li><a href="/month/{k}/">{_month_label(k)}の{KEN}のイベント</a></li>' for k in near)
+    return f"""<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ページが見つかりません｜{SITE_NAME}</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<style>
+body {{ margin: 0; background: #f5f1e8; color: #22302a; font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; line-height: 1.8; overflow-wrap: anywhere; }}
+main {{ max-width: 640px; margin: 0 auto; padding: 48px 16px; }}
+h1 {{ font-size: 1.3rem; }}
+a {{ color: #1f7a57; font-weight: 700; }}
+@media (prefers-color-scheme: dark) {{ body {{ background: #141815; color: #e8eee9; }} a {{ color: #4cc292; }} }}
+</style>
+</head>
+<body>
+<main>
+<h1>ページが見つかりませんでした</h1>
+<p>URL が変わったか、ページがなくなった可能性があります。</p>
+<ul>
+<li><a href="/">{SITE_NAME}のトップ（{KEN}の今週末のイベント・新しいお店）</a></li>
+{links}
+</ul>
+</main>
+</body>
+</html>
+"""
+
+
 def write_static(data: dict, today: date) -> None:
     months = write_months(data, today)
+    (ROOT / "docs" / "404.html").write_text(render_404(months, today), encoding="utf-8")
     html_text = INDEX.read_text(encoding="utf-8")
     a, b = html_text.find(MARK_START), html_text.find(MARK_END)
     if a < 0 or b < 0:
