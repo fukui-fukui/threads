@@ -145,6 +145,29 @@ def 今週末まとめの日(d) -> bool:
     return 今週末まとめを使う and d.weekday() == 4
 
 
+# まとめ投稿の返信に、サイトへのリンクを1本足す（2026-10-20 代表 OK「週2〜3本、どの投稿から来たか分かる印つき」）。
+# 毎日の返信には出典しか無く、サイトへの流れがほぼ無かった（固定投稿のリンクは1週間で41訪問）。
+# 金曜の今週末まとめ → トップ、月・水の 6:00 のまとめ → その月のページ。utm_content は投稿の id
+def サイトへの返信(hour: int, d, post_id: str) -> str | None:
+    site = 地域.地域.get("サイトURL", "").rstrip("/")
+    if not site:
+        return None
+    # 金曜 19:00（石川・ぎふあいちは今週末まとめ。福井はふつうの紹介でも、週末前に今週末へ案内する）
+    if d.weekday() == 4 and hour == WEEKEND_HOUR:
+        url, 文, camp = f"{site}/", f"今週末のほかの催しも、日付・市町で探せます", "weekend"
+    elif hour == 6 and d.weekday() in (0, 2):
+        月 = f"{d.year}-{d.month:02d}"
+        if (Path(__file__).resolve().parent.parent / "docs" / "month" / 月).is_dir():
+            url, 文 = f"{site}/month/{月}/", f"{d.month}月の{地域.県名}のイベントを、日付順にまとめています"
+        else:
+            url, 文 = f"{site}/", f"{地域.県名}のイベントを、日付・市町で探せます"
+        camp = "month"
+    else:
+        return None
+    名 = 地域.地域.get("サイト名", "")
+    return f"{文}（{名}）\n{url}?utm_source=threads&utm_medium=social&utm_campaign={camp}&utm_content={post_id}"
+
+
 MODEL_PREFERENCE = ("opus", "sonnet", "haiku")
 
 
@@ -2395,6 +2418,9 @@ def main() -> None:
                 "scheduled_at": f"{target_date.isoformat()}T{出す時(hour):02d}:00:00+09:00",
             }
             existing_ids.add(item["id"])
+            サイトへ = サイトへの返信(hour, target_date, item["id"])
+            if サイトへ:
+                thread = [*thread, サイトへ]
             if thread:
                 item["thread"] = thread
             if post.get("note"):
