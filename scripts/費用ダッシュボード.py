@@ -9,7 +9,7 @@
 yu（yu-fukui/threads_yu-fukui）は公開リポジトリなので、記録に金額が無い（トークン数だけ）。
 3つめの引数で yu の state/usage.jsonl を渡すと、ここで単価から金額を計算して足す（2026-10-19 代表「おすすめの設定で」）。
 
-予算は 予算.json（福井＋石川で1つ、「別に数える」の地域は別）。
+予算は 予算.json（本体は「名」の予算。2026-10-19 から福井 $40。「別に数える」の地域（石川・ぎふあいち）はそれぞれ別）。
 定期（cron-job.org・schedule）と手動・追加（Run workflow など）を分けて足す（記録の「起動」。
 2026-10-18 代表「定期実行分と、私の指示や追加で必要な対応をした分と分けて計れませんか？」）。
 「起動」の無い古い行は「不明」に入れる。
@@ -69,6 +69,7 @@ def 分ける(行たち: list[dict]) -> dict:
 def まとめる(data: Path, 予算設定: dict, 今: datetime, 場所: dict[str, Path] | None = None) -> dict:
     月 = 今.strftime("%Y-%m")
     別 = {b["置き場"]: b for b in 予算設定.get("別に数える", [])}
+    本 = 予算設定.get("名") or "福井＋石川"  # 予算.json の本体の予算の名前（2026-10-19 から「福井」）
     地域たち = []
     for key, 名 in 地域 + ほか:
         元 = (場所 or {}).get(key) or data / key / "state" / "usage.jsonl"
@@ -93,7 +94,7 @@ def まとめる(data: Path, 予算設定: dict, 今: datetime, 場所: dict[str
         地域たち.append({
             "key": key, "名": 名,
             # 予算の無いもの（エキマエ・yu）は、それぞれ自分の名前のグループにする
-            "グループ": 別[key]["名"] if key in 別 else ("福井＋石川" if (key, 名) in 地域 else 名),
+            "グループ": 別[key]["名"] if key in 別 else (本 if (key, 名) in 地域 else 名),
             "ドル": round(sum(日.values()), 2),
             "起動別": 分ける(行たち),
             "回数": len(行たち),
@@ -107,7 +108,7 @@ def まとめる(data: Path, 予算設定: dict, 今: datetime, 場所: dict[str
                           for k, v in 仕事.items()), key=lambda x: -x["ドル"]),
         })
     グループ = []
-    予算たち = [("福井＋石川", 予算設定.get("月の予算ドル"))] + [(b["名"], b.get("月の予算ドル")) for b in 別.values()]
+    予算たち = [(本, 予算設定.get("月の予算ドル"))] + [(b["名"], b.get("月の予算ドル")) for b in 別.values()]
     予算たち += [(r["名"], None) for r in 地域たち if r["グループ"] not in {n for n, _ in 予算たち}]
     for 名, 予算 in 予算たち:
         ドル = round(sum(r["ドル"] for r in 地域たち if r["グループ"] == 名), 2)
