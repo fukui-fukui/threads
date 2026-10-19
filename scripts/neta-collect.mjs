@@ -558,6 +558,22 @@ async function claudeに聞く(prompt) {
     検索した += u.server_tool_use?.web_search_requests ?? 0;
     入力 += u.input_tokens ?? 0;
     出力t += u.output_tokens ?? 0;
+    if (data.stop_reason === 'tool_use') {
+      // こちらに無い道具を呼ぼうとして止まることがある（2026-10-19 石川：本文が空のまま stop_reason=tool_use）。
+      // 「使えない」と返して、ここまでの結果で JSON を書くよう頼む
+      const 呼んだ = (data.content ?? []).filter((b) => b.type === 'tool_use');
+      if (!呼んだ.length) break;
+      console.log(`::warning::AI が使えない道具を呼びました（${呼んだ.map((b) => b.name).join('・')}）。ここまでの結果で JSON を頼み直します`);
+      messages.push({ role: 'assistant', content: data.content });
+      messages.push({
+        role: 'user',
+        content: [
+          ...呼んだ.map((b) => ({ type: 'tool_result', tool_use_id: b.id, is_error: true, content: 'この道具は使えません。' })),
+          { type: 'text', text: 'ここまでに調べた結果だけで、最初に頼んだ形の JSON を返してください。' }
+        ]
+      });
+      continue;
+    }
     if (data.stop_reason !== 'pause_turn') break;
     messages.push({ role: 'assistant', content: data.content });
   }
