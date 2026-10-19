@@ -511,6 +511,7 @@ if (書かない) {
 // 返すのは { ok, status, text }（text は組み立てたメッセージの JSON。失敗のときは返ってきた本文のまま）
 function 長く待って送る(url, headers, body, 待つ = 15 * 60 * 1000) {
   return new Promise((ok, ng) => {
+    let 今の = null; // 途中で切れたときに、届いた分の使用量を返すため
     const req = httpsRequest(url, { method: 'POST', headers: { ...headers, 'content-length': Buffer.byteLength(body) } }, (res) => {
       const 成功 = res.statusCode >= 200 && res.statusCode < 300;
       res.setEncoding('utf8');
@@ -524,7 +525,7 @@ function 長く待って送る(url, headers, body, 待つ = 15 * 60 * 1000) {
       let 残り = '', msg = null, 失敗 = null;
       const 途中の入力 = {};
       const 一つ = (ev) => {
-        if (ev.type === 'message_start') msg = { ...ev.message, content: [] };
+        if (ev.type === 'message_start') 今の = msg = { ...ev.message, content: [] };
         else if (ev.type === 'content_block_start') {
           msg.content[ev.index] = { ...ev.content_block };
           if ('input' in ev.content_block) 途中の入力[ev.index] = '';
@@ -561,10 +562,11 @@ function 長く待って送る(url, headers, body, 待つ = 15 * 60 * 1000) {
         else if (!msg) ng(new Error('Anthropic API の返事が空でした'));
         else ok({ ok: true, status: res.statusCode, text: JSON.stringify(msg) });
       });
-      res.on('error', ng);
+      res.on('error', (e) => ng(Object.assign(e, { 途中: msg })));
+      res.on('aborted', () => ng(Object.assign(new Error('Anthropic API の返事が途中で切れました'), { 途中: msg })));
     });
     req.setTimeout(待つ, () => req.destroy(new Error(`Anthropic API の返事が ${待つ / 60000} 分来ませんでした`)));
-    req.on('error', ng);
+    req.on('error', (e) => ng(Object.assign(e, { 途中: 今の })));
     req.end(body);
   });
 }
@@ -579,7 +581,9 @@ async function claudeに聞く(prompt) {
   for (let 回 = 0; 回 < 4; 回++) {
     // fetch は返事の頭が5分来ないと切れる（undici の headersTimeout）。web_fetch で何ページも読む日は
     // 5分を超えて「HeadersTimeoutError」で止まった（2026-10-19 福井 run 39170318771）。node:https で15分まで待つ
-    const res = await 長く待って送る('https://api.anthropic.com/v1/messages', {
+    let res;
+    try {
+    res = await 長く待って送る('https://api.anthropic.com/v1/messages', {
       'content-type': 'application/json',
       'x-api-key': APIキー,
       'anthropic-version': '2023-06-01'
@@ -598,6 +602,12 @@ async function claudeに聞く(prompt) {
         ],
         messages
       }));
+    } catch (e) {
+      // 途中で切れても、届いた分（入力は最初に分かる）は料金がかかっているので記録に残す（2026-10-19 代表「おすすめの設定で」）
+      const u = e.途中?.usage ?? {};
+      使用量を記録する(設定.モデル ?? 'claude-sonnet-5-5', 入力 + (u.input_tokens ?? 0), 出力t + (u.output_tokens ?? 0), 検索した);
+      throw e;
+    }
 
     if (!res.ok) {
       throw new Error(`Anthropic API が ${res.status} を返しました: ${res.text.slice(0, 500)}`);
