@@ -1,6 +1,338 @@
 {
- "updated": "2026-10-17",
+ "updated": "2026-10-19",
  "items": [
+  {
+   "text": "坂井市春江町藤鷲塚36-9 に、トヨタ「GR Garage福井 Harue」が2026年9月にオープン。車をモチーフにした子どもの遊び場やカフェを併設したスポット（福井新聞ONLINE掲載の紹介を、ふーぽ新店速報が載せている）",
+   "note": "家族連れが1日過ごせるように作られた、車の販売店の新施設",
+   "kind": "スポット",
+   "area": "坂井市",
+   "start": null,
+   "end": null,
+   "source": "https://fupo.jp/article/newopenlist/",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://fupo.jp/wp-content/uploads/2023/09/2a3a863037d164884e8e59e652482b73.jpg",
+    "title": "《ほぼ毎週更新》福井の新店速報【～2026年9月】",
+    "description": "福井県内にオープンしたお店情報をURL付きで一覧で紹介。随時更新。",
+    "site": "ふーぽ"
+   }
+  },
+  {
+   "text": "高浜町で「高浜町産業まつり＆若狭たかはまふぐまつり」を開催（若狭高浜観光協会の発表）",
+   "note": "町の産業まつりと、ふぐまつりが並んで案内されている",
+   "kind": "催し",
+   "area": "高浜町",
+   "start": null,
+   "end": null,
+   "source": "https://wakasa-takahama.jp/20261013494/",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": "https://wakasa-takahama.jp/wp-content/uploads/2026/08/2026tirashi.jpg",
+    "title": "高浜町産業まつり＆若狭たかはまふぐまつりを開催 | 若狭高浜観光協会公式ホームページ",
+    "description": "～高浜町の秋を楽しむイベント～ 第27回 高浜町 産業まつり 第21回 若狭たかはま ふぐまつり 2026 が10月24日（土）に開催されます！ 高浜町名物、若狭湾でとれるトラフグ「若狭ふぐ」が主役…",
+    "site": "若狭高浜観光協会公式ホームページ"
+   }
+  },
+  {
+   "text": "あわら市で「あわら湯けむり映画祭」を開催（あわら市観光協会のイベント情報）",
+   "note": "温泉街の名前を冠した映画祭が、観光協会のイベント欄に出ている",
+   "kind": "催し",
+   "area": "あわら市",
+   "start": null,
+   "end": null,
+   "source": "https://awara.info/cat_event/awara-steam-film-festival",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "あわら湯けむり映画祭 - あわら市観光協会",
+    "description": null,
+    "site": "あわら市観光協会 - 北陸福井の旅行「かなざわら あわら市」の観光や特産品、温…"
+   }
+  },
+  {
+   "text": "小浜市で「Halloween Dream Night 2026」を開催（若狭おばま観光協会のイベント情報）",
+   "note": "小浜で、ハロウィンの夜の催しが案内されている",
+   "kind": "催し",
+   "area": "小浜市",
+   "start": null,
+   "end": null,
+   "source": "https://wakasa-obama.jp/event/halloween-dream-night/",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": null,
+    "title": "Halloween Dream Night 2026 | 【小浜市公式】御食国若狭おばま観光サイト ｜ まるっとおばま",
+    "description": null,
+    "site": "【小浜市公式】御食国若狭おばま観光サイト ｜ まるっとおばま | あなたの癒し…"
+   }
+  },
+  {
+   "text": "小浜市で「おばま夢のWAメルカート」を開催（若狭おばま観光協会のイベント情報）",
+   "note": "小浜で、メルカート（市場）の名前を付けた催しが案内されている",
+   "kind": "催し",
+   "area": "小浜市",
+   "start": null,
+   "end": null,
+   "source": "https://wakasa-obama.jp/event/obama-yumenowameruka-to/",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": null,
+    "title": "おばま夢のWAメルカート | 【小浜市公式】御食国若狭おばま観光サイト ｜ まるっとおばま",
+    "description": null,
+    "site": "【小浜市公式】御食国若狭おばま観光サイト ｜ まるっとおばま | あなたの癒し…"
+   }
+  },
+  {
+   "text": "大野市で「九頭竜紅葉まつり」が開催される（大野市の発表）",
+   "note": "九頭竜の紅葉の時期に合わせた祭りが、市の観光情報に出ている",
+   "kind": "催し",
+   "area": "大野市",
+   "start": null,
+   "end": null,
+   "source": "https://www.city.ono.fukui.jp/kanko/kanko-joho/kanko_event/kuzuryu-koyo-matsuri.html",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "第47回九頭竜紅葉まつり 〜つながる、広がる！中部縦貫自動車道〜 大野市公式ウェブサイト",
+    "description": "「結の故郷 越前おおの」福井県大野市の公式ホームページです。",
+    "site": null
+   }
+  },
+  {
+   "text": "大野市で「三大朝市物産まつり」を開催（大野市の発表）",
+   "note": "大野の朝市をテーマにした物産まつりが、市の観光イベントに出ている",
+   "kind": "催し",
+   "area": "大野市",
+   "start": null,
+   "end": null,
+   "source": "https://www.city.ono.fukui.jp/kanko/kanko-joho/kanko_event/event_sandai.html",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": "https://www.city.ono.fukui.jp/kanko/kanko-joho/kanko_event/event_sandai.images/0003_20261014.jpg",
+    "title": "第41回 三大朝市物産まつり 大野市公式ウェブサイト",
+    "description": "「結の故郷 越前おおの」福井県大野市の公式ホームページです。",
+    "site": null
+   }
+  },
+  {
+   "text": "越前町で「2026越前町商工祭」が開催される（越前町の発表）",
+   "note": "町の商工業をテーマにした催しが、町のイベント欄に出ている",
+   "kind": "催し",
+   "area": "越前町",
+   "start": null,
+   "end": null,
+   "source": "http://www.town.echizen.fukui.jp/event/01/p010283.html",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "2026越前町商工祭が開催されます｜越前町公式ホームページ",
+    "description": null,
+    "site": null
+   }
+  },
+  {
+   "text": "越前町で「2026越前町地区文化祭」を開催（越前町の発表）",
+   "note": "町の地区ごとの文化祭が、町のイベント欄に出ている",
+   "kind": "催し",
+   "area": "越前町",
+   "start": null,
+   "end": null,
+   "source": "http://www.town.echizen.fukui.jp/event/02/p010289.html",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "2026越前町地区文化祭を開催します｜越前町公式ホームページ",
+    "description": null,
+    "site": null
+   }
+  },
+  {
+   "text": "永平寺町が「地産地消ランチおよび新米フェア」を開催（永平寺町の発表）",
+   "note": "町の食材と新米を味わう催しが、町の案内に出ている",
+   "kind": "催し",
+   "area": "永平寺町",
+   "start": null,
+   "end": null,
+   "source": "http://www.town.eiheiji.lg.jp/500/503/p011984.html",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "地産地消ランチおよび新米フェアを開催します | 永平寺町",
+    "description": "福井県永平寺町の公式ホームページです。暮らしや手続きに関する情報や災害時の緊急情報、町政に関する情報、町内のイベント情報などを発信しています。",
+    "site": "永平寺町ホームページ"
+   }
+  },
+  {
+   "text": "11/7(土) 坂井市のエンゼルランドふくいで「青少年のための科学の祭典福井大会 2026」を開催（エンゼルランドふくいのおしらせ）",
+   "note": "科学館の催しの日付が、公式のおしらせで決まった",
+   "kind": "催し",
+   "area": "坂井市",
+   "start": "2026-11-07",
+   "end": "2026-11-07",
+   "source": "https://angelland.or.jp/modules/news/index.php?action=PageView&amp;page_id=643",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": null
+  },
+  {
+   "text": "坂井市のエンゼルランドふくいが、10/14(水)から「カームダウンスペース」を設置（エンゼルランドふくいのおしらせ）",
+   "note": "科学館に、新しく設けられたスペースがある",
+   "kind": "話題",
+   "area": "坂井市",
+   "start": "2026-10-14",
+   "end": "2026-10-14",
+   "source": "https://angelland.or.jp/modules/news/index.php?action=PageView&amp;page_id=644",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": null
+  },
+  {
+   "text": "鯖江市の西山動物園で、レッサーパンダの赤ちゃん（ライトとかのこの仔）の愛称が決定（鯖江市の発表、10/17）",
+   "note": "西山動物園の赤ちゃんの名前が、市から発表された",
+   "kind": "話題",
+   "area": "鯖江市",
+   "start": "2026-10-17",
+   "end": "2026-10-17",
+   "source": "https://www.city.sabae.fukui.jp/kurashi_tetsuduki/doro_kasen_koen/nishiyamadobutsuen/Zoo0120261017.html",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "レッサーパンダの赤ちゃん（ライトとかのこの仔）の愛称決定について – めがねのまちさばえ 鯖江市",
+    "description": "「めがねのまちさばえ」福井県鯖江市の公式ホームページです。鯖江市は、国内シェア96%の日本随一の眼鏡フレームの聖地です。",
+    "site": null
+   }
+  },
+  {
+   "text": "道の駅 若狭おばま（小浜市）で「お酒コーナーがぷちリニューアル」（道の駅の発表、10/9）",
+   "note": "小浜の道の駅の売り場が、少し新しくなった",
+   "kind": "スポット",
+   "area": "小浜市",
+   "start": "2026-10-09",
+   "end": "2026-10-09",
+   "source": "https://michinoeki-obama.jp/info/blog/%e3%81%8a%e9%85%92%e3%82%b3%e3%83%bc%e3%83%8a%e3%83%bc%e3%81%8c%e3%81%b7%e3%81%a1%e3%83%aa%e3%83%8b%e3%83%a5%e3%83%bc%e3%82%a2%e3%83%ab%e2%80%bc%ef%b8%8f/",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": "https://michinoeki-obama.jp/wp/wp-content/uploads/2026/10/IMG_1142-scaled.jpeg",
+    "title": "お酒コーナーがぷちリニューアル‼️ | 【公式】道の駅若狭おばま",
+    "description": "道の駅のお酒コーナーが、ちょこっと新しくなりました ...",
+    "site": "【公式】道の駅若狭おばま"
+   }
+  },
+  {
+   "text": "美浜町が「令和8年度秋季トピックス展・美浜町歴史文化館交換展示『美浜の原風景』」を開催（美浜町の発表）",
+   "note": "町の歴史文化館で、秋の展示が案内されている",
+   "kind": "催し",
+   "area": "美浜町",
+   "start": null,
+   "end": null,
+   "source": "https://www.town.fukui-mihama.lg.jp/soshiki/30/8966.html",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺南",
+   "og": {
+    "image": null,
+    "title": "令和8年度秋季トピックス展・美浜町歴史文化館交換展示『美浜の原風景』開催のお知らせ - 福井県美浜町",
+    "description": null,
+    "site": null
+   }
+  },
+  {
+   "text": "福井のイベント情報サイト「ふーぽ」に、「【R15】大人のプラネタリウム特別企画『神話とオペラ 〜裏切りは星になり、嘆きは歌になる。〜』」が掲載",
+   "note": "大人向けと明記されたプラネタリウムの特別企画がある",
+   "kind": "催し",
+   "area": null,
+   "start": null,
+   "end": null,
+   "source": "https://fupo.jp/event/otonanopuranetariumu_261005/",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": null,
+   "og": {
+    "image": "https://fupo.jp/wp-content/uploads/2026/10/shinwatoopera_261005.jpg",
+    "title": "【R15】大人のプラネタリウム特別企画 『神話とオペラ 〜裏切りは星になり、嘆きは歌になる。〜」",
+    "description": null,
+    "site": "ふーぽ"
+   }
+  },
+  {
+   "text": "坂井市が「親子で楽しむ！人形劇＆わくわく体験デー」を開催（坂井市の発表）",
+   "note": "親子向けの人形劇と体験の日が、市の案内に出ている",
+   "kind": "催し",
+   "area": "坂井市",
+   "start": null,
+   "end": null,
+   "source": "https://www.city.fukui-sakai.lg.jp/jyosei2/event/r8/wakuwaku.html",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "親子で楽しむ！人形劇＆わくわく体験デーを開催します",
+    "description": null,
+    "site": "福井県坂井市"
+   }
+  },
+  {
+   "text": "あわら市が「魯迅著『藤野先生』発表100周年記念講演会」を案内（あわら市の発表）",
+   "note": "発表から100周年を記念した講演会が、市のイベント欄に出ている",
+   "kind": "話題",
+   "area": "あわら市",
+   "start": null,
+   "end": null,
+   "source": "https://www.city.awara.lg.jp/event-into/p015693.html",
+   "instagram": null,
+   "written": "2026-10-19",
+   "pick": false,
+   "region": "嶺北",
+   "og": {
+    "image": null,
+    "title": "魯迅著「藤野先生」発表100周年記念講演会について | あわら市ホームページ",
+    "description": "福井県あわら市公式サイト。行政情報など。",
+    "site": null
+   }
+  },
   {
    "text": "2026年9月5日(土)〜10月25日(日)、エンゼルランドふくい（福井県児童科学館）の展示エリアで、全国科学館連携協議会巡回展「宇宙をさわる」。地球や月、惑星など太陽系の天体の模型や、宇宙を観測する望遠鏡の立体模型など、触ってわかる模型を展示。対象はどなたでも（未就学児は保護者同伴）。展示エリア入場料は大人100円（高校生以下・70歳以上は無料） ［出典: https://angelland.or.jp/modules/event/index.php?action=PageView&page_id=1477 （エンゼルランドふくいの公式。代表が示したページ）］",
    "note": "",
