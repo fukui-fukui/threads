@@ -22,3 +22,14 @@ class 同じ名のテスト(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class サイトへの返信のテスト(unittest.TestCase):
+    def test_金曜19時はトップ_月水6時は月のページ_ほかは無し(self):
+        from datetime import date
+        金 = compose.サイトへの返信(19, date(2026, 10, 23), "p-1")
+        self.assertIn("utm_campaign=weekend&utm_content=p-1", 金)
+        月 = compose.サイトへの返信(6, date(2026, 10, 26), "p-2")
+        self.assertIn("utm_campaign=month&utm_content=p-2", 月)
+        self.assertIsNone(compose.サイトへの返信(6, date(2026, 10, 27), "p-3"))
+        self.assertIsNone(compose.サイトへの返信(12, date(2026, 10, 23), "p-4"))
