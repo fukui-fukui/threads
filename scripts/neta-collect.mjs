@@ -505,13 +505,62 @@ if (書かない) {
 //  小物
 // ==================================================================
 
-// POST して返事の本文を受け取る。待ち時間は15分（返事が遅くても切らない）
+// POST して返事を受け取る。返事は少しずつ流して受け取り（stream）、1つのメッセージに組み立て直す。
+// 流さずに待つと、web_fetch で長くなった日に途中で切れた（2026-10-19：福井は fetch の5分で、
+// 石川は6分ほどで ECONNRESET）。流すと途中で ping が来るので、つなぎっぱなしでも切られない。
+// 返すのは { ok, status, text }（text は組み立てたメッセージの JSON。失敗のときは返ってきた本文のまま）
 function 長く待って送る(url, headers, body, 待つ = 15 * 60 * 1000) {
   return new Promise((ok, ng) => {
     const req = httpsRequest(url, { method: 'POST', headers: { ...headers, 'content-length': Buffer.byteLength(body) } }, (res) => {
-      const 塊たち = [];
-      res.on('data', (c) => 塊たち.push(c));
-      res.on('end', () => ok({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, text: Buffer.concat(塊たち).toString('utf8') }));
+      const 成功 = res.statusCode >= 200 && res.statusCode < 300;
+      res.setEncoding('utf8');
+      if (!成功 || !String(res.headers['content-type'] || '').includes('text/event-stream')) {
+        let 本文 = '';
+        res.on('data', (c) => (本文 += c));
+        res.on('end', () => ok({ ok: 成功, status: res.statusCode, text: 本文 }));
+        res.on('error', ng);
+        return;
+      }
+      let 残り = '', msg = null, 失敗 = null;
+      const 途中の入力 = {};
+      const 一つ = (ev) => {
+        if (ev.type === 'message_start') msg = { ...ev.message, content: [] };
+        else if (ev.type === 'content_block_start') {
+          msg.content[ev.index] = { ...ev.content_block };
+          if ('input' in ev.content_block) 途中の入力[ev.index] = '';
+        } else if (ev.type === 'content_block_delta') {
+          const b = msg.content[ev.index], d = ev.delta;
+          if (d.type === 'text_delta') b.text = (b.text ?? '') + d.text;
+          else if (d.type === 'input_json_delta') 途中の入力[ev.index] += d.partial_json;
+          else if (d.type === 'citations_delta') b.citations = [...(b.citations ?? []), d.citation];
+          else if (d.type === 'thinking_delta') b.thinking = (b.thinking ?? '') + d.thinking;
+          else if (d.type === 'signature_delta') b.signature = d.signature;
+        } else if (ev.type === 'content_block_stop') {
+          if (ev.index in 途中の入力) {
+            const j = 途中の入力[ev.index];
+            if (j) msg.content[ev.index].input = JSON.parse(j);
+            delete 途中の入力[ev.index];
+          }
+        } else if (ev.type === 'message_delta') {
+          Object.assign(msg, ev.delta);
+          msg.usage = { ...(msg.usage ?? {}), ...(ev.usage ?? {}) };
+        } else if (ev.type === 'error') 失敗 = ev.error;
+      };
+      res.on('data', (c) => {
+        残り += c;
+        let k;
+        while ((k = 残り.indexOf('\n\n')) >= 0) {
+          const 塊 = 残り.slice(0, k);
+          残り = 残り.slice(k + 2);
+          const data = 塊.split('\n').filter((l) => l.startsWith('data:')).map((l) => l.slice(5).trim()).join('');
+          if (data) 一つ(JSON.parse(data));
+        }
+      });
+      res.on('end', () => {
+        if (失敗) ok({ ok: false, status: 500, text: JSON.stringify({ error: 失敗 }) });
+        else if (!msg) ng(new Error('Anthropic API の返事が空でした'));
+        else ok({ ok: true, status: res.statusCode, text: JSON.stringify(msg) });
+      });
       res.on('error', ng);
     });
     req.setTimeout(待つ, () => req.destroy(new Error(`Anthropic API の返事が ${待つ / 60000} 分来ませんでした`)));
@@ -538,6 +587,7 @@ async function claudeに聞く(prompt) {
         model: 設定.モデル ?? 'claude-sonnet-5-5',
         // 候補が多い日は 8000 では返しの JSON の途中で切れた（2026-10-08 石川版、候補130件）
         max_tokens: 16000,
+        stream: true,
         // web_fetch は出典のページを開いて読むため。検索だけだと一覧の見出ししか見えず、
         // 新店の営業時間・催しの日付が行に入らなかった（2026-10-15 運用部・石川担当）
         // 読んだページは続きの呼び出しのたびに入力に積み重なる。10回×8000で1回の入力が80万〜130万トークンに
