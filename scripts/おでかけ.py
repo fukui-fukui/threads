@@ -421,9 +421,24 @@ WD = "月火水木金土日"
 
 
 def _title(it: dict) -> str:
-    m = re.search(r"「([^」]{2,40})」", it["text"])
-    if m:
-        return m.group(1)
+    # 「」が複数あるときは、「…」が／を／開催 のように主語になっているものを採る。
+    # 「道の駅『若狭美浜はまびより』内に『美ton』が…」で場所の名前が見出しになっていた（2026-10-20）
+    # 見るのは最初の一文だけ（後ろの文の「おがくず」などを拾わない）。「けれんしあ。」のように「」の中の。は文の終わりにしない
+    first = re.match(r"(?:「[^」]*」|[^。「])*", it["text"]).group(0)
+    qs = list(re.finditer(r"「([^」]{2,40})」", first))
+    if not qs:
+        m = re.search(r"「([^」]{2,40})」", it["text"])
+        if m:
+            return m.group(1)
+    for m in qs:
+        after = re.sub(r"^[（(][^）)]*[）)]", "", it["text"][m.end():])
+        if re.match(r"(?:が|を|は|開催|オープン|新オープン)", after):
+            return m.group(1)
+    for m in qs:
+        after = it["text"][m.end():]
+        # 「◯◯」内に／にケンタッキー… のような場所の名前は見出しにしない
+        if not re.match(r"(?:内|に|で|前|近く|周辺)", after):
+            return m.group(1)
     # 「」が無いときは、先頭の日付（10/3-4 など）を外した最初の一文
     head = re.sub(r"^\s*" + _MD + r"(?:\s*[-〜～－–]\s*(?:\d{1,2}/)?\d{1,2})?\s*", "", it["text"])
     return head.split("。")[0][:44]

@@ -321,3 +321,16 @@ class DiscreteDaysTest(unittest.TestCase):
     def test_jp_range_is_not_discrete(self):
         items = odekake.parse_neta("## 書き足す場所\n\n### 2026-10-10\n\n- 9月15日〜12月15日に中能登町で「テスト」開催\n")
         self.assertNotIn("days", items[0])
+
+
+class TitleTest(unittest.TestCase):
+    def test_picks_the_subject_not_the_place(self):
+        t = odekake._title({"text": "9/8 美浜町の道の駅「若狭美浜はまびより」内にカラオケバー「美ton（ビトン）」が新オープン"})
+        self.assertEqual(t, "美ton（ビトン）")
+
+    def test_quote_in_later_sentence_is_not_used(self):
+        t = odekake._title({"text": "10/16-25 小浜市で個展「suwayuumi solo exhibition」。箸づくりで出る「おがくず」を使う"})
+        self.assertEqual(t, "suwayuumi solo exhibition")
+
+    def test_period_inside_quote(self):
+        self.assertEqual(odekake._title({"text": "金沢に朝ごはん専門店「けれんしあ。」がオープン"}), "けれんしあ。")
