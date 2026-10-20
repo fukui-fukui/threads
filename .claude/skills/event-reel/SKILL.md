@@ -26,7 +26,7 @@ description: ふくいおでかけの「来週末の福井おでかけ3選」リ
 | --- | --- | --- |
 | 月 | 次の次の週末の候補5つを表で出す（朝のネタ集めのあと） | 運用部・福井（制作部が頼む） |
 | 火 | 3つ選ぶ | 代表（統括経由） |
-| 水 | 公式で確かめる → 画像・動画 → scripts/リール.py → キャプション | 制作部 |
+| 水 | 公式で確かめる → 画像3枚 → **代表に画像を見せて OK をもらう** → OK が出たら動画 → scripts/リール.py → キャプション | 制作部（画像の OK は代表） |
 | 木 | 動画2本・キャプションを見せて OK をもらう（直しはこの日のうちに） | 代表（統括経由） |
 | 金 | Runway の一時 URL（約1日で切れる）を渡し、docs/reel・queue.jsonl・ig-queue.jsonl に入れる | おでかけ開発 |
 | 土 16:00 | Threads と Instagram に出る | 仕組み |
@@ -50,6 +50,10 @@ description: ふくいおでかけの「来週末の福井おでかけ3選」リ
 - テロップを上にのせるので、**画面の上 1/3 は空や建物**、料理などの主役は下に置く。
 - プロンプトの例：`Vertical photo of a cozy autumn food festival in a Japanese city plaza, steaming bowls of soba on wooden tables in the lower half, clear evening sky in the upper third, warm light, photorealistic, no text, no letters, no logos, no recognizable faces`
 - 出来を見て、文字・ロゴ・顔が出ていたら作り直す。
+- **画像の段階で代表の OK をもらい、OK が出てから動画に進む**（代表 10/20「画像生成の段階で確認をとって、OKがでたら動画に進むようにしてください」）。
+  - 3枚をスクラッチに落とし（Runway の画像 URL は署名つきなので、ログや連絡に URL を貼らない）、代表に見せる。代表と直接話しているときはファイルを送り、そうでなければ統括に送って見せてもらう。
+  - 直しの指示があれば、その画像だけ作り直してまた見せる（作り直しのクレジットも記録する）。
+  - OK の言葉はそのまま記録に残す。OK が出るまで generate_video は呼ばない。
 
 ### 3. 動画（Runway generate_video）
 - model `gen-4-turbo`、startFrame は画像の taskId、duration `5`、ratio `720:1280`。
