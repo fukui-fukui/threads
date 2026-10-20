@@ -78,7 +78,7 @@ table.toku th { width: 34%; color: var(--muted); font-weight: 700; }
 <label for="page">関係するページや催しの名前 <small>（あれば）</small></label><input type="text" id="page" name="page" maxlength="300">
 <label for="message">内容 <small>（1000字まで）</small></label><textarea id="message" name="message" maxlength="1000" required></textarea>
 <label class="check"><input type="checkbox" name="agree" value="1" required>上の個人情報の扱いに同意します</label>
-<button type="submit">送信する</button>
+<div class="cf-turnstile" data-sitekey="0x4AAAAAAFdguZP3dVL_r1uN" data-language="ja"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><button type="submit">送信する</button>
 <div class="msg" id="msg" hidden></div>
 </form>
 <script>
