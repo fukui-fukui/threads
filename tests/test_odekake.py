@@ -348,3 +348,17 @@ class EventLdTest(unittest.TestCase):
         self.assertEqual((item["@type"], item["name"], item["startDate"]), ("Event", "テスト祭", "2026-10-24"))
         self.assertEqual(item["location"]["address"]["addressRegion"], "福井県")
         self.assertIn(f'<article id="{odekake._anchor(ev)}"', html)
+
+
+class MergeSameEventTest(unittest.TestCase):
+    def test_same_name_and_date_is_kept_once_and_undated_is_dropped(self):
+        md = ("## 書き足す場所\n\n### 2026-10-15\n\n- 10/24 金沢市で「台南美食フェア」開催。屋台が並ぶ\n"
+              "- 11/14・15 坂井市で「かに祭り」開催\n"
+              "\n### 2026-10-08\n\n- 10/24(土) 片町で「台南美食フェア」\n- 坂井市「かに祭り」の案内が出ている\n"
+              "- 9/26・27 「テント市」開催\n- 10/17・18 「テント市」開催\n")
+        items = odekake.parse_neta(md)
+        names = [odekake._title(i) for i in items]
+        self.assertEqual(names.count("台南美食フェア"), 1)
+        self.assertEqual(names.count("かに祭り"), 1)
+        self.assertEqual(names.count("テント市"), 2)
+        self.assertEqual([i["written"] for i in items if odekake._title(i) == "台南美食フェア"], ["2026-10-15"])

@@ -265,7 +265,29 @@ def parse_neta(md: str) -> list[dict]:
             continue
         seen.add(it["text"])
         unique.append(it)
-    return unique
+    return _merge_same_event(unique)
+
+
+def _merge_same_event(items: list[dict]) -> list[dict]:
+    """書き方の違う同じ催しを1件にまとめる（2026-10-20 SEO 調査 ⑤：サイトに2回出ていた）。
+
+    - 名前と日付（始まり・終わり）が同じもの → 新しく書いたほうを残す（items は新しい順）
+    - 日付の無い行と、同じ名前の日付のある行 → 日付のある行を残す（案内の段階で書いた行が残っていた）
+    名前が同じでも日付の違うもの（毎月のマルシェなど）は別の催しとして残す。
+    """
+    dated = {_title(it) for it in items if it["start"]}
+    seen: set[tuple] = set()
+    out = []
+    for it in items:
+        name = _title(it)
+        if not it["start"] and name in dated:
+            continue
+        key = (name, it["start"], it["end"])
+        if it["start"] and key in seen:
+            continue
+        seen.add(key)
+        out.append(it)
+    return out
 
 
 def build(md: str) -> dict:
