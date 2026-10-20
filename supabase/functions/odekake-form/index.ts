@@ -6,13 +6,15 @@
 //   ・同じところから1時間に5件まで
 //   ・文字数・日付・URL・メールの形
 //   ・チラシ：5MB まで、JPEG / PNG / WebP / PDF だけ。拡張子でなく中身の先頭の印で確かめ、非公開の置き場へ
-// 掲載の申し込みは、SUBMISSION_OPEN=1 になるまで受け付けない（特商法の表記が決まってから公開。代表 10/20）。
+// 掲載の申し込みは、SUBMISSION_OPEN が true のときだけ受け付ける（2026-10-20 代表：特商法の表記と決済リンクがそろったので開く。
+// 止めるときは false にして載せ直す）。
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const ORIGINS = ["https://odekake.fukui-fukui.com", "https://ishikawa-odekake.fukui-fukui.com"];
 const REGION_OF: Record<string, string> = { [ORIGINS[0]]: "fukui", [ORIGINS[1]]: "ishikawa" };
 const MAX_FILE = 5 * 1024 * 1024;
 const PER_HOUR = 5;
+const SUBMISSION_OPEN = true;
 
 function cors(origin: string) {
   return {
@@ -111,7 +113,7 @@ Deno.serve(async (req) => {
   }
   const type = String(form.get("type") ?? "");
   if (type !== "inquiry" && type !== "submission") return reply(origin, 400, { error: "type" });
-  if (type === "submission" && Deno.env.get("SUBMISSION_OPEN") !== "1") return reply(origin, 403, { error: "closed" });
+  if (type === "submission" && !SUBMISSION_OPEN) return reply(origin, 403, { error: "closed" });
 
   // 人には見えない欄・開いてからの時間（ロボットは即座に全部埋める）
   if (String(form.get("website") ?? "") !== "") return reply(origin, 200, { ok: true });

@@ -697,7 +697,7 @@ table.toku th {{ width: 34%; color: var(--muted); font-weight: 700; }}
 <header><a href="{up}">← {h(SITE_NAME)}</a></header>
 <main>
 {main}</main>
-<footer>Threads <a href="https://www.threads.com/@{h(ACCOUNT)}" rel="noopener">@{h(ACCOUNT)}</a> が集めた{h(KEN)}の情報をまとめています。<br><a href="{up}about/">運営者情報・編集方針・プライバシー</a>{f' ・ <a href="{up}contact/">お問い合わせ</a>' if _uses("問い合わせ") else ""}{f' ・ <a href="{up}tokushoho/">特定商取引法に基づく表記</a>' if _uses("特商法") else ""}</footer>
+<footer>Threads <a href="https://www.threads.com/@{h(ACCOUNT)}" rel="noopener">@{h(ACCOUNT)}</a> が集めた{h(KEN)}の情報をまとめています。<br><a href="{up}about/">運営者情報・編集方針・プライバシー</a>{f' ・ <a href="{up}contact/">お問い合わせ</a>' if _uses("問い合わせ") else ""}{f' ・ <a href="{up}submit/">イベント掲載のお申し込み（主催者の方）</a>' if _uses("掲載申し込み") else ""}{f' ・ <a href="{up}tokushoho/">特定商取引法に基づく表記</a>' if _uses("特商法") else ""}</footer>
 {CF_BEACON}
 </body>
 </html>
@@ -1133,7 +1133,7 @@ def render_tokushoho(today: date) -> str:
     ]
     dl = "".join(f"<tr><th>{h(k)}</th><td>{h(v)}</td></tr>" for k, v in rows)
     main = f"""<h1>特定商取引法に基づく表記</h1>
-<div class="lead"><p>{h(SITE_NAME)}のイベント掲載（有料）についての表記です。掲載のお申し込みは、主催者の方からのみ受け付けます。</p></div>
+<div class="lead"><p>{h(SITE_NAME)}のイベント掲載（有料）についての表記です。掲載のお申し込みは、主催者の方からのみ受け付けます。{'<a href="../submit/">お申し込みはこちら</a>' if _uses("掲載申し込み") else ""}</p></div>
 <table class="toku">{dl}</table>
 <p><a href="../contact/">お問い合わせ</a> ・ <a href="../about/">運営者情報・編集方針・プライバシー</a></p>
 """
@@ -1220,6 +1220,7 @@ def write_static(data: dict, today: date) -> None:
     urls = [(f"{SITE}/", lastmod, "daily"), (f"{SITE}/weekend/", today.isoformat(), "daily"),
             (f"{SITE}/spot/", lastmod, "daily"),
             *([(f"{SITE}/contact/", "2026-10-20", "yearly")] if _uses("問い合わせ") else []),
+            *([(f"{SITE}/submit/", "2026-10-20", "yearly")] if _uses("掲載申し込み") else []),
             *[(f"{SITE}/area/{quote(a)}/", lastmod, "daily") for a in areas],
             (f"{SITE}/about/", "2026-10-04", "monthly")]
     urls += [(f"{SITE}/month/{k}/", lastmod, "daily") for k in months]
