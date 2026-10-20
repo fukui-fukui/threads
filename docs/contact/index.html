@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>お問い合わせ｜ふくいおでかけ</title>
+<meta name="description" content="ふくいおでかけへの、内容の誤り・掲載の取り下げなどのお問い合わせフォームです。">
+<link rel="canonical" href="https://odekake.fukui-fukui.com/contact/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="お問い合わせ｜ふくいおでかけ">
+<meta property="og:description" content="ふくいおでかけへの、内容の誤り・掲載の取り下げなどのお問い合わせフォームです。">
+<meta property="og:url" content="https://odekake.fukui-fukui.com/contact/">
+<meta property="og:site_name" content="ふくいおでかけ">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="https://odekake.fukui-fukui.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<meta name="theme-color" content="#1f7a57">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "ContactPage", "name": "お問い合わせ｜ふくいおでかけ", "url": "https://odekake.fukui-fukui.com/contact/"}</script>
+<style>
+:root { --bg: #f5f1e8; --surface: #fff; --ink: #22302a; --muted: #6d7570; --main: #1f7a57; --line: #e4ddcf; }
+@media (prefers-color-scheme: dark) { :root { --bg: #141815; --surface: #1d231f; --ink: #e8eee9; --muted: #a2aba5; --main: #4cc292; --line: #2e3631; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; line-height: 1.8; overflow-wrap: anywhere; }
+header { background: #1f7a57; color: #fff; padding: 14px 16px; }
+header a { color: #fff; text-decoration: none; font-weight: 700; }
+main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 1.5rem; margin: 0 0 8px; }
+h2 { font-size: 1.05rem; margin: 30px 0 10px; padding-bottom: 6px; border-bottom: 2px dashed var(--line); }
+article { background: var(--surface); border-radius: 14px; padding: 12px 16px; margin: 10px 0; }
+article h3 { font-size: 1rem; margin: 0 0 4px; }
+article h3 small { margin-left: 8px; font-size: .72rem; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 1px 8px; }
+article.ended { opacity: .6; }
+article p { margin: 4px 0; font-size: .92rem; }
+.meta { color: var(--main); font-weight: 700; font-size: .85rem; }
+.note, .muted { color: var(--muted); font-size: .85rem; }
+.src a { font-size: .85rem; }
+a { color: var(--main); }
+.lead { background: var(--surface); border-radius: 14px; padding: 12px 16px; }
+nav.months { margin-top: 36px; font-size: .9rem; }
+footer { color: var(--muted); font-size: .78rem; text-align: center; padding: 0 16px 32px; }
+form.f label { display: block; font-weight: 700; font-size: .9rem; margin: 16px 0 4px; }
+form.f label small { font-weight: 400; color: var(--muted); }
+form.f input[type=text], form.f input[type=email], form.f input[type=url], form.f input[type=date], form.f select, form.f textarea { width: 100%; font: inherit; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
+form.f textarea { min-height: 9em; }
+form.f .check { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; }
+form.f .check input { margin-top: .45em; }
+form.f button { margin-top: 20px; font: inherit; font-weight: 700; background: var(--main); color: #fff; border: 0; border-radius: 999px; padding: 12px 28px; cursor: pointer; }
+form.f button:disabled { opacity: .5; }
+form.f .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.msg { margin-top: 16px; padding: 12px 16px; border-radius: 12px; background: var(--surface); }
+.msg.err { border: 1.5px solid #d9473a; }
+</style>
+</head>
+<body>
+<header><a href="../">← ふくいおでかけ</a></header>
+<main>
+<h1>お問い合わせ</h1>
+<div class="lead">
+<p>内容の誤り、掲載の取り下げ、そのほかのご連絡はこちらからどうぞ。お返事が必要な内容には、メールでご連絡します。</p>
+<p class="muted">フォームでいただいたお名前・メールアドレスは、ご連絡と掲載の確認のためだけに使い、公開や第三者への提供はしません。運営者だけが見られる場所に保存し、用件が済んで1年たったものは消します。</p>
+</div>
+<form class="f" id="f" novalidate>
+<input type="hidden" name="type" value="inquiry"><input type="hidden" name="opened" value="">
+<div class="hp" aria-hidden="true"><label>空けておいてください<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+<label for="kind">ご用件</label>
+<select id="kind" name="kind" required>
+<option value="fix">内容の誤り</option><option value="remove">掲載の取り下げ</option>
+<option value="paid">有料のイベント掲載について</option><option value="other" selected>そのほか</option>
+</select>
+<label for="name">お名前</label><input type="text" id="name" name="name" maxlength="100" required autocomplete="name">
+<label for="email">メールアドレス</label><input type="email" id="email" name="email" maxlength="200" required autocomplete="email">
+<label for="page">関係するページや催しの名前 <small>（あれば）</small></label><input type="text" id="page" name="page" maxlength="300">
+<label for="message">内容 <small>（1000字まで）</small></label><textarea id="message" name="message" maxlength="1000" required></textarea>
+<label class="check"><input type="checkbox" name="agree" value="1" required>上の個人情報の扱いに同意します</label>
+<button type="submit">送信する</button>
+<div class="msg" id="msg" hidden></div>
+</form>
+<script>
+(() => {
+  const f = document.getElementById("f"), msg = document.getElementById("msg");
+  f.opened.value = Date.now();
+  const say = (t, err) => { msg.hidden = false; msg.className = "msg" + (err ? " err" : ""); msg.textContent = t; };
+  const NAMES = { email: "メールアドレス", contact_email: "メールアドレス", official_url: "公式の URL", date_from: "開催日",
+    flyer: "チラシ（5MB までの JPEG・PNG・WebP・PDF）", message: "内容", body: "内容", url: "URL の数" };
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const b = f.querySelector("button"); b.disabled = true; say("送っています…");
+    try {
+      const r = await fetch("https://zynxnpwwmrxzyljrsmbs.supabase.co/functions/v1/odekake-form", { method: "POST", body: new FormData(f) });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.ok) {
+        f.querySelectorAll("input,textarea,select,button").forEach((x) => (x.disabled = true));
+        say("送信しました。ありがとうございます。お返事が必要な内容には、メールでご連絡します。");
+        return;
+      }
+      const why = { fast: "少し時間をおいて、もう一度送ってください。", many: "送信が続いています。1時間ほどおいてから送ってください。",
+        robot: "ロボットよけの確認ができませんでした。もう一度お試しください。", agree: "同意の欄にチェックを入れてください。",
+        closed: "いまは受け付けていません。" }[j.error];
+      say(why || (j.field ? `「${NAMES[j.field] || "入力"}」を確かめてください。` : "送れませんでした。時間をおいてお試しください。"), true);
+    } catch (_) { say("送れませんでした。通信を確かめて、もう一度お試しください。", true); }
+    b.disabled = false;
+  });
+})();
+</script>
+<p><a href="../about/">運営者情報・編集方針・プライバシー</a></p>
+</main>
+<footer>Threads <a href="https://www.threads.com/@fukui._.fukui" rel="noopener">@fukui._.fukui</a> が集めた福井の情報をまとめています。<br><a href="../about/">運営者情報・編集方針・プライバシー</a> ・ <a href="../contact/">お問い合わせ</a></footer>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "9e64b6e539884a02b525b311b2a2eb15"}'></script><script async src="https://www.googletagmanager.com/gtag/js?id=G-13WG76PCKH"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-13WG76PCKH");</script>
+</body>
+</html>
