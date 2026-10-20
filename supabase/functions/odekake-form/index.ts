@@ -8,13 +8,20 @@
 //   ・チラシ：5MB まで、JPEG / PNG / WebP / PDF だけ。拡張子でなく中身の先頭の印で確かめ、非公開の置き場へ
 // 掲載の申し込みは、SUBMISSION_OPEN が true のときだけ受け付ける（2026-10-20 代表：特商法の表記と決済リンクがそろったので開く。
 // 止めるときは false にして載せ直す）。
+// PAY_HOLD が true のとき、申し込みはその場で Stripe の支払い画面（カードの仮押さえ）へ移す（pay.ts）。
+// 受付・確定・取り消し・期限切れのメールは mail.ts。
+//   type=confirm：支払い画面から戻ったとき。Stripe に問い合わせて仮押さえを確かめ、受付メールを送る
+//   type=process：毎朝の作業から呼ぶ。代表の「受ける／受けない」の確定・取り消し、戻らなかった人の確認、期限切れ
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import * as mail from "./mail.ts";
+import * as pay from "./pay.ts";
 
 const ORIGINS = ["https://odekake.fukui-fukui.com", "https://ishikawa-odekake.fukui-fukui.com"];
 const REGION_OF: Record<string, string> = { [ORIGINS[0]]: "fukui", [ORIGINS[1]]: "ishikawa" };
 const MAX_FILE = 5 * 1024 * 1024;
 const PER_HOUR = 5;
 const SUBMISSION_OPEN = true;
+const PAY_HOLD = true;
 
 function cors(origin: string) {
   return {
@@ -112,6 +119,14 @@ Deno.serve(async (req) => {
     return reply(origin, 400, { error: "form" });
   }
   const type = String(form.get("type") ?? "");
+  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  if (type === "confirm") return reply(origin, 200, await confirm(db, String(form.get("n") ?? ""), String(form.get("s") ?? "")));
+  if (type === "process") {
+    // 毎朝の作業だけが呼べるように、運営だけが読める表の合言葉と照らす（新しい鍵を増やさないため）
+    const { data: t } = await db.from("odekake_settings").select("value").eq("key", "process_token").maybeSingle();
+    if (!t?.value || String(form.get("token") ?? "") !== t.value) return reply(origin, 403, { error: "token" });
+    return reply(origin, 200, await process(db));
+  }
   if (type !== "inquiry" && type !== "submission") return reply(origin, 400, { error: "type" });
   if (type === "submission" && !SUBMISSION_OPEN) return reply(origin, 403, { error: "closed" });
 
@@ -129,7 +144,6 @@ Deno.serve(async (req) => {
     return reply(origin, 400, { error: "robot" });
   }
 
-  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const ipHash = await sha256(`${ip}|${Deno.env.get("SUPABASE_URL")}|odekake-form`);
   const since = new Date(Date.now() - 3600_000).toISOString();
   const { count } = await db.from("odekake_form_hits").select("*", { count: "exact", head: true })
@@ -140,8 +154,11 @@ Deno.serve(async (req) => {
   if (type === "inquiry") {
     const { row, bad } = check(form, INQUIRY);
     if (bad) return reply(origin, 400, { error: "field", field: bad });
-    const { error } = await db.from("odekake_inquiries").insert({ ...row, region });
+    const { data: saved, error } = await db.from("odekake_inquiries").insert({ ...row, region }).select().single();
     if (error) return reply(origin, 500, { error: "save" });
+    if (await mail.send(mail.inquiryReceived(saved))) {
+      await db.from("odekake_inquiries").update({ mail_sent_at: new Date().toISOString() }).eq("id", saved.id);
+    }
     return reply(origin, 200, { ok: true });
   }
 
@@ -160,7 +177,98 @@ Deno.serve(async (req) => {
     const up = await db.storage.from("odekake-flyers").upload(flyer_path, bytes, { contentType: flyer_type });
     if (up.error) return reply(origin, 500, { error: "save" });
   }
-  const { error } = await db.from("odekake_submissions").insert({ ...row, region, number, flyer_path, flyer_type });
+  const status = PAY_HOLD ? "pending_payment" : "open";
+  const { error } = await db.from("odekake_submissions").insert({ ...row, region, number, flyer_path, flyer_type, status });
   if (error) return reply(origin, 500, { error: "save" });
-  return reply(origin, 200, { ok: true, number });
+  if (!PAY_HOLD) return reply(origin, 200, { ok: true, number });
+  try {
+    const site = mail.SITES[region];
+    const s = await pay.createCheckout(pay.checkoutBody({ number, region, siteName: site.name, siteUrl: site.url,
+      email: String(row.contact_email), eventName: String(row.event_name) }));
+    await db.from("odekake_submissions").update({ stripe_session: s.id }).eq("number", number);
+    return reply(origin, 200, { ok: true, number, pay_url: s.url });
+  } catch (e) {
+    console.error(e);
+    await db.from("odekake_submissions").update({ status: "abandoned" }).eq("number", number);
+    return reply(origin, 500, { error: "pay" });
+  }
 });
+
+type DB = ReturnType<typeof createClient>;
+const now = () => new Date().toISOString();
+
+/** 仮押さえが済んでいれば authorized にして受付メールを送る。済んでいなければ何もしない */
+async function settle(db: DB, r: Record<string, unknown>): Promise<string> {
+  if (!r.stripe_session) return String(r.status);
+  const s = await pay.getSession(String(r.stripe_session));
+  const pi = pay.heldIntent(s, String(r.number));
+  if (pi) {
+    await db.from("odekake_submissions").update({ status: "authorized", payment_intent: pi, authorized_at: now() })
+      .eq("number", r.number).eq("status", "pending_payment");
+    if (!r.mail_sent_at && await mail.send(mail.submissionReceived({ ...r, status: "authorized" }))) {
+      await db.from("odekake_submissions").update({ mail_sent_at: now() }).eq("number", r.number);
+    }
+    return "authorized";
+  }
+  if (s.status === "expired") {
+    await db.from("odekake_submissions").update({ status: "abandoned" }).eq("number", r.number).eq("status", "pending_payment");
+    return "abandoned";
+  }
+  return String(r.status);
+}
+
+/** 支払い画面から戻ったとき */
+async function confirm(db: DB, number: string, session: string) {
+  if (!/^S\d{6}-[0-9A-F]{6}$/.test(number)) return { error: "number" };
+  const { data: r } = await db.from("odekake_submissions").select("*").eq("number", number).maybeSingle();
+  if (!r || (session && r.stripe_session !== session)) return { error: "number" };
+  if (r.status !== "pending_payment") return { ok: r.status === "authorized" || r.status === "approve", number, status: r.status };
+  try {
+    const st = await settle(db, r);
+    return { ok: st === "authorized", number, status: st };
+  } catch (e) {
+    console.error(e);
+    return { error: "pay" };
+  }
+}
+
+/** 毎朝の作業から呼ぶ。代表の答え（approve / reject）を Stripe に反映し、メールを送る */
+async function process(db: DB) {
+  const out: Record<string, string[]> = { authorized: [], captured: [], canceled: [], expired: [], abandoned: [], soon: [], errors: [] };
+  const { data: rows } = await db.from("odekake_submissions").select("*")
+    .in("status", ["pending_payment", "authorized", "approve", "reject"]);
+  for (const r of rows ?? []) {
+    const n = String(r.number);
+    try {
+      if (r.status === "pending_payment") {
+        const st = await settle(db, r);
+        if (st === "authorized" || st === "abandoned") out[st].push(n);
+      } else if (r.status === "approve" && r.payment_intent) {
+        await pay.capture(String(r.payment_intent));
+        await db.from("odekake_submissions").update({ status: "captured", decided_at: now() }).eq("number", n);
+        if (await mail.send(mail.submissionCaptured(r))) await db.from("odekake_submissions").update({ result_mail_at: now() }).eq("number", n);
+        out.captured.push(n);
+      } else if (r.status === "reject" && r.payment_intent) {
+        await pay.cancel(String(r.payment_intent));
+        await db.from("odekake_submissions").update({ status: "canceled", decided_at: now() }).eq("number", n);
+        if (await mail.send(mail.submissionCanceled(r))) await db.from("odekake_submissions").update({ result_mail_at: now() }).eq("number", n);
+        out.canceled.push(n);
+      } else if (r.status === "authorized" && r.authorized_at) {
+        const age = Date.now() - new Date(String(r.authorized_at)).getTime();
+        if (age > pay.HOLD_LIMIT_MS) {
+          await pay.cancel(String(r.payment_intent));
+          await db.from("odekake_submissions").update({ status: "expired", decided_at: now() }).eq("number", n);
+          if (await mail.send(mail.submissionExpired(r))) await db.from("odekake_submissions").update({ result_mail_at: now() }).eq("number", n);
+          out.expired.push(n);
+        } else if (age > pay.REMIND_MS) out.soon.push(n);
+      }
+    } catch (e) {
+      console.error(n, e);
+      out.errors.push(`${n}: ${String(e).slice(0, 120)}`);
+    }
+  }
+  let acct = "";
+  try { const a = await pay.account(); acct = `${a.id}${a.livemode === false ? "（試験）" : ""}`; } catch (_) { acct = "読めない"; }
+  return { ok: true, account: acct, mode: Deno.env.get("STRIPE_MODE") === "test" ? "test" : "live", ...out };
+  // 申込番号の一覧は、運営だけが読める表にもあるので、ここで返してもよい（呼べるのは合言葉を知る毎朝の作業だけ）
+}

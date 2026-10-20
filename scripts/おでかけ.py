@@ -987,6 +987,10 @@ def write_areas(data: dict, today: date) -> list[str]:
 # 受け取りは Supabase の Edge Function odekake-form（ソースは supabase/functions/odekake-form）。
 # ロボットよけ（Cloudflare Turnstile）は、region.json の "Turnstile"（サイトキー。公開してよい鍵）があるときだけ出す。
 # 秘密鍵は代表が Supabase に直接登録する（リポジトリ・チャットに書かない）。
+# 仮押さえ（region.json の 使う.仮押さえ）のときの申し込みページの説明（2026-10-20 代表）
+HOLD_LEAD = ("<p>いただいた情報は、主催者などの公式の案内で確かめてから掲載します。</p>"
+             "<p><b>送信すると、お支払い画面（Stripe）に移ります。</b>カードで 5,500円（税込）を仮押さえしますが、"
+             "掲載が決まるまで確定しません。掲載できない場合は取り消し、料金は請求されません。</p>")
 # 有料掲載で提供する内容（2026-10-20 代表の文。特商法の表記・申し込みフォームで同じ文を使う）
 PAID_OFFER = (f"「{SITE_NAME}」PR枠への掲載（最長30日）、Threads での紹介（掲載を始めたとき・毎週1回・開催の前日と当日）、"
               "AI で作る紹介動画（1回）。表示や投稿には「PR」と付きます。")
@@ -1085,6 +1089,12 @@ def _form_script(kind: str) -> str:
     try {{
       const r = await fetch("{FORM_URL}", {{ method: "POST", body: new FormData(f) }});
       const j = await r.json().catch(() => ({{}}));
+      if (r.ok && j.ok && j.pay_url) {{
+        // 仮押さえ：Stripe の支払い画面へ。戻ってきたら下の「戻ったとき」で受付を確かめる
+        say("お支払い画面（Stripe）に移ります…");
+        location.href = j.pay_url;
+        return;
+      }}
       if (r.ok && j.ok) {{
         f.querySelectorAll("input,textarea,select,button").forEach((x) => (x.disabled = true));
         say({done});
@@ -1101,6 +1111,25 @@ def _form_script(kind: str) -> str:
     }} catch (_) {{ say("送れませんでした。通信を確かめて、もう一度お試しください。", true); }}
     b.disabled = false;
   }});
+  // 支払い画面から戻ったとき（?n=申込番号&s=…）／やめたとき（&cancel=1）
+  const q = new URLSearchParams(location.search);
+  if (q.get("n")) {{
+    history.replaceState(null, "", location.pathname);
+    if (q.get("cancel")) say("お支払いが済んでいないため、お申し込みは受け付けていません。入力を確かめて、もう一度「送信する」を押してください。", true);
+    else {{
+      say("お申し込みを確かめています…");
+      const fd = new FormData(); fd.append("type", "confirm"); fd.append("n", q.get("n")); fd.append("s", q.get("s") || "");
+      fetch("{FORM_URL}", {{ method: "POST", body: fd }}).then((r) => r.json()).then((j) => {{
+        if (j.ok) {{
+          f.querySelectorAll("input,textarea,select,button").forEach((x) => (x.disabled = true));
+          say(["受け付けました。申込番号：" + j.number, "カードで 5,500円（税込）を仮押さえしました。まだ確定していません。",
+               "公式の案内で確かめ、掲載が決まったら確定してメールでお知らせします。掲載できない場合は取り消し、料金は請求されません。",
+               "受付のメールをお送りしました。届かない場合は迷惑メールのフォルダもご覧ください。"]);
+          msg.scrollIntoView({{ block: "center" }});
+        }} else say("お支払いを確かめられませんでした。お手数ですが、お問い合わせからご連絡ください（申込番号：" + q.get("n") + "）。", true);
+      }}).catch(() => say("通信がうまくいきませんでした。ページを読み込み直してください。", true));
+    }}
+  }}
 }})();
 </script>"""
 
@@ -1144,7 +1173,7 @@ def render_submit(today: date) -> str:
     main = f"""<h1>イベント掲載の申し込み</h1>
 <div class="lead">
 <p><b>主催者の方からのみ受け付けます。</b></p>
-<p>いただいた情報は、主催者などの公式の案内で確かめてから掲載します。掲載できる場合は、お支払いのご案内をメールでお送りします。</p>
+{HOLD_LEAD if _uses("仮押さえ") else '<p>いただいた情報は、主催者などの公式の案内で確かめてから掲載します。掲載できる場合は、お支払いのご案内をメールでお送りします。</p>'}
 <p>掲載の内容：{h(PAID_OFFER)}料金は 1件 5,500円（税込）です。</p>
 <p>お支払いのあとの返金は、原則できません。事情がある場合は、<a href="../contact/">お問い合わせ</a>から運営へご連絡ください。料金などは<a href="../tokushoho/">特定商取引法に基づく表記</a>をご覧ください。</p>
 <p class="muted">{h(PRIVACY_FORM)}</p>
@@ -1195,10 +1224,14 @@ def render_tokushoho(today: date) -> str:
         ("販売価格", "イベント掲載 1件 5,500円（税込）"),
         ("提供する内容", PAID_OFFER),
         ("商品代金以外の必要料金", "なし（インターネット接続にかかる通信料はお客様のご負担です）"),
-        ("掲載の可否", "お申し込みの内容は、主催者などの公式の案内で確かめてから掲載します。掲載できない場合は、お支払いの前にご連絡します"),
+        ("掲載の可否", "お申し込みの内容は、主催者などの公式の案内で確かめてから掲載します。"
+                       + ("掲載できない場合は、仮押さえを取り消してご連絡します" if _uses("仮押さえ") else "掲載できない場合は、お支払いの前にご連絡します")),
         ("支払方法", "クレジットカード（Stripe による決済）"),
-        ("支払時期", "掲載のご案内（お支払いのリンク）をお送りしてから7日以内に、1回でお支払いください"),
-        ("サービスの提供時期", "お支払いを確かめてから3日以内に掲載を始めます"),
+        ("支払時期", "お申し込みの際に、カードで 5,500円（税込）を仮押さえ（与信）します。掲載が決まった時点で確定し、"
+                    "掲載できない場合は取り消します（料金は請求されません）。仮押さえの期限（7日）までに掲載を決められない場合も取り消します"
+                    if _uses("仮押さえ") else "掲載のご案内（お支払いのリンク）をお送りしてから7日以内に、1回でお支払いください"),
+        ("サービスの提供時期", "掲載が決まった日（確定した日）から3日以内に掲載を始めます" if _uses("仮押さえ")
+                              else "お支払いを確かめてから3日以内に掲載を始めます"),
         ("返金について", "サービスの性質上、お支払い済みの料金の返金はいたしません。ただし、当方の責による不具合で掲載できなかった場合はこの限りではありません。"
                        "催しの中止・延期など事情がある場合は、お問い合わせフォームからご相談ください"),
         ("動作環境", "最新版の主要なブラウザ（Safari・Chrome・Edge など）"),

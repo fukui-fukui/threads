@@ -170,6 +170,12 @@ table.toku th { width: 34%; color: var(--muted); font-weight: 700; }
     try {
       const r = await fetch("https://zynxnpwwmrxzyljrsmbs.supabase.co/functions/v1/odekake-form", { method: "POST", body: new FormData(f) });
       const j = await r.json().catch(() => ({}));
+      if (r.ok && j.ok && j.pay_url) {
+        // 仮押さえ：Stripe の支払い画面へ。戻ってきたら下の「戻ったとき」で受付を確かめる
+        say("お支払い画面（Stripe）に移ります…");
+        location.href = j.pay_url;
+        return;
+      }
       if (r.ok && j.ok) {
         f.querySelectorAll("input,textarea,select,button").forEach((x) => (x.disabled = true));
         say("受け付けました。申込番号：" + (j.number || "") + "。公式の案内で確かめてから、メールでご連絡します。");
@@ -186,6 +192,25 @@ table.toku th { width: 34%; color: var(--muted); font-weight: 700; }
     } catch (_) { say("送れませんでした。通信を確かめて、もう一度お試しください。", true); }
     b.disabled = false;
   });
+  // 支払い画面から戻ったとき（?n=申込番号&s=…）／やめたとき（&cancel=1）
+  const q = new URLSearchParams(location.search);
+  if (q.get("n")) {
+    history.replaceState(null, "", location.pathname);
+    if (q.get("cancel")) say("お支払いが済んでいないため、お申し込みは受け付けていません。入力を確かめて、もう一度「送信する」を押してください。", true);
+    else {
+      say("お申し込みを確かめています…");
+      const fd = new FormData(); fd.append("type", "confirm"); fd.append("n", q.get("n")); fd.append("s", q.get("s") || "");
+      fetch("https://zynxnpwwmrxzyljrsmbs.supabase.co/functions/v1/odekake-form", { method: "POST", body: fd }).then((r) => r.json()).then((j) => {
+        if (j.ok) {
+          f.querySelectorAll("input,textarea,select,button").forEach((x) => (x.disabled = true));
+          say(["受け付けました。申込番号：" + j.number, "カードで 5,500円（税込）を仮押さえしました。まだ確定していません。",
+               "公式の案内で確かめ、掲載が決まったら確定してメールでお知らせします。掲載できない場合は取り消し、料金は請求されません。",
+               "受付のメールをお送りしました。届かない場合は迷惑メールのフォルダもご覧ください。"]);
+          msg.scrollIntoView({ block: "center" });
+        } else say("お支払いを確かめられませんでした。お手数ですが、お問い合わせからご連絡ください（申込番号：" + q.get("n") + "）。", true);
+      }).catch(() => say("通信がうまくいきませんでした。ページを読み込み直してください。", true));
+    }
+  }
 })();
 </script>
 </main>
