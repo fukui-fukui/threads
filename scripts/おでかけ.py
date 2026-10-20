@@ -21,6 +21,7 @@ import sys
 import urllib.error
 import urllib.request
 from datetime import date, timedelta
+from urllib.parse import quote
 from html import unescape
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
@@ -880,6 +881,88 @@ def render_spot(data: dict, today: date) -> str:
     return _shell(title, desc, url, ld, main, "../")
 
 
+# ---- 市町別のページ（2026-10-20 代表 OK、SEO の5） ----
+# 「金沢市 イベント」「坂井市 おでかけ」を受けるページ。URL は /area/金沢市/（日本語のまま。読み違いを避ける）。
+# 中身の薄いページを増やさないよう、これからの催しと新しいお店が AREA_MIN 件以上ある市町だけ作る。
+# 一度作ったページは、件数が減っても消さずに作り直す（月のページと同じ）。
+AREA_DIR = ROOT / "docs" / "area"
+AREA_MIN = 5
+
+
+def _area_items(data: dict, today: date) -> dict[str, dict]:
+    """市町 → {"events": [...], "shops": [...]}（終わった催しと、6か月より前の新店はのぞく）"""
+    y, m = today.year, today.month - SPOT_MONTHS
+    while m < 1:
+        y, m = y - 1, m + 12
+    since = date(y, m, 1)
+    out: dict[str, dict] = {}
+    for it in data["items"]:
+        a = it.get("area")
+        if not a:
+            continue
+        sp = _span(it)
+        if sp and sp[1] >= today:
+            out.setdefault(a, {"events": [], "shops": []})["events"].append(it)
+        elif it["kind"] == "スポット" and it.get("start") and date.fromisoformat(it["start"]) >= since:
+            out.setdefault(a, {"events": [], "shops": []})["shops"].append(it)
+    return out
+
+
+def render_area(area: str, b: dict, today: date) -> str:
+    from html import escape as h
+    from urllib.parse import quote
+    sat, sun = weekend_of(today)
+    evs = sorted(b["events"], key=lambda it: (_span(it)[0], _title(it)))
+    wk = [it for it in evs if _on(it, sat) or _on(it, sun)]
+    long_ = [it for it in evs if it not in wk and _is_long(_span(it))]
+    rest = [it for it in evs if it not in wk and it not in long_]
+    shops = sorted(b["shops"], key=lambda it: it["start"], reverse=True)
+    url = f"{SITE}/area/{quote(area)}/"
+    n = len(evs) + len(shops)
+    title = f"{area}のイベント・おでかけ情報と新しいお店｜{SITE_NAME}"
+    desc = (f"{KEN}・{area}で開かれるイベント・祭り・マルシェ・展示と、新しくオープンしたお店を{n}件まとめました。"
+            "毎日更新、主催者や自治体などの出典つき。")
+    f = lambda d: f"{d.month}月{d.day}日（{WD[d.weekday()]}）"
+    body = []
+    for head, its in ((f"今週末（{f(sat)}・{f(sun)}）", wk), ("これからのイベント", rest),
+                      ("期間中に行ける展示・フェア", long_), ("新しいお店", shops)):
+        if its:
+            body.append(f"<h2>{h(head)}</h2>" + "".join(_page_card(i, today) for i in its))
+    if not body:
+        body.append(f"<p>いまは{h(area)}の催しが載っていません。ほかの市町や月別のページもご覧ください。</p>")
+    crumbs = {"@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": f"{SITE}/"},
+        {"@type": "ListItem", "position": 2, "name": f"{area}のイベント・おでかけ情報", "item": url}]}
+    lst = [_event_ld(it, url) for it in wk + rest + long_] + [_shop_ld(it, url) for it in shops]
+    graph = [crumbs] + ([{"@type": "ItemList", "name": f"{area}のイベント・新しいお店", "numberOfItems": len(lst),
+                           "itemListElement": [{"@type": "ListItem", "position": i, "item": x}
+                                               for i, x in enumerate(lst, start=1)]}] if lst else [])
+    ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False).replace("</", "<\\/")
+    main = f"""<h1>{h(area)}のイベント・おでかけ情報</h1>
+<div class="lead">
+<p>{h(KEN)}・{h(area)}で開かれるイベントと、新しくオープンしたお店をまとめました。これからの催しが{len(evs)}件、新しいお店が{len(shops)}件です。</p>
+<p class="muted">日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・自治体・お店の公式）で必ず確かめてください。最終更新：{today.year}年{today.month}月{today.day}日</p>
+</div>
+{"".join(body)}
+<nav class="months"><a href="../../weekend/">今週末の{h(KEN)}のイベント</a> ・ <a href="../../spot/">{h(KEN)}の新しいお店</a></nav>
+<p><a href="../../">{h(KEN)}のほかの市町のおでかけ情報を見る（{h(SITE_NAME)}）</a></p>
+"""
+    return _shell(title, desc, url, ld, main, "../../")
+
+
+def write_areas(data: dict, today: date) -> list[str]:
+    made = {d.name for d in AREA_DIR.iterdir() if d.is_dir()} if AREA_DIR.exists() else set()
+    groups = _area_items(data, today)
+    areas = sorted((a for a, b in groups.items() if len(b["events"]) + len(b["shops"]) >= AREA_MIN or a in made),
+                   key=lambda a: -(len(groups.get(a, {}).get("events", [])) + len(groups.get(a, {}).get("shops", []))))
+    areas += sorted(made - set(areas))
+    for a in areas:
+        (AREA_DIR / a).mkdir(parents=True, exist_ok=True)
+        (AREA_DIR / a / "index.html").write_text(render_area(a, groups.get(a, {"events": [], "shops": []}), today),
+                                                 encoding="utf-8")
+    return areas
+
+
 def write_months(data: dict, today: date) -> list[str]:
     # 前に作った月（docs/month/ にあるもの）は、過ぎても作り直して残す。消さない
     made = {d.name for d in MONTH_DIR.iterdir() if d.is_dir()} if MONTH_DIR.exists() else set()
@@ -933,6 +1016,7 @@ def write_static(data: dict, today: date) -> None:
     (WEEKEND_DIR / "index.html").write_text(render_weekend(data, today), encoding="utf-8")
     SPOT_DIR.mkdir(parents=True, exist_ok=True)
     (SPOT_DIR / "index.html").write_text(render_spot(data, today), encoding="utf-8")
+    areas = write_areas(data, today)
     html_text = INDEX.read_text(encoding="utf-8")
     a, b = html_text.find(MARK_START), html_text.find(MARK_END)
     if a < 0 or b < 0:
@@ -941,12 +1025,14 @@ def write_static(data: dict, today: date) -> None:
         html_text = html_text[:a] + prerender(data, today) + html_text[b + len(MARK_END):]
     ma, mb = html_text.find(MONTHS_MARK[0]), html_text.find(MONTHS_MARK[1])
     if ma >= 0 and mb >= 0:
-        links = '<a href="./weekend/">今週末のイベント</a><br><a href="./spot/">新しいお店</a><br>' + "".join(f'<a href="./month/{k}/">{_month_label(k)}のイベント</a><br>' for k in months)
+        links = ('<a href="./weekend/">今週末のイベント</a><br><a href="./spot/">新しいお店</a><br>'
+                 + ("市町別：" + " ・ ".join(f'<a href="./area/{quote(a)}/">{a}</a>' for a in areas) + "<br>" if areas else "")) + "".join(f'<a href="./month/{k}/">{_month_label(k)}のイベント</a><br>' for k in months)
         html_text = html_text[:ma] + MONTHS_MARK[0] + links + html_text[mb:]
     INDEX.write_text(html_text, encoding="utf-8")
     lastmod = data.get("updated") or today.isoformat()
     urls = [(f"{SITE}/", lastmod, "daily"), (f"{SITE}/weekend/", today.isoformat(), "daily"),
             (f"{SITE}/spot/", lastmod, "daily"),
+            *[(f"{SITE}/area/{quote(a)}/", lastmod, "daily") for a in areas],
             (f"{SITE}/about/", "2026-10-04", "monthly")]
     urls += [(f"{SITE}/month/{k}/", lastmod, "daily") for k in months]
     SITEMAP.write_text(

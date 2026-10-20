@@ -49,4 +49,5 @@ jobs:
           ./scripts/commit_file.sh docs/weekend "chore(odekake): 今週末のページを更新"
           ./scripts/commit_file.sh docs/404.html "chore(odekake): 404 ページを更新"
           ./scripts/commit_file.sh docs/spot "chore(odekake): 新しいお店のページを更新"
+          ./scripts/commit_file.sh docs/area "chore(odekake): 市町別のページを更新"
           ./scripts/commit_file.sh docs/hotels.json "chore(odekake): 宿のデータを更新"
