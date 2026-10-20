@@ -407,3 +407,15 @@ class AreaPageTest(unittest.TestCase):
         html = odekake.render_area("福井市", g["福井市"], date(2026, 10, 20))
         self.assertIn('<link rel="canonical" href="https://odekake.fukui-fukui.com/area/%E7%A6%8F%E4%BA%95%E5%B8%82/">', html)
         self.assertIn("今週末", html)
+
+
+class FormPageTest(unittest.TestCase):
+    def test_contact_and_submit_pages(self):
+        c = odekake.render_contact(date(2026, 10, 20))
+        for k in ('name="type" value="inquiry"', 'name="website"', 'name="opened"', 'name="agree"', odekake.FORM_URL):
+            self.assertIn(k, c)
+        s = odekake.render_submit(date(2026, 10, 20))
+        self.assertIn("主催者の方からのみ受け付けます", s)
+        self.assertIn('name="agree_flyer"', s)
+        self.assertIn('name="flyer"', s)
+        self.assertNotIn("お約束するものではありません", s)

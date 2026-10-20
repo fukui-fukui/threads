@@ -676,13 +676,24 @@ a {{ color: var(--main); }}
 .lead {{ background: var(--surface); border-radius: 14px; padding: 12px 16px; }}
 nav.months {{ margin-top: 36px; font-size: .9rem; }}
 footer {{ color: var(--muted); font-size: .78rem; text-align: center; padding: 0 16px 32px; }}
+form.f label {{ display: block; font-weight: 700; font-size: .9rem; margin: 16px 0 4px; }}
+form.f label small {{ font-weight: 400; color: var(--muted); }}
+form.f input[type=text], form.f input[type=email], form.f input[type=url], form.f input[type=date], form.f select, form.f textarea {{ width: 100%; font: inherit; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }}
+form.f textarea {{ min-height: 9em; }}
+form.f .check {{ display: flex; gap: 8px; align-items: flex-start; font-weight: 400; }}
+form.f .check input {{ margin-top: .45em; }}
+form.f button {{ margin-top: 20px; font: inherit; font-weight: 700; background: var(--main); color: #fff; border: 0; border-radius: 999px; padding: 12px 28px; cursor: pointer; }}
+form.f button:disabled {{ opacity: .5; }}
+form.f .hp {{ position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }}
+.msg {{ margin-top: 16px; padding: 12px 16px; border-radius: 12px; background: var(--surface); }}
+.msg.err {{ border: 1.5px solid #d9473a; }}
 </style>
 </head>
 <body>
 <header><a href="{up}">← {h(SITE_NAME)}</a></header>
 <main>
 {main}</main>
-<footer>Threads <a href="https://www.threads.com/@{h(ACCOUNT)}" rel="noopener">@{h(ACCOUNT)}</a> が集めた{h(KEN)}の情報をまとめています。<br><a href="{up}about/">運営者情報・編集方針・プライバシー</a></footer>
+<footer>Threads <a href="https://www.threads.com/@{h(ACCOUNT)}" rel="noopener">@{h(ACCOUNT)}</a> が集めた{h(KEN)}の情報をまとめています。<br><a href="{up}about/">運営者情報・編集方針・プライバシー</a>{f' ・ <a href="{up}contact/">お問い合わせ</a>' if _uses("問い合わせ") else ""}</footer>
 {CF_BEACON}
 </body>
 </html>
@@ -963,6 +974,128 @@ def write_areas(data: dict, today: date) -> list[str]:
     return areas
 
 
+# ---- フォーム（2026-10-20 代表 B 案：サイトのフォーム → Supabase → ダッシュボードの「判断待ち」） ----
+# 受け取りは Supabase の Edge Function odekake-form（ソースは supabase/functions/odekake-form）。
+# ロボットよけ（Cloudflare Turnstile）は、region.json の "Turnstile"（サイトキー。公開してよい鍵）があるときだけ出す。
+# 秘密鍵は代表が Supabase に直接登録する（リポジトリ・チャットに書かない）。
+FORM_URL = "https://zynxnpwwmrxzyljrsmbs.supabase.co/functions/v1/odekake-form"
+CONTACT_DIR = ROOT / "docs" / "contact"
+SUBMIT_DIR = ROOT / "docs" / "submit"
+PRIVACY_FORM = ("フォームでいただいたお名前・メールアドレスは、ご連絡と掲載の確認のためだけに使い、公開や第三者への提供はしません。"
+                "運営者だけが見られる場所に保存し、用件が済んで1年たったものは消します。")
+
+
+def _uses(name: str) -> bool:
+    return bool(地域.地域.get("使う", {}).get(name, False))
+
+
+def _form_script(kind: str) -> str:
+    """送信の JS。成功したら中身を消して、お礼を出す。"""
+    sitekey = 地域.地域.get("Turnstile", "")
+    ts = ('<div class="cf-turnstile" data-sitekey="' + sitekey + '" data-language="ja"></div>'
+          '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>') if sitekey else ""
+    return ts + f"""<button type="submit">送信する</button>
+<div class="msg" id="msg" hidden></div>
+</form>
+<script>
+(() => {{
+  const f = document.getElementById("f"), msg = document.getElementById("msg");
+  f.opened.value = Date.now();
+  const say = (t, err) => {{ msg.hidden = false; msg.className = "msg" + (err ? " err" : ""); msg.textContent = t; }};
+  const NAMES = {{ email: "メールアドレス", contact_email: "メールアドレス", official_url: "公式の URL", date_from: "開催日",
+    flyer: "チラシ（5MB までの JPEG・PNG・WebP・PDF）", message: "内容", body: "内容", url: "URL の数" }};
+  f.addEventListener("submit", async (e) => {{
+    e.preventDefault();
+    const b = f.querySelector("button"); b.disabled = true; say("送っています…");
+    try {{
+      const r = await fetch("{FORM_URL}", {{ method: "POST", body: new FormData(f) }});
+      const j = await r.json().catch(() => ({{}}));
+      if (r.ok && j.ok) {{
+        f.querySelectorAll("input,textarea,select,button").forEach((x) => (x.disabled = true));
+        say({'"受け付けました。申込番号：" + (j.number || "") + "。公式の案内で確かめてから、メールでご連絡します。"' if kind == "submission" else '"送信しました。ありがとうございます。お返事が必要な内容には、メールでご連絡します。"'});
+        return;
+      }}
+      const why = {{ fast: "少し時間をおいて、もう一度送ってください。", many: "送信が続いています。1時間ほどおいてから送ってください。",
+        robot: "ロボットよけの確認ができませんでした。もう一度お試しください。", agree: "同意の欄にチェックを入れてください。",
+        closed: "いまは受け付けていません。" }}[j.error];
+      say(why || (j.field ? `「${{NAMES[j.field] || "入力"}}」を確かめてください。` : "送れませんでした。時間をおいてお試しください。"), true);
+    }} catch (_) {{ say("送れませんでした。通信を確かめて、もう一度お試しください。", true); }}
+    b.disabled = false;
+  }});
+}})();
+</script>"""
+
+
+def render_contact(today: date) -> str:
+    from html import escape as h
+    url = f"{SITE}/contact/"
+    title = f"お問い合わせ｜{SITE_NAME}"
+    desc = f"{SITE_NAME}への、内容の誤り・掲載の取り下げなどのお問い合わせフォームです。"
+    main = f"""<h1>お問い合わせ</h1>
+<div class="lead">
+<p>内容の誤り、掲載の取り下げ、そのほかのご連絡はこちらからどうぞ。お返事が必要な内容には、メールでご連絡します。</p>
+<p class="muted">{h(PRIVACY_FORM)}</p>
+</div>
+<form class="f" id="f" novalidate>
+<input type="hidden" name="type" value="inquiry"><input type="hidden" name="opened" value="">
+<div class="hp" aria-hidden="true"><label>空けておいてください<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+<label for="kind">ご用件</label>
+<select id="kind" name="kind" required>
+<option value="fix">内容の誤り</option><option value="remove">掲載の取り下げ</option>
+<option value="paid">有料のイベント掲載について</option><option value="other" selected>そのほか</option>
+</select>
+<label for="name">お名前</label><input type="text" id="name" name="name" maxlength="100" required autocomplete="name">
+<label for="email">メールアドレス</label><input type="email" id="email" name="email" maxlength="200" required autocomplete="email">
+<label for="page">関係するページや催しの名前 <small>（あれば）</small></label><input type="text" id="page" name="page" maxlength="300">
+<label for="message">内容 <small>（1000字まで）</small></label><textarea id="message" name="message" maxlength="1000" required></textarea>
+<label class="check"><input type="checkbox" name="agree" value="1" required>上の個人情報の扱いに同意します</label>
+{_form_script("inquiry")}
+<p><a href="../about/">運営者情報・編集方針・プライバシー</a></p>
+"""
+    ld = json.dumps({"@context": "https://schema.org", "@type": "ContactPage", "name": title, "url": url}, ensure_ascii=False)
+    return _shell(title, desc, url, ld, main, "../")
+
+
+def render_submit(today: date) -> str:
+    """イベント掲載（有料）の申し込み。特商法の表記が決まるまで公開しない（region.json の 使う.掲載申し込み）。"""
+    from html import escape as h
+    url = f"{SITE}/submit/"
+    title = f"イベント掲載の申し込み｜{SITE_NAME}"
+    desc = f"{SITE_NAME}へのイベント掲載（有料）の申し込みフォームです。主催者の方からのみ受け付けます。"
+    main = f"""<h1>イベント掲載の申し込み</h1>
+<div class="lead">
+<p><b>主催者の方からのみ受け付けます。</b></p>
+<p>いただいた情報は、主催者などの公式の案内で確かめてから掲載します。掲載できる場合は、お支払いのご案内をメールでお送りします。</p>
+<p>お支払いのあとの返金は、原則できません。事情がある場合は、<a href="../contact/">お問い合わせ</a>から運営へご連絡ください。料金などは<a href="../tokushoho/">特定商取引法に基づく表記</a>をご覧ください。</p>
+<p class="muted">{h(PRIVACY_FORM)}</p>
+</div>
+<form class="f" id="f" novalidate enctype="multipart/form-data">
+<input type="hidden" name="type" value="submission"><input type="hidden" name="opened" value="">
+<div class="hp" aria-hidden="true"><label>空けておいてください<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+<label for="event_name">催しの名前</label><input type="text" id="event_name" name="event_name" maxlength="100" required>
+<label for="date_from">開催日（始め）</label><input type="date" id="date_from" name="date_from" required>
+<label for="date_to">開催日（終わり） <small>（1日だけなら空けてください）</small></label><input type="date" id="date_to" name="date_to">
+<label for="time_text">時間 <small>（例：10:00〜15:00）</small></label><input type="text" id="time_text" name="time_text" maxlength="100">
+<label for="venue">会場の名前</label><input type="text" id="venue" name="venue" maxlength="100" required>
+<label for="city">市町</label><input type="text" id="city" name="city" maxlength="30" required placeholder="例：{h(AREAS[0][1] if AREAS else '')}">
+<label for="address">住所 <small>（あれば）</small></label><input type="text" id="address" name="address" maxlength="200">
+<label for="fee">料金 <small>（例：無料／大人500円）</small></label><input type="text" id="fee" name="fee" maxlength="100">
+<label for="body">催しの内容 <small>（300字まで）</small></label><textarea id="body" name="body" maxlength="300" required></textarea>
+<label for="target">対象・事前申し込み・締め切り <small>（あれば）</small></label><input type="text" id="target" name="target" maxlength="300">
+<label for="organizer">主催者</label><input type="text" id="organizer" name="organizer" maxlength="100" required>
+<label for="official_url">公式の URL または SNS <small>（ここを出典にします）</small></label><input type="url" id="official_url" name="official_url" maxlength="300" required placeholder="https://">
+<label for="flyer">チラシの画像または PDF <small>（あれば。5MB まで、JPEG・PNG・WebP・PDF）</small></label><input type="file" id="flyer" name="flyer" accept="image/jpeg,image/png,image/webp,application/pdf">
+<label for="wish_from">掲載したい期間 <small>（あれば。最長30日）</small></label><input type="date" id="wish_from" name="wish_from"> 〜 <input type="date" id="wish_to" name="wish_to">
+<label for="contact_name">ご担当者のお名前 <small>（公開しません）</small></label><input type="text" id="contact_name" name="contact_name" maxlength="100" required autocomplete="name">
+<label for="contact_email">ご担当者のメールアドレス <small>（公開しません）</small></label><input type="email" id="contact_email" name="contact_email" maxlength="200" required autocomplete="email">
+<label class="check"><input type="checkbox" name="agree" value="1" required>公式の案内で確かめてから掲載すること、上の個人情報の扱いに同意します</label>
+<label class="check"><input type="checkbox" name="agree_flyer" value="1" required>提供した画像・チラシを、掲載・投稿に使ってよいことに同意します</label>
+{_form_script("submission")}
+"""
+    ld = json.dumps({"@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url}, ensure_ascii=False)
+    return _shell(title, desc, url, ld, main, "../")
+
+
 def write_months(data: dict, today: date) -> list[str]:
     # 前に作った月（docs/month/ にあるもの）は、過ぎても作り直して残す。消さない
     made = {d.name for d in MONTH_DIR.iterdir() if d.is_dir()} if MONTH_DIR.exists() else set()
@@ -1017,6 +1150,12 @@ def write_static(data: dict, today: date) -> None:
     SPOT_DIR.mkdir(parents=True, exist_ok=True)
     (SPOT_DIR / "index.html").write_text(render_spot(data, today), encoding="utf-8")
     areas = write_areas(data, today)
+    if _uses("問い合わせ"):
+        CONTACT_DIR.mkdir(parents=True, exist_ok=True)
+        (CONTACT_DIR / "index.html").write_text(render_contact(today), encoding="utf-8")
+    if _uses("掲載申し込み"):
+        SUBMIT_DIR.mkdir(parents=True, exist_ok=True)
+        (SUBMIT_DIR / "index.html").write_text(render_submit(today), encoding="utf-8")
     html_text = INDEX.read_text(encoding="utf-8")
     a, b = html_text.find(MARK_START), html_text.find(MARK_END)
     if a < 0 or b < 0:
@@ -1032,6 +1171,7 @@ def write_static(data: dict, today: date) -> None:
     lastmod = data.get("updated") or today.isoformat()
     urls = [(f"{SITE}/", lastmod, "daily"), (f"{SITE}/weekend/", today.isoformat(), "daily"),
             (f"{SITE}/spot/", lastmod, "daily"),
+            *([(f"{SITE}/contact/", "2026-10-20", "yearly")] if _uses("問い合わせ") else []),
             *[(f"{SITE}/area/{quote(a)}/", lastmod, "daily") for a in areas],
             (f"{SITE}/about/", "2026-10-04", "monthly")]
     urls += [(f"{SITE}/month/{k}/", lastmod, "daily") for k in months]
