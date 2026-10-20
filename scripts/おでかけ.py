@@ -1106,7 +1106,7 @@ def render_submit(today: date) -> str:
 
 # ---- 特定商取引法に基づく表記（2026-10-20 代表。事業者の情報はふくいエキマエの表記と同じ） ----
 TOKUSHOHO_DIR = ROOT / "docs" / "tokushoho"
-TOKUSHOHO_MAIL = "yasu29fr@gmail.com"   # エキマエの表記と同じ、公開している連絡先
+TOKUSHOHO_MAIL = "contact@fukui-fukui.com"   # 2026-10-20 代表がさくらで作った連絡先（代表の Gmail に転送）
 
 
 def render_tokushoho(today: date) -> str:
