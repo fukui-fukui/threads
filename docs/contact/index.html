@@ -51,7 +51,8 @@ form.f button:disabled { opacity: .5; }
 form.f .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .msg { margin-top: 16px; padding: 12px 16px; border-radius: 12px; background: var(--surface); }
 .msg.err { border: 1.5px solid #d9473a; }
-form.f .req { display: inline-block; margin-left: 8px; font-size: .7rem; font-weight: 700; color: #fff; background: #d9473a; border-radius: 4px; padding: 0 6px; vertical-align: 2px; white-space: nowrap; flex: none; align-self: flex-start; margin-top: .3em; }
+form.f .req { color: #d9473a; font-weight: 800; margin: 0 4px 0 2px; flex: none; }
+form.f .reqnote { font-size: .85rem; color: var(--muted); margin: 8px 0 0; }
 form.f .bad { border-color: #d9473a !important; outline: 2px solid #d9473a33; }
 form.f label.check.bad { border: 1.5px solid #d9473a; border-radius: 8px; padding: 4px 6px; }
 form.f .ferr { color: #d9473a; font-size: .85rem; font-weight: 700; margin: 4px 0 0; }
@@ -99,11 +100,17 @@ table.toku th { width: 34%; color: var(--muted); font-weight: 700; }
     const c = lab.cloneNode(true); c.querySelectorAll("small,.req,input").forEach((n) => n.remove());
     return c.textContent.trim().replace(/\s+/g, " ");
   };
-  // 必須の印
+  // 必須の印：欄の名前の横に赤い「*」、フォームの上に「* は必須です」（2026-10-20 代表）
   for (const x of fields) if (x.required) {
     const lab = x.id && f.querySelector(`label[for="${x.id}"]`) || x.closest("label");
-    if (lab && !lab.querySelector(".req")) { const r = document.createElement("span"); r.className = "req"; r.textContent = "必須"; lab.append(r); }
+    if (lab && !lab.querySelector(".req")) {
+      const r = document.createElement("span"); r.className = "req"; r.textContent = "*"; r.setAttribute("aria-label", "必須");
+      const small = lab.querySelector("small");
+      if (small && x.type !== "checkbox") small.before(r); else lab.append(r);
+    }
   }
+  { const n = document.createElement("p"); n.className = "reqnote"; const r = document.createElement("span"); r.className = "req"; r.textContent = "*";
+    n.append(r, " は必須です"); f.prepend(n); }
   const problem = (x) => {
     const v = (x.value || "").trim(), n = nameOf(x);
     if (x.type === "checkbox") return x.required && !x.checked ? `「${n}」にチェックを入れてください` : "";
