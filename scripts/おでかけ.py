@@ -20,7 +20,7 @@ import re
 import sys
 import urllib.error
 import urllib.request
-from datetime import date
+from datetime import date, timedelta
 from html import unescape
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
@@ -607,63 +607,30 @@ def _event_ld(it: dict, page_url: str) -> dict:
     return ev
 
 
-def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
-    from collections import Counter
+def _page_card(it: dict, today: date) -> str:
+    """月のページ・今週末のページの催し1件。"""
     from html import escape as h
-    y, m = map(int, key.split("-"))
-    label = _month_label(key)
-    first = date(y, m, 1)
-    short = sorted(b["short"], key=lambda it: (it["start"], _title(it)))
-    long_ = sorted(b["long"], key=lambda it: it["end"])
-    areas = Counter(it.get("area") for it in short + long_ if it.get("area")).most_common(3)
-    area_txt = "、".join(f"{a}（{n}件）" for a, n in areas)
-    url = f"{SITE}/month/{key}/"
-    title = f"{KEN}のイベント {label}｜{SITE_NAME}"
-    past = (y, m) < (today.year, today.month)
-    desc = (f"{label}に{KEN}県内で{'開かれた' if past else '開かれる'}イベント・祭り・マルシェ・展示を日付順にまとめました。"
-            f"全{len(short) + len(long_)}件、主催者や自治体などの出典つき。")
+    sp = _span(it)
+    ended = sp[1] < today
+    meta = "・".join(x for x in (_when(it), it.get("area") or "") if x)
+    site = (it.get("og") or {}).get("site") or "出典"
+    cls = ' class="ended"' if ended else ""
+    mark = "<small>終了</small>" if ended else ""
+    out = [f'<article id="{_anchor(it)}"{cls}><h3>{h(_title(it))}{mark}</h3>']
+    if meta:
+        out.append(f'<p class="meta">{h(meta)}</p>')
+    out.append(f"<p>{h(it['text'])}</p>")
+    if it.get("note"):
+        out.append(f'<p class="note">{h(it["note"])}</p>')
+    if it.get("source"):
+        out.append(f'<p class="src"><a href="{h(it["source"])}" rel="noopener" target="_blank">{h(site)}で詳しく見る</a></p>')
+    out.append("</article>")
+    return "".join(out)
 
-    def card(it: dict) -> str:
-        sp = _span(it)
-        ended = sp[1] < today
-        meta = "・".join(x for x in (_when(it), it.get("area") or "") if x)
-        site = (it.get("og") or {}).get("site") or "出典"
-        cls = ' class="ended"' if ended else ""
-        mark = "<small>終了</small>" if ended else ""
-        out = [f'<article id="{_anchor(it)}"{cls}><h3>{h(_title(it))}{mark}</h3>']
-        if meta:
-            out.append(f'<p class="meta">{h(meta)}</p>')
-        out.append(f"<p>{h(it['text'])}</p>")
-        if it.get("note"):
-            out.append(f'<p class="note">{h(it["note"])}</p>')
-        if it.get("source"):
-            out.append(f'<p class="src"><a href="{h(it["source"])}" rel="noopener" target="_blank">{h(site)}で詳しく見る</a></p>')
-        out.append("</article>")
-        return "".join(out)
 
-    body = []
-    days: dict[date, list] = {}
-    for it in short:
-        days.setdefault(max(_span(it)[0], first), []).append(it)
-    for d, its in days.items():
-        head = f"{d.month}月{d.day}日（{WD[d.weekday()]}）"
-        if d == first and any(_span(i)[0] < first for i in its):
-            head += "〜 先月から続く催しを含む"
-        body.append(f"<h2>{h(head)}</h2>" + "".join(card(i) for i in its))
-    if long_:
-        body.append(f"<h2>{m}月の期間中に行ける展示・フェア</h2>"
-                    "<p class=\"muted\">1週間以上つづく催しです。期間中の好きな日に行けます。</p>"
-                    + "".join(card(i) for i in long_))
-    nav = " ・ ".join(f'<a href="../{k}/">{_month_label(k)}</a>' if k != key else f"<b>{_month_label(k)}</b>" for k in keys)
-    crumbs = {"@type": "BreadcrumbList", "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": f"{SITE}/"},
-        {"@type": "ListItem", "position": 2, "name": f"{KEN}のイベント {label}", "item": url}]}
-    # 催しの一覧（ItemList の中に Event）。Google のイベントの欄に出るように（2026-10-20 代表 OK）
-    events = [{"@type": "ListItem", "position": n, "item": _event_ld(it, url)}
-              for n, it in enumerate(short + long_, start=1)]
-    graph = [crumbs] + ([{"@type": "ItemList", "name": f"{KEN}のイベント {label}", "numberOfItems": len(events),
-                           "itemListElement": events}] if events else [])
-    ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False).replace("</", "<\\/")
+def _shell(title: str, desc: str, url: str, ld: str, main: str, up: str) -> str:
+    """月のページ・今週末のページなどの外側（head・見た目・フッター）。up はトップへの相対パス。"""
+    from html import escape as h
     return f"""<!doctype html>
 <html lang="ja">
 <head>
@@ -680,8 +647,8 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
 <meta property="og:locale" content="ja_JP">
 <meta property="og:image" content="{SITE}/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="../../favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<link rel="icon" href="{up}favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="{up}apple-touch-icon.png">
 <meta name="theme-color" content="#1f7a57">
 <script type="application/ld+json">{ld}</script>
 <style>
@@ -709,9 +676,58 @@ footer {{ color: var(--muted); font-size: .78rem; text-align: center; padding: 0
 </style>
 </head>
 <body>
-<header><a href="../../">← {h(SITE_NAME)}</a></header>
+<header><a href="{up}">← {h(SITE_NAME)}</a></header>
 <main>
-<h1>{h(KEN)}のイベント {h(label)}</h1>
+{main}</main>
+<footer>Threads <a href="https://www.threads.com/@{h(ACCOUNT)}" rel="noopener">@{h(ACCOUNT)}</a> が集めた{h(KEN)}の情報をまとめています。<br><a href="{up}about/">運営者情報・編集方針・プライバシー</a></footer>
+{CF_BEACON}
+</body>
+</html>
+"""
+
+
+def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
+    from collections import Counter
+    from html import escape as h
+    y, m = map(int, key.split("-"))
+    label = _month_label(key)
+    first = date(y, m, 1)
+    short = sorted(b["short"], key=lambda it: (it["start"], _title(it)))
+    long_ = sorted(b["long"], key=lambda it: it["end"])
+    areas = Counter(it.get("area") for it in short + long_ if it.get("area")).most_common(3)
+    area_txt = "、".join(f"{a}（{n}件）" for a, n in areas)
+    url = f"{SITE}/month/{key}/"
+    title = f"{KEN}のイベント {label}｜{SITE_NAME}"
+    past = (y, m) < (today.year, today.month)
+    desc = (f"{label}に{KEN}県内で{'開かれた' if past else '開かれる'}イベント・祭り・マルシェ・展示を日付順にまとめました。"
+            f"全{len(short) + len(long_)}件、主催者や自治体などの出典つき。")
+
+    card = lambda it: _page_card(it, today)
+
+    body = []
+    days: dict[date, list] = {}
+    for it in short:
+        days.setdefault(max(_span(it)[0], first), []).append(it)
+    for d, its in days.items():
+        head = f"{d.month}月{d.day}日（{WD[d.weekday()]}）"
+        if d == first and any(_span(i)[0] < first for i in its):
+            head += "〜 先月から続く催しを含む"
+        body.append(f"<h2>{h(head)}</h2>" + "".join(card(i) for i in its))
+    if long_:
+        body.append(f"<h2>{m}月の期間中に行ける展示・フェア</h2>"
+                    "<p class=\"muted\">1週間以上つづく催しです。期間中の好きな日に行けます。</p>"
+                    + "".join(card(i) for i in long_))
+    nav = " ・ ".join(f'<a href="../{k}/">{_month_label(k)}</a>' if k != key else f"<b>{_month_label(k)}</b>" for k in keys)
+    crumbs = {"@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": f"{SITE}/"},
+        {"@type": "ListItem", "position": 2, "name": f"{KEN}のイベント {label}", "item": url}]}
+    # 催しの一覧（ItemList の中に Event）。Google のイベントの欄に出るように（2026-10-20 代表 OK）
+    events = [{"@type": "ListItem", "position": n, "item": _event_ld(it, url)}
+              for n, it in enumerate(short + long_, start=1)]
+    graph = [crumbs] + ([{"@type": "ItemList", "name": f"{KEN}のイベント {label}", "numberOfItems": len(events),
+                           "itemListElement": events}] if events else [])
+    ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False).replace("</", "<\\/")
+    main = f"""<h1>{h(KEN)}のイベント {h(label)}</h1>
 <div class="lead">
 <p>{h(MONTH_NOTE[m])}</p>
 <p>{h(label)}に{h(KEN)}県内で開かれるイベントを、日付順にまとめました。1日〜数日の催しが{len(short)}件、期間中いつでも行ける展示・フェアが{len(long_)}件です。{h(f"多いのは{area_txt}。") if area_txt else ""}</p>
@@ -720,12 +736,75 @@ footer {{ color: var(--muted); font-size: .78rem; text-align: center; padding: 0
 {"".join(body)}
 <nav class="months">月別：{nav}</nav>
 <p><a href="../../">今週末のイベント・新しいお店を見る（{h(SITE_NAME)}）</a></p>
-</main>
-<footer>Threads <a href="https://www.threads.com/@{h(ACCOUNT)}" rel="noopener">@{h(ACCOUNT)}</a> が集めた{h(KEN)}の情報をまとめています。<br><a href="../../about/">運営者情報・編集方針・プライバシー</a></footer>
-{CF_BEACON}
-</body>
-</html>
 """
+    return _shell(title, desc, url, ld, main, "../../")
+
+
+# ---- 今週末のページ（2026-10-20 代表 OK、SEO の3） ----
+# 「福井 イベント 今週末」を受けるページ。トップのボタンの切り替えには URL が無いので、静的に作る。
+# 毎日作り直す（odekake.yml の schedule）。月〜金は次の土日、土日はその土日。
+WEEKEND_DIR = ROOT / "docs" / "weekend"
+
+
+def weekend_of(today: date) -> tuple[date, date]:
+    sat = today + timedelta(days=(5 - today.weekday()) % 7) if today.weekday() != 6 else today - timedelta(days=1)
+    return sat, sat + timedelta(days=1)
+
+
+def _on(it: dict, d: date) -> bool:
+    sp = _span(it)
+    if not sp or not (sp[0] <= d <= sp[1]):
+        return False
+    return not it.get("days") or d.isoformat() in it["days"]
+
+
+def render_weekend(data: dict, today: date) -> str:
+    from html import escape as h
+    sat, sun = weekend_of(today)
+    evs = [it for it in data["items"] if it["kind"] != "スポット" and _span(it)]
+    both = [it for it in evs if _on(it, sat) and _on(it, sun)]
+    long_ = [it for it in both if _is_long(_span(it))]
+    both = [it for it in both if not _is_long(_span(it))]
+    only_sat = [it for it in evs if _on(it, sat) and not _on(it, sun)]
+    only_sun = [it for it in evs if _on(it, sun) and not _on(it, sat)]
+    key = lambda it: (_span(it)[0], _title(it))
+    f = lambda d: f"{d.month}月{d.day}日（{WD[d.weekday()]}）"
+    url = f"{SITE}/weekend/"
+    n = len(both) + len(only_sat) + len(only_sun) + len(long_)
+    title = f"今週末の{KEN}のイベント・おでかけ情報（{sat.month}/{sat.day}・{sun.day if sun.month == sat.month else f'{sun.month}/{sun.day}'}）｜{SITE_NAME}"
+    desc = (f"{f(sat)}・{f(sun)}に{KEN}県内で行けるイベント・祭り・マルシェ・展示{n}件を、土曜・日曜・両日に分けてまとめました。"
+            "毎日更新、主催者や自治体などの出典つき。")
+    body = []
+    for head, its in ((f"{f(sat)}・{f(sun)} の両日", both), (f"{f(sat)} だけ", only_sat),
+                      (f"{f(sun)} だけ", only_sun)):
+        if its:
+            body.append(f"<h2>{h(head)}</h2>" + "".join(_page_card(i, today) for i in sorted(its, key=key)))
+    if long_:
+        body.append("<h2>期間中に行ける展示・フェア</h2><p class=\"muted\">1週間以上つづく催しです。</p>"
+                    + "".join(_page_card(i, today) for i in sorted(long_, key=lambda it: _span(it)[1])))
+    if not body:
+        body.append("<p>この土日の催しは、まだ集まっていません。月別のページもご覧ください。</p>")
+    months = sorted({f"{d.year}-{d.month:02d}" for d in (sat, sun)})
+    links = " ・ ".join(f'<a href="../month/{k}/">{_month_label(k)}の{h(KEN)}のイベント</a>'
+                       for k in months if (MONTH_DIR / k).is_dir())
+    crumbs = {"@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": f"{SITE}/"},
+        {"@type": "ListItem", "position": 2, "name": f"今週末の{KEN}のイベント", "item": url}]}
+    allev = sorted(both, key=key) + sorted(only_sat, key=key) + sorted(only_sun, key=key) + long_
+    graph = [crumbs] + ([{"@type": "ItemList", "name": f"今週末の{KEN}のイベント", "numberOfItems": len(allev),
+                           "itemListElement": [{"@type": "ListItem", "position": i, "item": _event_ld(it, url)}
+                                               for i, it in enumerate(allev, start=1)]}] if allev else [])
+    ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False).replace("</", "<\\/")
+    main = f"""<h1>今週末の{h(KEN)}のイベント（{h(f(sat))}・{h(f(sun))}）</h1>
+<div class="lead">
+<p>この土日に{h(KEN)}県内で行けるイベントを、両日・土曜だけ・日曜だけに分けてまとめました。全{n}件です。</p>
+<p class="muted">日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・自治体などの公式）で必ず確かめてください。最終更新：{today.year}年{today.month}月{today.day}日</p>
+</div>
+{"".join(body)}
+<nav class="months">{links}</nav>
+<p><a href="../">新しいお店・ほかの日のイベントを見る（{h(SITE_NAME)}）</a></p>
+"""
+    return _shell(title, desc, url, ld, main, "../")
 
 
 def write_months(data: dict, today: date) -> list[str]:
@@ -777,6 +856,8 @@ a {{ color: #1f7a57; font-weight: 700; }}
 def write_static(data: dict, today: date) -> None:
     months = write_months(data, today)
     (ROOT / "docs" / "404.html").write_text(render_404(months, today), encoding="utf-8")
+    WEEKEND_DIR.mkdir(parents=True, exist_ok=True)
+    (WEEKEND_DIR / "index.html").write_text(render_weekend(data, today), encoding="utf-8")
     html_text = INDEX.read_text(encoding="utf-8")
     a, b = html_text.find(MARK_START), html_text.find(MARK_END)
     if a < 0 or b < 0:
@@ -785,11 +866,12 @@ def write_static(data: dict, today: date) -> None:
         html_text = html_text[:a] + prerender(data, today) + html_text[b + len(MARK_END):]
     ma, mb = html_text.find(MONTHS_MARK[0]), html_text.find(MONTHS_MARK[1])
     if ma >= 0 and mb >= 0:
-        links = "".join(f'<a href="./month/{k}/">{_month_label(k)}のイベント</a><br>' for k in months)
+        links = '<a href="./weekend/">今週末のイベント</a><br>' + "".join(f'<a href="./month/{k}/">{_month_label(k)}のイベント</a><br>' for k in months)
         html_text = html_text[:ma] + MONTHS_MARK[0] + links + html_text[mb:]
     INDEX.write_text(html_text, encoding="utf-8")
     lastmod = data.get("updated") or today.isoformat()
-    urls = [(f"{SITE}/", lastmod, "daily"), (f"{SITE}/about/", "2026-10-04", "monthly")]
+    urls = [(f"{SITE}/", lastmod, "daily"), (f"{SITE}/weekend/", today.isoformat(), "daily"),
+            (f"{SITE}/about/", "2026-10-04", "monthly")]
     urls += [(f"{SITE}/month/{k}/", lastmod, "daily") for k in months]
     SITEMAP.write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'

@@ -13,6 +13,10 @@ on:
       - "scripts/おでかけ_宿.py"
       - "scripts/宿.py"
   workflow_dispatch:
+  # 今週末のページ・終わった催しは日付で変わるので、毎日作り直す（2026-10-20 SEO）。
+  # GitHub の schedule は遅れることがあるが、AI を使わない作業なので遅れても困らない。0:05 JST
+  schedule:
+    - cron: "5 15 * * *"
 
 permissions:
   contents: write
@@ -41,4 +45,7 @@ jobs:
           # 月別ページは増えたり消えたりするので、新しいファイルも差分に出るようにしてから
           if [ -d docs/month ]; then git add -N docs/month; fi
           ./scripts/commit_file.sh docs/month "chore(odekake): 月別ページを更新"
+          # 今週末のページ・404（2026-10-20 SEO）
+          ./scripts/commit_file.sh docs/weekend "chore(odekake): 今週末のページを更新"
+          ./scripts/commit_file.sh docs/404.html "chore(odekake): 404 ページを更新"
           ./scripts/commit_file.sh docs/hotels.json "chore(odekake): 宿のデータを更新"
