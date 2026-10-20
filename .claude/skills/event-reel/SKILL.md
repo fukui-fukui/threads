@@ -51,7 +51,8 @@ description: ふくいおでかけの「来週末の福井おでかけ3選」リ
 - プロンプトの例：`Vertical photo of a cozy autumn food festival in a Japanese city plaza, steaming bowls of soba on wooden tables in the lower half, clear evening sky in the upper third, warm light, photorealistic, no text, no letters, no logos, no recognizable faces`
 - 出来を見て、文字・ロゴ・顔が出ていたら作り直す。
 - **画像の段階で代表の OK をもらい、OK が出てから動画に進む**（代表 10/20「画像生成の段階で確認をとって、OKがでたら動画に進むようにしてください」）。
-  - 3枚をスクラッチに落とし（Runway の画像 URL は署名つきなので、ログや連絡に URL を貼らない）、代表に見せる。代表と直接話しているときはファイルを送り、そうでなければ統括に送って見せてもらう。
+  - 3枚をスクラッチに落とし（Runway の画像 URL は署名つきなので、ログや連絡に URL を貼らない）、**統括に送って代表に見せてもらう**（代表 10/21：代表の許可（許可の画面・「進めて」・画像や動画の OK）が要るときは、必ず統括へ。何を・なぜ・お金に関わるかを書く。許可の画面で止まったときも、すぐ統括に「止まった・何の許可か」を送る）。
+  - 見せ方：3枚を横に並べた1枚（`ffmpeg -i 1.png -i 2.png -i 3.png -filter_complex "[0]scale=360:-1[a];[1]scale=360:-1[b];[2]scale=360:-1[c];[a][b][c]hstack=3" -q:v 4 画像3枚.jpg`、100KB くらい）を Google ドライブ AI会社/連絡 に置き、そのリンクを統括に送る。
   - 直しの指示があれば、その画像だけ作り直してまた見せる（作り直しのクレジットも記録する）。
   - OK の言葉はそのまま記録に残す。OK が出るまで generate_video は呼ばない。
 
