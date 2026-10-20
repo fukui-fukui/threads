@@ -394,3 +394,16 @@ class SpotPageTest(unittest.TestCase):
         self.assertLess(html.index("これからオープン"), html.index("2026年10月にオープン"))
         self.assertIn("お店の Instagram を見る", html)
         self.assertIn('"@type": "LocalBusiness"', html)
+
+
+class AreaPageTest(unittest.TestCase):
+    def test_area_items_skip_ended_and_old(self):
+        ev = lambda s, e, a: {"kind": "催し", "start": s, "end": e, "area": a, "text": f"{s}「祭」開催", "note": "", "source": None}
+        data = {"items": [ev("2026-10-01", "2026-10-02", "福井市"), ev("2026-10-24", "2026-10-24", "福井市"),
+                          {"kind": "スポット", "start": "2026-10-01", "end": "2026-10-01", "area": "福井市",
+                           "text": "「店」がオープン", "note": "", "source": None}]}
+        g = odekake._area_items(data, date(2026, 10, 20))
+        self.assertEqual((len(g["福井市"]["events"]), len(g["福井市"]["shops"])), (1, 1))
+        html = odekake.render_area("福井市", g["福井市"], date(2026, 10, 20))
+        self.assertIn('<link rel="canonical" href="https://odekake.fukui-fukui.com/area/%E7%A6%8F%E4%BA%95%E5%B8%82/">', html)
+        self.assertIn("今週末", html)
