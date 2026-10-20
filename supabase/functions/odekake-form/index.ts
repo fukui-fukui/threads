@@ -133,6 +133,18 @@ Deno.serve(async (req) => {
     try { return reply(origin, 200, { ok: true, results: await pay.selftest() }); }
     catch (e) { return reply(origin, 500, { error: String(e).slice(0, 200) }); }
   }
+  if (type === "testhold") {
+    // 試験だけ：申し込みに試験の仮押さえを付けて authorized にし、受付メールを送る（confirm の代わり）
+    if (!testing) return reply(origin, 403, { error: "token" });
+    const n = String(form.get("n") ?? "");
+    const { data: r } = await db.from("odekake_submissions").select("*").eq("number", n).eq("status", "pending_payment").maybeSingle();
+    if (!r) return reply(origin, 404, { error: "number" });
+    const pi = await pay.testHold(n);
+    await db.from("odekake_submissions").update({ status: "authorized", payment_intent: pi, authorized_at: now() }).eq("number", n);
+    const sent = await mail.send(mail.submissionReceived(r));
+    if (sent) await db.from("odekake_submissions").update({ mail_sent_at: now() }).eq("number", n);
+    return reply(origin, 200, { ok: true, number: n, payment_intent: pi, mail: sent });
+  }
   if (type === "process") {
     // 毎朝の作業だけが呼べるように、運営だけが読める表の合言葉と照らす（新しい鍵を増やさないため）
     if (!trusted) return reply(origin, 403, { error: "token" });

@@ -52,7 +52,9 @@ export function checkoutBody(o: { number: string; region: string; siteName: stri
     expires_at: Math.floor(Date.now() / 1000) + 30 * 60,   // 30分で切れる（Stripe の下限）
     line_items: { 0: { quantity: 1, price_data: { currency: "jpy", unit_amount: AMOUNT,
       product_data: { name: `イベント掲載（${o.siteName}）`, description: `申込番号 ${o.number}：${o.eventName}`.slice(0, 200) } } } },
-    // 支払い方法は Stripe の設定（Managed Payments）に任せる。指定すると 400 になる（2026-10-20 試験で確認）
+    // Managed Payments（Stripe が売り手になる仕組み）は使わない。販売事業者はふくふくプロジェクト（2026-10-21 代表）
+    managed_payments: { enabled: "false" },
+    payment_method_types: { 0: "card" },
     payment_intent_data: { capture_method: "manual", description: `イベント掲載 ${o.number}`,
       metadata: { number: o.number, region: o.region } },
     metadata: { number: o.number, region: o.region, kind: "odekake-submission" },
@@ -104,4 +106,14 @@ export async function selftest() {
     out.push(row);
   }
   return out;
+}
+
+/** 試験だけ：支払い画面を通さずに、試験のカードで仮押さえを1つ作る（支払い画面を開けない環境での通しの試験用） */
+export async function testHold(number: string): Promise<string> {
+  if (!test) throw new Error("testHold is test-mode only");
+  const pi = await api("POST", "payment_intents", { amount: AMOUNT, currency: "jpy", capture_method: "manual", confirm: "true",
+    payment_method: "pm_card_visa", payment_method_types: { 0: "card" }, description: `イベント掲載 ${number}（試験）`,
+    metadata: { number } });
+  if (pi.status !== "requires_capture") throw new Error(`hold ${pi.status}`);
+  return String(pi.id);
 }
