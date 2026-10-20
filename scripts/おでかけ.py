@@ -982,6 +982,9 @@ def write_areas(data: dict, today: date) -> list[str]:
 # 受け取りは Supabase の Edge Function odekake-form（ソースは supabase/functions/odekake-form）。
 # ロボットよけ（Cloudflare Turnstile）は、region.json の "Turnstile"（サイトキー。公開してよい鍵）があるときだけ出す。
 # 秘密鍵は代表が Supabase に直接登録する（リポジトリ・チャットに書かない）。
+# 有料掲載で提供する内容（2026-10-20 代表の文。特商法の表記・申し込みフォームで同じ文を使う）
+PAID_OFFER = (f"「{SITE_NAME}」PR枠への掲載（最長30日）、Threads での紹介（掲載を始めたとき・毎週1回・開催の前日と当日）、"
+              "AI で作る紹介動画（1回）。表示や投稿には「PR」と付きます。")
 FORM_URL = "https://zynxnpwwmrxzyljrsmbs.supabase.co/functions/v1/odekake-form"
 CONTACT_DIR = ROOT / "docs" / "contact"
 SUBMIT_DIR = ROOT / "docs" / "submit"
@@ -1070,6 +1073,7 @@ def render_submit(today: date) -> str:
 <div class="lead">
 <p><b>主催者の方からのみ受け付けます。</b></p>
 <p>いただいた情報は、主催者などの公式の案内で確かめてから掲載します。掲載できる場合は、お支払いのご案内をメールでお送りします。</p>
+<p>掲載の内容：{h(PAID_OFFER)}料金は 1件 5,500円（税込）です。</p>
 <p>お支払いのあとの返金は、原則できません。事情がある場合は、<a href="../contact/">お問い合わせ</a>から運営へご連絡ください。料金などは<a href="../tokushoho/">特定商取引法に基づく表記</a>をご覧ください。</p>
 <p class="muted">{h(PRIVACY_FORM)}</p>
 </div>
@@ -1117,8 +1121,7 @@ def render_tokushoho(today: date) -> str:
         ("電話番号", "請求があった場合には遅滞なく開示します"),
         ("メールアドレス", TOKUSHOHO_MAIL),
         ("販売価格", "イベント掲載 1件 5,500円（税込）"),
-        ("提供する内容", f"{SITE_NAME}のトップへの掲載（最長30日）、Threads での紹介（掲載を始めたとき・毎週1回・開催の前日と当日）、"
-                         "AI で作る紹介動画（週1回）。表示や投稿には「PR」と付けます"),
+        ("提供する内容", PAID_OFFER),
         ("商品代金以外の必要料金", "なし（インターネット接続にかかる通信料はお客様のご負担です）"),
         ("掲載の可否", "お申し込みの内容は、主催者などの公式の案内で確かめてから掲載します。掲載できない場合は、お支払いの前にご連絡します"),
         ("支払方法", "クレジットカード（Stripe による決済）"),
