@@ -4,6 +4,7 @@ from pathlib import Path as _P
 # 福井のデータで書いたテストなので、どの県のリポジトリでも福井の設定で走らせる
 os.environ["REGION_FILE"] = str(_P(__file__).resolve().parent / "region_fukui.json")
 import importlib.util
+import re
 import unittest
 from datetime import date
 from pathlib import Path
@@ -334,3 +335,16 @@ class TitleTest(unittest.TestCase):
 
     def test_period_inside_quote(self):
         self.assertEqual(odekake._title({"text": "金沢に朝ごはん専門店「けれんしあ。」がオープン"}), "けれんしあ。")
+
+
+class EventLdTest(unittest.TestCase):
+    def test_month_page_has_event_list_and_anchors(self):
+        import json as _json
+        ev = {"kind": "催し", "start": "2026-10-24", "end": "2026-10-24", "area": "福井市",
+              "text": "10/24 福井市で「テスト祭」開催", "note": "", "source": "https://example.com/a"}
+        html = odekake.render_month("2026-10", {"short": [ev], "long": []}, ["2026-10"], date(2026, 10, 4))
+        ld = _json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1))
+        item = ld["@graph"][1]["itemListElement"][0]["item"]
+        self.assertEqual((item["@type"], item["name"], item["startDate"]), ("Event", "テスト祭", "2026-10-24"))
+        self.assertEqual(item["location"]["address"]["addressRegion"], "福井県")
+        self.assertIn(f'<article id="{odekake._anchor(ev)}"', html)

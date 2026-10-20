@@ -554,6 +554,37 @@ def _month_label(key: str) -> str:
     return f"{int(y)}年{int(m)}月"
 
 
+def _anchor(it: dict) -> str:
+    """催し1件ごとのページ内リンク（#e-…）。本文から作るので、毎朝作り直しても変わらない。"""
+    import hashlib
+    return "e-" + hashlib.sha1(it["text"].encode("utf-8")).hexdigest()[:8]
+
+
+def _event_ld(it: dict, page_url: str) -> dict:
+    """構造化データの Event。書くのはネタ帳にある事実（名前・日付・市町・出典）だけ。"""
+    sp = _span(it)
+    region = f"{KEN}県" if "・" not in KEN else None
+    addr = {"@type": "PostalAddress", "addressCountry": "JP"}
+    if it.get("area"):
+        addr["addressLocality"] = it["area"]
+    if region:
+        addr["addressRegion"] = region
+    ev = {
+        "@type": "Event",
+        "name": _title(it),
+        "startDate": sp[0].isoformat(),
+        "endDate": sp[1].isoformat(),
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "location": {"@type": "Place", "name": it.get("area") or KEN, "address": addr},
+        "description": it["text"][:200],
+        "url": f"{page_url}#{_anchor(it)}",
+    }
+    if it.get("source"):
+        ev["sameAs"] = it["source"]
+    return ev
+
+
 def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
     from collections import Counter
     from html import escape as h
@@ -577,7 +608,7 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
         site = (it.get("og") or {}).get("site") or "出典"
         cls = ' class="ended"' if ended else ""
         mark = "<small>終了</small>" if ended else ""
-        out = [f"<article{cls}><h3>{h(_title(it))}{mark}</h3>"]
+        out = [f'<article id="{_anchor(it)}"{cls}><h3>{h(_title(it))}{mark}</h3>']
         if meta:
             out.append(f'<p class="meta">{h(meta)}</p>')
         out.append(f"<p>{h(it['text'])}</p>")
@@ -602,9 +633,15 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
                     "<p class=\"muted\">1週間以上つづく催しです。期間中の好きな日に行けます。</p>"
                     + "".join(card(i) for i in long_))
     nav = " ・ ".join(f'<a href="../{k}/">{_month_label(k)}</a>' if k != key else f"<b>{_month_label(k)}</b>" for k in keys)
-    ld = json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+    crumbs = {"@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": f"{SITE}/"},
-        {"@type": "ListItem", "position": 2, "name": f"{KEN}のイベント {label}", "item": url}]}, ensure_ascii=False)
+        {"@type": "ListItem", "position": 2, "name": f"{KEN}のイベント {label}", "item": url}]}
+    # 催しの一覧（ItemList の中に Event）。Google のイベントの欄に出るように（2026-10-20 代表 OK）
+    events = [{"@type": "ListItem", "position": n, "item": _event_ld(it, url)}
+              for n, it in enumerate(short + long_, start=1)]
+    graph = [crumbs] + ([{"@type": "ItemList", "name": f"{KEN}のイベント {label}", "numberOfItems": len(events),
+                           "itemListElement": events}] if events else [])
+    ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False).replace("</", "<\\/")
     return f"""<!doctype html>
 <html lang="ja">
 <head>
