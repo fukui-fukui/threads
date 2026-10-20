@@ -687,13 +687,17 @@ form.f button:disabled {{ opacity: .5; }}
 form.f .hp {{ position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }}
 .msg {{ margin-top: 16px; padding: 12px 16px; border-radius: 12px; background: var(--surface); }}
 .msg.err {{ border: 1.5px solid #d9473a; }}
+table.toku {{ width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 14px; overflow: hidden; margin-top: 16px; font-size: .92rem; }}
+table.toku th, table.toku td {{ text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }}
+table.toku th {{ width: 34%; color: var(--muted); font-weight: 700; }}
+@media (max-width: 520px) {{ table.toku th, table.toku td {{ display: block; width: auto; }} table.toku th {{ border-bottom: 0; padding-bottom: 0; }} }}
 </style>
 </head>
 <body>
 <header><a href="{up}">← {h(SITE_NAME)}</a></header>
 <main>
 {main}</main>
-<footer>Threads <a href="https://www.threads.com/@{h(ACCOUNT)}" rel="noopener">@{h(ACCOUNT)}</a> が集めた{h(KEN)}の情報をまとめています。<br><a href="{up}about/">運営者情報・編集方針・プライバシー</a>{f' ・ <a href="{up}contact/">お問い合わせ</a>' if _uses("問い合わせ") else ""}</footer>
+<footer>Threads <a href="https://www.threads.com/@{h(ACCOUNT)}" rel="noopener">@{h(ACCOUNT)}</a> が集めた{h(KEN)}の情報をまとめています。<br><a href="{up}about/">運営者情報・編集方針・プライバシー</a>{f' ・ <a href="{up}contact/">お問い合わせ</a>' if _uses("問い合わせ") else ""}{f' ・ <a href="{up}tokushoho/">特定商取引法に基づく表記</a>' if _uses("特商法") else ""}</footer>
 {CF_BEACON}
 </body>
 </html>
@@ -1096,6 +1100,44 @@ def render_submit(today: date) -> str:
     return _shell(title, desc, url, ld, main, "../")
 
 
+# ---- 特定商取引法に基づく表記（2026-10-20 代表。事業者の情報はふくいエキマエの表記と同じ） ----
+TOKUSHOHO_DIR = ROOT / "docs" / "tokushoho"
+TOKUSHOHO_MAIL = "yasu29fr@gmail.com"   # エキマエの表記と同じ、公開している連絡先
+
+
+def render_tokushoho(today: date) -> str:
+    from html import escape as h
+    url = f"{SITE}/tokushoho/"
+    title = f"特定商取引法に基づく表記｜{SITE_NAME}"
+    desc = f"{SITE_NAME}のイベント掲載（有料）についての、特定商取引法に基づく表記です。"
+    rows = [
+        ("販売事業者", "ふくふくプロジェクト"),
+        ("運営責任者", "請求があった場合には遅滞なく開示します"),
+        ("所在地", "請求があった場合には遅滞なく開示します"),
+        ("電話番号", "請求があった場合には遅滞なく開示します"),
+        ("メールアドレス", TOKUSHOHO_MAIL),
+        ("販売価格", "イベント掲載　1件 5,000円（税別）／税込 5,500円"),
+        ("提供する内容", f"{SITE_NAME}のトップへの掲載（最長30日）、Threads での紹介（掲載を始めたとき・毎週1回・開催の前日と当日）、"
+                         "AI で作る紹介動画（週1回）。表示や投稿には「PR」と付けます"),
+        ("商品代金以外の必要料金", "なし（インターネット接続にかかる通信料はお客様のご負担です）"),
+        ("掲載の可否", "お申し込みの内容は、主催者などの公式の案内で確かめてから掲載します。掲載できない場合は、お支払いの前にご連絡します"),
+        ("支払方法", "クレジットカード（Stripe による決済）"),
+        ("支払時期", "掲載のご案内（お支払いのリンク）をお送りしてから7日以内に、1回でお支払いください"),
+        ("サービスの提供時期", "お支払いを確かめてから3日以内に掲載を始めます"),
+        ("返金について", "サービスの性質上、お支払い済みの料金の返金はいたしません。ただし、当方の責による不具合で掲載できなかった場合はこの限りではありません。"
+                       "催しの中止・延期など事情がある場合は、お問い合わせフォームからご相談ください"),
+        ("動作環境", "最新版の主要なブラウザ（Safari・Chrome・Edge など）"),
+    ]
+    dl = "".join(f"<tr><th>{h(k)}</th><td>{h(v)}</td></tr>" for k, v in rows)
+    main = f"""<h1>特定商取引法に基づく表記</h1>
+<div class="lead"><p>{h(SITE_NAME)}のイベント掲載（有料）についての表記です。掲載のお申し込みは、主催者の方からのみ受け付けます。</p></div>
+<table class="toku">{dl}</table>
+<p><a href="../contact/">お問い合わせ</a> ・ <a href="../about/">運営者情報・編集方針・プライバシー</a></p>
+"""
+    ld = json.dumps({"@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url}, ensure_ascii=False)
+    return _shell(title, desc, url, ld, main, "../")
+
+
 def write_months(data: dict, today: date) -> list[str]:
     # 前に作った月（docs/month/ にあるもの）は、過ぎても作り直して残す。消さない
     made = {d.name for d in MONTH_DIR.iterdir() if d.is_dir()} if MONTH_DIR.exists() else set()
@@ -1153,6 +1195,9 @@ def write_static(data: dict, today: date) -> None:
     if _uses("問い合わせ"):
         CONTACT_DIR.mkdir(parents=True, exist_ok=True)
         (CONTACT_DIR / "index.html").write_text(render_contact(today), encoding="utf-8")
+    if _uses("特商法"):
+        TOKUSHOHO_DIR.mkdir(parents=True, exist_ok=True)
+        (TOKUSHOHO_DIR / "index.html").write_text(render_tokushoho(today), encoding="utf-8")
     if _uses("掲載申し込み"):
         SUBMIT_DIR.mkdir(parents=True, exist_ok=True)
         (SUBMIT_DIR / "index.html").write_text(render_submit(today), encoding="utf-8")

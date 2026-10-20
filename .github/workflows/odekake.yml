@@ -51,4 +51,5 @@ jobs:
           ./scripts/commit_file.sh docs/spot "chore(odekake): 新しいお店のページを更新"
           ./scripts/commit_file.sh docs/area "chore(odekake): 市町別のページを更新"
           ./scripts/commit_file.sh docs/contact "chore(odekake): 問い合わせのページを更新"
+          ./scripts/commit_file.sh docs/tokushoho "chore(odekake): 特商法の表記を更新"
           ./scripts/commit_file.sh docs/hotels.json "chore(odekake): 宿のデータを更新"
