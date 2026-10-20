@@ -40,3 +40,12 @@
 - **料金の表示**（代表 10/20）：「イベント掲載 1件 5,500円（税込）」（特商法の表記・フォーム・決済リンクをこの表記にそろえる）
 - **決済リンク**（代表 10/20 作成）：リンクそのものは公開のリポジトリ・サイトに書かない。非公開の置き場 fukui-fukui/odekake-data の `有料案件/決済リンク.md` にある。代表が承認した申し込みにだけ、末尾に `?client_reference_id=<申込番号>` を付けて代表の Gmail の下書きで送る
 - **受付**：サイトのフォーム（Supabase に保存し、ダッシュボードの「判断待ち」に出す）。主催者からのみ受け付ける。チラシの画像・PDF を受け付け、「提供された画像・チラシを掲載・投稿に使ってよい」の同意を取る。掲載の申し込みフォームは、特商法の表記の中身が決まるまで公開しない
+
+## Supabase の表の決まり（2026-10-20）
+
+おでかけの受付・仮押さえの表は、エキマエと同じ Supabase（fukui-ekimae）に置いている。マイグレーションは fukui-fukui/threads の supabase/migrations/。
+
+- **新しい表を作るマイグレーションには、必要な GRANT を同じ中に書く**（Supabase は 2026-10-30 から、public の新しい表に Data API の権限を自動で付けない。db reset・preview branch も同じ）
+- 必要な分だけ：サイトから直接読み書きしない表は anon に何も与えない。書き込みは Edge Function（service_role）。運営が読む表は authenticated に select・update を与え、行は RLS（is_admin）で絞る
+- 例：supabase/migrations/0003_odekake_grants.sql
+
