@@ -52,7 +52,7 @@ export function checkoutBody(o: { number: string; region: string; siteName: stri
     expires_at: Math.floor(Date.now() / 1000) + 30 * 60,   // 30分で切れる（Stripe の下限）
     line_items: { 0: { quantity: 1, price_data: { currency: "jpy", unit_amount: AMOUNT,
       product_data: { name: `イベント掲載（${o.siteName}）`, description: `申込番号 ${o.number}：${o.eventName}`.slice(0, 200) } } } },
-    payment_method_types: { 0: "card" },
+    // 支払い方法は Stripe の設定（Managed Payments）に任せる。指定すると 400 になる（2026-10-20 試験で確認）
     payment_intent_data: { capture_method: "manual", description: `イベント掲載 ${o.number}`,
       metadata: { number: o.number, region: o.region } },
     metadata: { number: o.number, region: o.region, kind: "odekake-submission" },
@@ -93,7 +93,11 @@ export async function selftest() {
       const b = await mk();
       const x = await api("POST", `payment_intents/${b.id}/cancel`, {});
       row.canceled = x.status;
-      row.charge_after_cancel = x.latest_charge ?? null;
+      // 取り消したとき、売上（balance_transaction）と手数料が出ていないか
+      if (x.latest_charge) {
+        const xc = await api("GET", `charges/${x.latest_charge}?expand[]=balance_transaction`);
+        row.cancel_charge = { captured: xc.captured, amount_captured: xc.amount_captured, fee: xc.balance_transaction?.fee ?? 0 };
+      }
     } catch (e) {
       row.error = String(e).slice(0, 200);
     }
