@@ -381,3 +381,16 @@ class WeekendTest(unittest.TestCase):
         self.assertIn("日曜会", html)
         self.assertNotIn("飛び市", html)
         self.assertIn('<link rel="canonical" href="https://odekake.fukui-fukui.com/weekend/">', html)
+
+
+class SpotPageTest(unittest.TestCase):
+    def test_spot_page_lists_recent_shops_newest_first(self):
+        sp = lambda d, name: {"kind": "スポット", "start": d, "end": d, "area": "福井市", "text": f"「{name}」がオープン",
+                              "note": "", "source": None, "instagram": "https://www.instagram.com/x/"}
+        data = {"items": [sp("2026-10-01", "新しい店"), sp("2026-10-30", "これから店"), sp("2025-01-01", "古い店")]}
+        html = odekake.render_spot(data, date(2026, 10, 20))
+        self.assertIn("これから店", html)
+        self.assertNotIn("古い店", html)
+        self.assertLess(html.index("これからオープン"), html.index("2026年10月にオープン"))
+        self.assertIn("お店の Instagram を見る", html)
+        self.assertIn('"@type": "LocalBusiness"', html)
