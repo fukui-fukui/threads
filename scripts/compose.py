@@ -154,7 +154,8 @@ def サイトへの返信(hour: int, d, post_id: str) -> str | None:
         return None
     # 金曜 19:00（石川・ぎふあいちは今週末まとめ。福井はふつうの紹介でも、週末前に今週末へ案内する）
     if d.weekday() == 4 and hour == WEEKEND_HOUR:
-        url, 文, camp = f"{site}/", f"今週末のほかの催しも、日付・市町で探せます", "weekend"
+        週末 = (Path(__file__).resolve().parent.parent / "docs" / "weekend").is_dir()
+        url, 文, camp = f"{site}/weekend/" if 週末 else f"{site}/", f"今週末の{地域.県名}のイベントを、土日に分けてまとめています", "weekend"
     elif hour == 6 and d.weekday() in (0, 2):
         月 = f"{d.year}-{d.month:02d}"
         if (Path(__file__).resolve().parent.parent / "docs" / "month" / 月).is_dir():

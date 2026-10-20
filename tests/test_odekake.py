@@ -362,3 +362,22 @@ class MergeSameEventTest(unittest.TestCase):
         self.assertEqual(names.count("かに祭り"), 1)
         self.assertEqual(names.count("テント市"), 2)
         self.assertEqual([i["written"] for i in items if odekake._title(i) == "台南美食フェア"], ["2026-10-15"])
+
+
+class WeekendTest(unittest.TestCase):
+    def test_weekend_of(self):
+        for d in (date(2026, 10, 19), date(2026, 10, 23), date(2026, 10, 24), date(2026, 10, 25)):
+            self.assertEqual(odekake.weekend_of(d), (date(2026, 10, 24), date(2026, 10, 25)))
+
+    def test_weekend_page_splits_days(self):
+        ev = lambda s, e, name, **k: {"kind": "催し", "start": s, "end": e, "area": "福井市",
+                                      "text": f"「{name}」開催", "note": "", "source": None, **k}
+        data = {"items": [ev("2026-10-24", "2026-10-25", "両日祭"), ev("2026-10-24", "2026-10-24", "土曜市"),
+                          ev("2026-10-17", "2026-10-31", "飛び市", days=["2026-10-17", "2026-10-31"]),
+                          ev("2026-10-25", "2026-10-25", "日曜会")]}
+        html = odekake.render_weekend(data, date(2026, 10, 20))
+        self.assertIn("両日祭", html)
+        self.assertIn("土曜市", html)
+        self.assertIn("日曜会", html)
+        self.assertNotIn("飛び市", html)
+        self.assertIn('<link rel="canonical" href="https://odekake.fukui-fukui.com/weekend/">', html)
