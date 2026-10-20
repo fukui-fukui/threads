@@ -687,6 +687,10 @@ form.f button:disabled {{ opacity: .5; }}
 form.f .hp {{ position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }}
 .msg {{ margin-top: 16px; padding: 12px 16px; border-radius: 12px; background: var(--surface); }}
 .msg.err {{ border: 1.5px solid #d9473a; }}
+form.f .req {{ display: inline-block; margin-left: 8px; font-size: .7rem; font-weight: 700; color: #fff; background: #d9473a; border-radius: 4px; padding: 0 6px; vertical-align: 2px; white-space: nowrap; flex: none; align-self: flex-start; margin-top: .3em; }}
+form.f .bad {{ border-color: #d9473a !important; outline: 2px solid #d9473a33; }}
+form.f label.check.bad {{ border: 1.5px solid #d9473a; border-radius: 8px; padding: 4px 6px; }}
+form.f .ferr {{ color: #d9473a; font-size: .85rem; font-weight: 700; margin: 4px 0 0; }}
 table.toku {{ width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 14px; overflow: hidden; margin-top: 16px; font-size: .92rem; }}
 table.toku th, table.toku td {{ text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }}
 table.toku th {{ width: 34%; color: var(--muted); font-weight: 700; }}
@@ -997,10 +1001,13 @@ def _uses(name: str) -> bool:
 
 
 def _form_script(kind: str) -> str:
-    """送信の JS。成功したら中身を消して、お礼を出す。"""
+    """送信の JS。足りない欄・おかしい欄を、名前つきで欄のすぐ下と送信の下に出す（2026-10-20 代表「わかりにくい」）。
+    必須の欄には「必須」の印。入力し終えた欄から確かめる。エラーのあとも入力とチラシは消さない。成功したらお礼を出す。"""
     sitekey = 地域.地域.get("Turnstile", "")
     ts = ('<div class="cf-turnstile" data-sitekey="' + sitekey + '" data-language="ja"></div>'
           '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>') if sitekey else ""
+    done = ('"受け付けました。申込番号：" + (j.number || "") + "。公式の案内で確かめてから、メールでご連絡します。"'
+            if kind == "submission" else '"送信しました。ありがとうございます。お返事が必要な内容には、メールでご連絡します。"')
     return ts + f"""<button type="submit">送信する</button>
 <div class="msg" id="msg" hidden></div>
 </form>
@@ -1008,24 +1015,82 @@ def _form_script(kind: str) -> str:
 (() => {{
   const f = document.getElementById("f"), msg = document.getElementById("msg");
   f.opened.value = Date.now();
-  const say = (t, err) => {{ msg.hidden = false; msg.className = "msg" + (err ? " err" : ""); msg.textContent = t; }};
-  const NAMES = {{ email: "メールアドレス", contact_email: "メールアドレス", official_url: "公式の URL", date_from: "開催日",
-    flyer: "チラシ（5MB までの JPEG・PNG・WebP・PDF）", message: "内容", body: "内容", url: "URL の数" }};
+  const say = (t, err) => {{ msg.hidden = false; msg.className = "msg" + (err ? " err" : ""); msg.replaceChildren();
+    for (const line of [].concat(t)) {{ const p = document.createElement("div"); p.textContent = line; msg.append(p); }} }};
+  const fields = [...f.querySelectorAll("input:not([type=hidden]),textarea,select")].filter((x) => !x.closest(".hp"));
+  // 欄の名前（ラベルの文字から「（あれば…）」などの小さな字を除いたもの）
+  const nameOf = (x) => {{
+    const lab = x.id && f.querySelector(`label[for="${{x.id}}"]`) || x.closest("label");
+    if (!lab) return "入力";
+    const c = lab.cloneNode(true); c.querySelectorAll("small,.req,input").forEach((n) => n.remove());
+    return c.textContent.trim().replace(/\s+/g, " ");
+  }};
+  // 必須の印
+  for (const x of fields) if (x.required) {{
+    const lab = x.id && f.querySelector(`label[for="${{x.id}}"]`) || x.closest("label");
+    if (lab && !lab.querySelector(".req")) {{ const r = document.createElement("span"); r.className = "req"; r.textContent = "必須"; lab.append(r); }}
+  }}
+  const problem = (x) => {{
+    const v = (x.value || "").trim(), n = nameOf(x);
+    if (x.type === "checkbox") return x.required && !x.checked ? `「${{n}}」にチェックを入れてください` : "";
+    if (x.type === "file") {{
+      const file = x.files && x.files[0];
+      if (!file) return "";
+      if (file.size > 5 * 1024 * 1024) return `${{n}}は 5MB までです（いまは ${{(file.size / 1048576).toFixed(1)}}MB）`;
+      if (!/\.(jpe?g|png|webp|pdf)$/i.test(file.name)) return `${{n}}は JPEG・PNG・WebP・PDF のどれかにしてください`;
+      return "";
+    }}
+    if (x.required && !v) return x.tagName === "SELECT" ? `${{n}}を選んでください` : `${{n}}を入れてください`;
+    if (!v) return "";
+    if (x.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]{{2,}}$/.test(v)) return `${{n}}の形が正しくありません（例：name@example.com）`;
+    if (x.type === "url" && !/^https?:\/\/\S+$/.test(v)) return `${{n}}は https:// から始まる URL を入れてください`;
+    if (x.maxLength > 0 && v.length > x.maxLength) return `${{n}}は ${{x.maxLength}} 字までです`;
+    return "";
+  }};
+  const mark = (x, text) => {{
+    const box = x.type === "checkbox" ? x.closest("label") : x;
+    let e = box.nextElementSibling;
+    if (!(e && e.classList.contains("ferr"))) e = null;
+    box.classList.toggle("bad", !!text);
+    if (text) {{
+      if (!e) {{ e = document.createElement("p"); e.className = "ferr"; box.after(e); }}
+      e.textContent = text;
+    }} else if (e) e.remove();
+  }};
+  const check = (x) => {{ const t = problem(x); mark(x, t); return t; }};
+  // 入力し終えた欄から確かめる（触る前の欄は赤くしない）
+  for (const x of fields) {{
+    x.addEventListener(x.type === "checkbox" || x.type === "file" || x.tagName === "SELECT" ? "change" : "blur", () => check(x));
+    x.addEventListener("input", () => {{ if (x.classList.contains("bad") || x.closest(".bad")) check(x); }});
+  }}
+  const fail = (lines, first) => {{
+    say(["送れませんでした。次のところを確かめてください。", ...lines.map((t) => "・" + t)], true);
+    if (first) {{ first.scrollIntoView({{ behavior: "smooth", block: "center" }}); setTimeout(() => first.focus({{ preventScroll: true }}), 300); }}
+  }};
+  const SERVER = {{ fast: "少し時間をおいて、もう一度送ってください。", many: "送信が続いています。1時間ほどおいてから送ってください。",
+    robot: "ロボットよけの確認ができませんでした。もう一度「送信する」を押してください。", agree: "同意の欄にチェックを入れてください。",
+    closed: "いまは受け付けていません。" }};
   f.addEventListener("submit", async (e) => {{
     e.preventDefault();
-    const b = f.querySelector("button"); b.disabled = true; say("送っています…");
+    const bad = fields.map((x) => [x, check(x)]).filter(([, t]) => t);
+    if (bad.length) {{ fail(bad.map(([, t]) => t), bad[0][0]); return; }}
+    const b = f.querySelector("button[type=submit]"); b.disabled = true; say("送っています…");
     try {{
       const r = await fetch("{FORM_URL}", {{ method: "POST", body: new FormData(f) }});
       const j = await r.json().catch(() => ({{}}));
       if (r.ok && j.ok) {{
         f.querySelectorAll("input,textarea,select,button").forEach((x) => (x.disabled = true));
-        say({'"受け付けました。申込番号：" + (j.number || "") + "。公式の案内で確かめてから、メールでご連絡します。"' if kind == "submission" else '"送信しました。ありがとうございます。お返事が必要な内容には、メールでご連絡します。"'});
+        say({done});
         return;
       }}
-      const why = {{ fast: "少し時間をおいて、もう一度送ってください。", many: "送信が続いています。1時間ほどおいてから送ってください。",
-        robot: "ロボットよけの確認ができませんでした。もう一度お試しください。", agree: "同意の欄にチェックを入れてください。",
-        closed: "いまは受け付けていません。" }}[j.error];
-      say(why || (j.field ? `「${{NAMES[j.field] || "入力"}}」を確かめてください。` : "送れませんでした。時間をおいてお試しください。"), true);
+      // ロボットよけの印は1回しか使えないので、作り直してもう一度押せるようにする
+      if (window.turnstile) try {{ window.turnstile.reset(); }} catch (_) {{}}
+      if (j.field) {{
+        const x = f.elements[j.field];
+        const t = x && x.nodeType ? (problem(x) || `${{nameOf(x)}}を確かめてください`) : "入力を確かめてください（URL は4本まで）";
+        if (x && x.nodeType) mark(x, t);
+        fail([t], x && x.nodeType ? x : null);
+      }} else say(SERVER[j.error] || "送れませんでした。時間をおいてお試しください。", true);
     }} catch (_) {{ say("送れませんでした。通信を確かめて、もう一度お試しください。", true); }}
     b.disabled = false;
   }});
