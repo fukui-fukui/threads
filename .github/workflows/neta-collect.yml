@@ -122,6 +122,7 @@ jobs:
           # 今週末のページ・404（2026-10-20 SEO）
           ./scripts/commit_file.sh docs/weekend "chore(odekake): 今週末のページを更新"
           ./scripts/commit_file.sh docs/404.html "chore(odekake): 404 ページを更新"
+          ./scripts/commit_file.sh docs/spot "chore(odekake): 新しいお店のページを更新"
           # 宿のリストは X のリポジトリで更新されるので、毎朝ここで取り直す
           python3 scripts/おでかけ_宿.py --images
           ./scripts/commit_file.sh docs/hotels.json "chore(odekake): 宿のデータを更新"
