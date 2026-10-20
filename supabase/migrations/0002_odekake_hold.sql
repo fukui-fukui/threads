@@ -24,5 +24,7 @@ alter table public.odekake_inquiries
 create table if not exists public.odekake_settings (key text primary key, value text not null);
 alter table public.odekake_settings enable row level security;
 create policy odekake_settings_admin on public.odekake_settings for all using (is_admin()) with check (is_admin());
-insert into public.odekake_settings (key, value) values ('process_token', encode(gen_random_bytes(24), 'hex'))
+insert into public.odekake_settings (key, value) values ('process_token', encode(extensions.gen_random_bytes(24), 'hex'))
 on conflict (key) do nothing;
+-- 仮押さえの切り替え（off：今まで通り／test：試験の鍵／live：本番）。最初は off
+insert into public.odekake_settings (key, value) values ('pay_mode', 'off') on conflict (key) do nothing;

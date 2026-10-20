@@ -8,7 +8,7 @@
 //   ・チラシ：5MB まで、JPEG / PNG / WebP / PDF だけ。拡張子でなく中身の先頭の印で確かめ、非公開の置き場へ
 // 掲載の申し込みは、SUBMISSION_OPEN が true のときだけ受け付ける（2026-10-20 代表：特商法の表記と決済リンクがそろったので開く。
 // 止めるときは false にして載せ直す）。
-// PAY_HOLD が true のとき、申し込みはその場で Stripe の支払い画面（カードの仮押さえ）へ移す（pay.ts）。
+// 仮押さえ（pay_mode が live か、試験の送信）のとき、申し込みはその場で Stripe の支払い画面へ移す（pay.ts）。
 // 受付・確定・取り消し・期限切れのメールは mail.ts。
 //   type=confirm：支払い画面から戻ったとき。Stripe に問い合わせて仮押さえを確かめ、受付メールを送る
 //   type=process：毎朝の作業から呼ぶ。代表の「受ける／受けない」の確定・取り消し、戻らなかった人の確認、期限切れ
@@ -21,7 +21,8 @@ const REGION_OF: Record<string, string> = { [ORIGINS[0]]: "fukui", [ORIGINS[1]]:
 const MAX_FILE = 5 * 1024 * 1024;
 const PER_HOUR = 5;
 const SUBMISSION_OPEN = true;
-const PAY_HOLD = true;
+// 仮押さえは、運営だけが読める表 odekake_settings の pay_mode で切り替える（off／test／live。既定は off）。
+// off のあいだは今まで通り（仮押さえ無し）。試験は、合言葉つきの試験の送信だけを試験の鍵で通す
 
 function cors(origin: string) {
   return {
@@ -120,11 +121,21 @@ Deno.serve(async (req) => {
   }
   const type = String(form.get("type") ?? "");
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const settings = Object.fromEntries(((await db.from("odekake_settings").select("key,value")).data ?? []).map((r) => [r.key, r.value]));
+  // 毎朝の作業・開発の試験だけが知る合言葉（試験の送信は、ロボットよけ・開いてからの時間を通さない）
+  const trusted = !!settings.process_token && String(form.get("token") ?? "") === settings.process_token;
+  const testing = trusted && form.get("test") === "1";
+  pay.useTest(testing || settings.pay_mode === "test");
+  const PAY_HOLD = testing || settings.pay_mode === "live";
   if (type === "confirm") return reply(origin, 200, await confirm(db, String(form.get("n") ?? ""), String(form.get("s") ?? "")));
+  if (type === "selftest") {
+    if (!testing) return reply(origin, 403, { error: "token" });
+    try { return reply(origin, 200, { ok: true, results: await pay.selftest() }); }
+    catch (e) { return reply(origin, 500, { error: String(e).slice(0, 200) }); }
+  }
   if (type === "process") {
     // 毎朝の作業だけが呼べるように、運営だけが読める表の合言葉と照らす（新しい鍵を増やさないため）
-    const { data: t } = await db.from("odekake_settings").select("value").eq("key", "process_token").maybeSingle();
-    if (!t?.value || String(form.get("token") ?? "") !== t.value) return reply(origin, 403, { error: "token" });
+    if (!trusted) return reply(origin, 403, { error: "token" });
     return reply(origin, 200, await process(db));
   }
   if (type !== "inquiry" && type !== "submission") return reply(origin, 400, { error: "type" });
@@ -133,14 +144,14 @@ Deno.serve(async (req) => {
   // 人には見えない欄・開いてからの時間（ロボットは即座に全部埋める）
   if (String(form.get("website") ?? "") !== "") return reply(origin, 200, { ok: true });
   const opened = Number(form.get("opened") ?? 0);
-  if (!opened || Date.now() - opened < 3000) return reply(origin, 400, { error: "fast" });
+  if (!testing && (!opened || Date.now() - opened < 3000)) return reply(origin, 400, { error: "fast" });
   if (form.get("agree") !== "1" || (type === "submission" && form.get("agree_flyer") !== "1")) {
     return reply(origin, 400, { error: "agree" });
   }
 
   const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();
   const secret = Deno.env.get("TURNSTILE_SECRET") ?? "";
-  if (secret && !(await turnstileOk(secret, String(form.get("cf-turnstile-response") ?? ""), ip))) {
+  if (secret && !testing && !(await turnstileOk(secret, String(form.get("cf-turnstile-response") ?? ""), ip))) {
     return reply(origin, 400, { error: "robot" });
   }
 
@@ -269,6 +280,6 @@ async function process(db: DB) {
   }
   let acct = "";
   try { const a = await pay.account(); acct = `${a.id}${a.livemode === false ? "（試験）" : ""}`; } catch (_) { acct = "読めない"; }
-  return { ok: true, account: acct, mode: Deno.env.get("STRIPE_MODE") === "test" ? "test" : "live", ...out };
-  // 申込番号の一覧は、運営だけが読める表にもあるので、ここで返してもよい（呼べるのは合言葉を知る毎朝の作業だけ）
+  // 申込番号の一覧は、運営だけが読める表にもあるので返してよい（呼べるのは合言葉を知る毎朝の作業だけ）
+  return { ok: true, account: acct, mode: pay.isTest() ? "test" : "live", ...out };
 }
