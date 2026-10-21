@@ -56,6 +56,18 @@ form.f .reqnote { font-size: .85rem; color: var(--muted); margin: 8px 0 0; }
 form.f .bad { border-color: #d9473a !important; outline: 2px solid #d9473a33; }
 form.f label.check.bad { border: 1.5px solid #d9473a; border-radius: 8px; padding: 4px 6px; }
 form.f .ferr { color: #d9473a; font-size: .85rem; font-weight: 700; margin: 4px 0 0; }
+form.f .flyer { margin-top: 20px; }
+form.f .flyer input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+form.f label.filebtn { display: flex; align-items: center; gap: 12px; margin: 0; min-height: 64px; padding: 14px 18px; border: 2px dashed var(--main); border-radius: 14px; background: color-mix(in srgb, var(--main) 10%, var(--surface)); color: var(--ink); font-size: 1.05rem; cursor: pointer; }
+form.f label.filebtn .ic { font-size: 1.6rem; line-height: 1; }
+form.f label.filebtn small { display: block; font-size: .8rem; }
+form.f .flyer input[type=file]:focus-visible + label.filebtn { outline: 3px solid var(--main); outline-offset: 2px; }
+form.f .picked { display: flex; align-items: center; gap: 12px; margin-top: 8px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); }
+form.f .picked[hidden] { display: none; }
+form.f .picked img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex: none; }
+form.f .picked .pdf { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 8px; background: var(--bg); font-weight: 800; flex: none; }
+form.f .picked .nm { flex: 1; min-width: 0; font-size: .9rem; overflow-wrap: anywhere; }
+form.f button.clear { margin: 0; padding: 8px 14px; background: transparent; color: var(--ink); border: 1.5px solid var(--line); font-weight: 600; }
 table.toku { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 14px; overflow: hidden; margin-top: 16px; font-size: .92rem; }
 table.toku th, table.toku td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
 table.toku th { width: 34%; color: var(--muted); font-weight: 700; }
