@@ -53,6 +53,14 @@ class リールのテスト(unittest.TestCase):
         self.assertEqual(cmd[i - 3:i - 1], ["-ss", "1.5"])
         self.assertEqual(cmd[cmd.index("/x/2.mp4") - 2], "0")
 
+    def test_静止画はゆっくり寄る動画にする(self):
+        台本3 = {**台本, "scenes": [{**台本["scenes"][0], "clip": "1.png"}, *台本["scenes"][1:]]}
+        with tempfile.TemporaryDirectory() as d:
+            cmd = リール.組み立て(台本3, Path("/x"), Path(d) / "o.mp4", "ig", None, Path(d), dry_run=True)
+        fc = cmd[cmd.index("-filter_complex") + 1]
+        self.assertEqual(fc.count("zoompan"), 2)  # はじめと1場面目
+        self.assertNotIn("[1:v]scale=1440", fc)
+
 
 if __name__ == "__main__":
     unittest.main()

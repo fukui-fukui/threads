@@ -18,7 +18,7 @@
       ... 3つ（start は使い始めの秒。省略すると頭から）
     ]
   }
-  clip は台本.json からの相対パスでもよい。
+  clip は台本.json からの相対パスでもよい。静止画（.png・.jpg）なら、ゆっくり寄る5秒の動画にする。
 
 BGM は公開リポジトリに入れない（代表の手元・Google ドライブ AI会社/BGM から持ってくる）。
 """
@@ -77,6 +77,22 @@ def 正規化() -> str:
     return f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setsar=1,fps={FPS},format=yuv420p"
 
 
+IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp"}
+
+
+def 寄る() -> str:
+    """静止画をゆっくり寄る5秒の動画にする（Vids の上限が少ないとき用。代表 10/22）。"""
+    frames = int(SCENE_SEC * FPS)
+    return (f"scale={W * 2}:{H * 2}:force_original_aspect_ratio=increase,crop={W * 2}:{H * 2},"
+            f"zoompan=z='1+0.08*on/{frames}':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+            f":s={W}x{H}:fps={FPS},")
+
+
+def 元(scenes: list[dict], i: int) -> str:
+    """場面 i の映像の入り口。静止画なら先にゆっくり寄る動画にする。"""
+    return f"[{i}:v]" + (寄る() if Path(scenes[i]["clip"]).suffix.lower() in IMAGE_EXT else "")
+
+
 def 組み立て(台本: dict, base: Path, out: Path, kind: str, bgm: Path | None, tmp: Path,
            dry_run: bool) -> list[str]:
     t = 文字(tmp)
@@ -88,11 +104,15 @@ def 組み立て(台本: dict, base: Path, out: Path, kind: str, bgm: Path | Non
     for s in scenes:
         clip = Path(s["clip"])
         # 代表が Google Vids で作った動画は長いので、使い始めの秒（start）から5秒を使う
-        inputs += ["-ss", str(s.get("start", 0)), "-i", str(clip if clip.is_absolute() else base / clip)]
+        if clip.suffix.lower() in IMAGE_EXT:
+            inputs += ["-loop", "1", "-framerate", str(FPS), "-t", str(SCENE_SEC)]
+        else:
+            inputs += ["-ss", str(s.get("start", 0))]
+        inputs += ["-i", str(clip if clip.is_absolute() else base / clip)]
 
     # はじめ：1本目の絵をぼかして題名
     chains.append(
-        f"[0:v]{正規化()},trim=0:{INTRO_SEC},setpts=PTS-STARTPTS,gblur=sigma=18,"
+        f"{元(scenes, 0)}{正規化()},trim=0:{INTRO_SEC},setpts=PTS-STARTPTS,gblur=sigma=18,"
         "drawbox=x=0:y=0:w=iw:h=ih:color=black@0.35:t=fill,"
         + ",".join([
             t("来週末の福井", 64, "430"),
@@ -106,7 +126,7 @@ def 組み立て(台本: dict, base: Path, out: Path, kind: str, bgm: Path | Non
     # 各場面：上に帯、帯の中に見出し・名前・日にち・場所・見どころ、右下に注記
     for i, s in enumerate(scenes):
         chains.append(
-            f"[{i}:v]{正規化()},trim=0:{SCENE_SEC},setpts=PTS-STARTPTS,"
+            f"{元(scenes, i)}{正規化()},trim=0:{SCENE_SEC},setpts=PTS-STARTPTS,"
             "drawbox=x=0:y=40:w=iw:h=360:color=black@0.45:t=fill,"
             + ",".join([
                 t(f"来週末の福井 おでかけ{n}選 {i + 1}/{n}", 28, "62", box=f"{ORANGE}@1", shadow=False),
