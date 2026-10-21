@@ -106,9 +106,14 @@ def インスタを読む(repo: Path, 出どころ: str, 境目: date) -> list[d
         if 人 and 人 in 中身[:120]:
             中身 = 中身[中身.index(人) + len(人):].strip()
         中身 = 中身[:160]
+        # PR・広告と書かれた投稿は「インスタの引用」にしない（2026-10-21 代表）
+        本文 = str(x.get("本文") or "")
+        引用できる = not re.search(r"(?<![A-Za-z])PR(?![A-Za-z])|＃PR|広告|タイアップ|プロモーション|提供[:：]", 本文)
         出.append({"id": 印(出どころ, "insta", url), "出どころ": 出どころ, "種類": "インスタ（Meta）で読んだ新しい投稿",
                    "日": str(x.get("日付") or 集めた日), "中身": 中身, "理由": f"{x.get('アカウント', '')}の投稿。ネタ帳に入らなかった",
-                   "url": url})
+                   "url": url, "アカウント": 人, "引用できる": 引用できる,
+                   # 運用部のおすすめ（載せる／引用／載せない）と理由は、毎朝の作業が投稿を読んで入れる
+                   "おすすめ": "", "おすすめの理由": ""})
     return 出
 
 
@@ -189,6 +194,42 @@ def 返事を入れる(mine: list[dict], repo: Path) -> list[str]:
     return 済み
 
 
+def 引用の文(アカウント: str, コメント: str) -> str:
+    """インスタの引用の本文。元の投稿の紹介として書き、こちらが確かめた事実としては書かない（2026-10-21 代表）。"""
+    return f"{コメント}\n\n@{アカウント} さんの投稿で紹介されていました。"
+
+
+def 引用を入れる(mine: list[dict], repo: Path) -> list[str]:
+    """判断待ちで「インスタの引用」を選び、コメントがあるものを posts/queue.jsonl に1本ずつ入れる。
+    コメントが無いもの・PR と書かれた投稿は入れない（保留と同じで、翌朝もまた出る）。"""
+    引用 = [a for a in mine if a.get("答え") == "引用" and str(a.get("種類") or "").startswith("インスタ")]
+    if not 引用:
+        return []
+    q = repo / "posts" / "queue.jsonl"
+    すでに = {json.loads(l).get("id") for l in q.read_text(encoding="utf-8").splitlines() if l.strip()} if q.exists() else set()
+    今 = datetime.now(JST)
+    済み, 行たち = [], []
+    for a in 引用:
+        コメント = " ".join(str(a.get("一言") or "").split())
+        人 = str(a.get("アカウント") or "").strip().lstrip("@")
+        url = str(a.get("url") or "").strip()
+        if not コメント or not 人 or not url.startswith("https://www.instagram.com/") or a.get("引用できる") is False:
+            print(f"::warning::インスタの引用 {a.get('id')} は、コメント・アカウント・投稿の URL が無いか PR の投稿なので入れません")
+            continue
+        pid = f"p-insta-{今:%Y%m%d}-{a['id'][:8]}"
+        if pid not in すでに:
+            行 = {"id": pid, "text": 引用の文(人, コメント), "thread": [f"元の投稿（@{人}）\n{url}"],
+                  "scheduled_at": 返事の時刻(今, len(行たち)),
+                  "approved_at": str(a.get("答えた時刻") or a.get("答えた日") or 今.isoformat(timespec="seconds")),
+                  "note": "判断待ちで代表が「インスタの引用」（元の投稿の紹介。写真は使わない）"}
+            行たち.append(json.dumps(行, ensure_ascii=False))
+        済み.append(a["id"])
+    if 行たち:
+        with q.open("a", encoding="utf-8") as f:
+            f.write("\n".join(行たち) + "\n")
+    return 済み
+
+
 def 反映(answers: list[dict], repos: dict[str, Path]) -> list[str]:
     名で = {v: k for k, v in 出どころの名.items()}
     済み = []
@@ -199,6 +240,7 @@ def 反映(answers: list[dict], repos: dict[str, Path]) -> list[str]:
         済み += 返事を入れる([a for a in answers if 名で.get(a.get("出どころ")) == 名], repo)
         if 名 == "ekimae":
             continue  # エキマエは返事だけ（ネタ帳は無い）
+        済み += 引用を入れる([a for a in answers if 名で.get(a.get("出どころ")) == 名], repo)
         mine = [a for a in answers if 名で.get(a.get("出どころ")) == 名 and a.get("答え") in ("載せる", "載せない")
                 and a.get("種類") != "返事の案"]
         if not mine:
