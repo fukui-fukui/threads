@@ -134,6 +134,19 @@ Deno.serve(async (req) => {
     try { return reply(origin, 200, { ok: true, results: await pay.selftest() }); }
     catch (e) { return reply(origin, 500, { error: String(e).slice(0, 200) }); }
   }
+  if (type === "flyers") {
+    // 毎朝の作業だけ：チラシ（非公開の置き場）を開く期限つきのリンク（7日）。代表しか開けないダッシュボードに載せる（2026-10-21 代表）
+    if (!trusted) return reply(origin, 403, { error: "token" });
+    const nums = String(form.get("n") ?? "").split(",").map((x) => x.trim()).filter((x) => /^S\d{6}-[0-9A-F]{6}$/.test(x)).slice(0, 50);
+    const { data: rows } = await db.from("odekake_submissions").select("number,flyer_path,flyer_type").in("number", nums);
+    const out: Record<string, unknown>[] = [];
+    for (const r of rows ?? []) {
+      if (!r.flyer_path) continue;
+      const { data: su } = await db.storage.from("odekake-flyers").createSignedUrl(String(r.flyer_path), 7 * 24 * 3600);
+      out.push({ number: r.number, type: r.flyer_type, url: su?.signedUrl ?? null });
+    }
+    return reply(origin, 200, { ok: true, flyers: out });
+  }
   if (type === "testcoupon") {
     // 試験だけ：試験の口座にクーポンを作る（本番の口座には作らない。本番は代表が Stripe の画面で作る）
     if (!testing) return reply(origin, 403, { error: "token" });
