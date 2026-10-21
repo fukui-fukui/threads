@@ -53,6 +53,12 @@ form.f .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflo
 .msg.err { border: 1.5px solid #d9473a; }
 form.f .req { color: #d9473a; font-weight: 800; margin: 0 4px 0 2px; flex: none; }
 form.f .reqnote { font-size: .85rem; color: var(--muted); margin: 8px 0 0; }
+.msg .rh { margin-top: 12px; font-weight: 700; }
+.msg button.again { margin-top: 16px; }
+.msg dl.receipt { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 6px 0 0; font-size: .9rem; }
+.msg dl.receipt dt { color: var(--muted); }
+.msg dl.receipt dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .msg dl.receipt { grid-template-columns: 1fr; gap: 0; } .msg dl.receipt dd { margin-bottom: 6px; } }
 form.f .paynote { margin: 20px 0 0; padding: 12px 14px; border: 2px solid var(--main); border-radius: 12px; background: var(--surface); font-weight: 700; }
 form.f .bad { border-color: #d9473a !important; outline: 2px solid #d9473a33; }
 form.f label.check.bad { border: 1.5px solid #d9473a; border-radius: 8px; padding: 4px 6px; }
