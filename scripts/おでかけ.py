@@ -689,6 +689,11 @@ form.f .hp {{ position: absolute; left: -9999px; width: 1px; height: 1px; overfl
 .msg.err {{ border: 1.5px solid #d9473a; }}
 form.f .req {{ color: #d9473a; font-weight: 800; margin: 0 4px 0 2px; flex: none; }}
 form.f .reqnote {{ font-size: .85rem; color: var(--muted); margin: 8px 0 0; }}
+.msg .rh {{ margin-top: 12px; font-weight: 700; }}
+.msg dl.receipt {{ display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 6px 0 0; font-size: .9rem; }}
+.msg dl.receipt dt {{ color: var(--muted); }}
+.msg dl.receipt dd {{ margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }}
+@media (max-width: 520px) {{ .msg dl.receipt {{ grid-template-columns: 1fr; gap: 0; }} .msg dl.receipt dd {{ margin-bottom: 6px; }} }}
 form.f .paynote {{ margin: 20px 0 0; padding: 12px 14px; border: 2px solid var(--main); border-radius: 12px; background: var(--surface); font-weight: 700; }}
 form.f .bad {{ border-color: #d9473a !important; outline: 2px solid #d9473a33; }}
 form.f label.check.bad {{ border: 1.5px solid #d9473a; border-radius: 8px; padding: 4px 6px; }}
@@ -1106,7 +1111,17 @@ def _form_script(kind: str) -> str:
       const r = await fetch("{FORM_URL}", {{ method: "POST", body: new FormData(f) }});
       const j = await r.json().catch(() => ({{}}));
       if (r.ok && j.ok && j.pay_url) {{
-        // 仮押さえ：Stripe の支払い画面へ。戻ってきたら下の「戻ったとき」で受付を確かめる
+        // 仮押さえ：Stripe の支払い画面へ。戻ってきたら下の「戻ったとき」で受付を確かめる。
+        // 入力はこの端末（このタブ）にだけ一時保存し、戻ったら控えを出す・やめたら埋め直す（2026-10-21 代表「入力した項目は残っていてほしい」）
+        try {{
+          const v = {{}}, list = [];
+          for (const x of fields) {{
+            if (x.type === "file") {{ const fl = x.files && x.files[0]; if (fl) list.push(["チラシ", fl.name]); continue; }}
+            v[x.name] = x.type === "checkbox" ? x.checked : x.value;
+            if (x.type !== "checkbox" && x.value.trim()) list.push([nameOf(x), x.value.trim()]);
+          }}
+          sessionStorage.setItem("odekake-form-" + j.number, JSON.stringify({{ v, list, flyer: list.some(([k]) => k === "チラシ") }}));
+        }} catch (_) {{}}
         say("お支払い画面（Stripe）に移ります…");
         location.href = j.pay_url;
         return;
@@ -1127,23 +1142,68 @@ def _form_script(kind: str) -> str:
     }} catch (_) {{ say("送れませんでした。通信を確かめて、もう一度お試しください。", true); }}
     b.disabled = false;
   }});
-  // 支払い画面から戻ったとき（?n=申込番号&s=…）／やめたとき（&cancel=1）
+  // 支払い画面から戻ったとき（?n=申込番号&s=…）／やめたとき（&cancel=1）。2026-10-21 代表の指摘で作り直し：
+  // カード・0円（クーポン）・やめた・確認中 を分けて出す。確認中は3秒おきに確かめ直す。受付が済んだら入力の控えを出し、
+  // 済んでいなければ入力を埋め直す。同じ結果を出したタブで開き直したときは、前の結果を出さずに空のフォームに戻す
   const q = new URLSearchParams(location.search);
   if (q.get("n")) {{
+    const n = q.get("n"), key = "odekake-form-" + n, doneKey = "odekake-done-" + n;
     history.replaceState(null, "", location.pathname);
-    if (q.get("cancel")) say("お支払いが済んでいないため、お申し込みは受け付けていません。入力を確かめて、もう一度「送信する」を押してください。", true);
-    else {{
+    let saved = null;
+    try {{ saved = JSON.parse(sessionStorage.getItem(key) || "null"); }} catch (_) {{}}
+    let shown = false;
+    try {{ shown = !!sessionStorage.getItem(doneKey); }} catch (_) {{}}
+    const refill = () => {{
+      if (!saved) return;
+      for (const x of fields) {{
+        if (x.type === "file" || !(x.name in saved.v)) continue;
+        if (x.type === "checkbox") x.checked = !!saved.v[x.name]; else x.value = saved.v[x.name];
+      }}
+    }};
+    const flyerNote = saved && saved.flyer ? "チラシのファイルは、もう一度選び直してください（ページを移ると、選んだファイルは消えます）。" : "";
+    const receipt = () => {{
+      if (!saved || !saved.list.length) return;
+      const h = document.createElement("div"); h.className = "rh"; h.textContent = "お申し込み内容の控え";
+      const dl = document.createElement("dl"); dl.className = "receipt";
+      for (const [k, v] of saved.list) {{ const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; dl.append(dt, dd); }}
+      msg.append(h, dl);
+    }};
+    if (shown) {{ /* 同じタブで開き直した：前の結果は出さない */ }}
+    else if (q.get("cancel")) {{
+      refill();
+      say(["お支払いを済ませていないため、まだ受け付けていません。", "入力は元に戻しました。内容を確かめて、もう一度「送信する」を押してください。", flyerNote].filter(Boolean), true);
+      msg.scrollIntoView({{ block: "center" }});
+    }} else {{
       say("お申し込みを確かめています…");
-      const fd = new FormData(); fd.append("type", "confirm"); fd.append("n", q.get("n")); fd.append("s", q.get("s") || "");
-      fetch("{FORM_URL}", {{ method: "POST", body: fd }}).then((r) => r.json()).then((j) => {{
+      const ask = async () => {{
+        const fd = new FormData(); fd.append("type", "confirm"); fd.append("n", n); fd.append("s", q.get("s") || "");
+        const r = await fetch("{FORM_URL}", {{ method: "POST", body: fd }}); return r.json();
+      }};
+      (async () => {{
+        let j = {{}};
+        for (let i = 0; i < 6; i++) {{
+          try {{ j = await ask(); }} catch (_) {{ j = {{}}; }}
+          if (j.ok || (j.status && j.status !== "pending_payment")) break;
+          await new Promise((res) => setTimeout(res, 3000));
+        }}
         if (j.ok) {{
           f.querySelectorAll("input,textarea,select,button").forEach((x) => (x.disabled = true));
-          say(["受け付けました。申込番号：" + j.number, "カードで 5,500円（税込）を仮押さえしました。まだ確定していません。",
-               "公式の案内で確かめ、掲載が決まったら確定してメールでお知らせします。掲載できない場合は取り消し、料金は請求されません。",
+          say(["受け付けました。申込番号：" + j.number,
+               j.free ? "クーポンのご利用で 0円です（請求はありません）。" : "カードで 5,500円（税込）を仮押さえしました。まだ請求されていません。",
+               j.free ? "公式の案内で確かめ、掲載が決まったらメールでお知らせします。"
+                      : "公式の案内で確かめ、掲載が決まったら確定してメールでお知らせします。掲載できない場合は取り消し、料金は請求されません。",
                "受付のメールをお送りしました。届かない場合は迷惑メールのフォルダもご覧ください。"]);
+          receipt();
+          try {{ sessionStorage.setItem(doneKey, "1"); sessionStorage.removeItem(key); }} catch (_) {{}}
           msg.scrollIntoView({{ block: "center" }});
-        }} else say("お支払いを確かめられませんでした。お手数ですが、お問い合わせからご連絡ください（申込番号：" + q.get("n") + "）。", true);
-      }}).catch(() => say("通信がうまくいきませんでした。ページを読み込み直してください。", true));
+        }} else {{
+          refill();
+          say(["受付の確認に時間がかかっています（申込番号：" + n + "）。",
+               "受付のメールが届けば、お申し込みは完了しています。しばらくしても届かない場合は、お問い合わせから申込番号をお知らせください。",
+               "入力は元に戻してあります。", flyerNote].filter(Boolean));
+          msg.scrollIntoView({{ block: "center" }});
+        }}
+      }})();
     }}
   }}
 }})();

@@ -265,10 +265,12 @@ async function confirm(db: DB, number: string, session: string) {
   if (!/^S\d{6}-[0-9A-F]{6}$/.test(number)) return { error: "number" };
   const { data: r } = await db.from("odekake_submissions").select("*").eq("number", number).maybeSingle();
   if (!r || (session && r.stripe_session !== session)) return { error: "number" };
-  if (r.status !== "pending_payment") return { ok: r.status === "authorized" || r.status === "approve", number, status: r.status };
+  // free：クーポンで 0円の受付か（戻った画面の出し分けに使う。2026-10-21）
+  if (r.status !== "pending_payment") return { ok: r.status === "authorized" || r.status === "approve", number, status: r.status, free: r.payment_intent === pay.FREE };
   try {
     const st = await settle(db, r);
-    return { ok: st === "authorized", number, status: st };
+    const { data: now2 } = await db.from("odekake_submissions").select("payment_intent").eq("number", number).maybeSingle();
+    return { ok: st === "authorized", number, status: st, free: now2?.payment_intent === pay.FREE };
   } catch (e) {
     console.error(e);
     return { error: "pay" };
