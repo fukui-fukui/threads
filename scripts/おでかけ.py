@@ -675,6 +675,8 @@ article p {{ margin: 4px 0; font-size: .92rem; }}
 a {{ color: var(--main); }}
 .lead {{ background: var(--surface); border-radius: 14px; padding: 12px 16px; }}
 nav.months {{ margin-top: 36px; font-size: .9rem; }}
+aside.prbox {{ margin-top: 32px; padding: 12px 16px; border: 1.5px dashed var(--main); border-radius: 14px; background: var(--surface); font-size: .9rem; }}
+aside.prbox p {{ margin: 4px 0 0; }}
 footer {{ color: var(--muted); font-size: .78rem; text-align: center; padding: 0 16px 32px; }}
 form.f label {{ display: block; font-weight: 700; font-size: .9rem; margin: 16px 0 4px; }}
 form.f label small {{ font-weight: 400; color: var(--muted); }}
@@ -728,6 +730,17 @@ table.toku th {{ width: 34%; color: var(--muted); font-weight: 700; }}
 """
 
 
+def _pr_box(up: str, where: str) -> str:
+    """主催者向けの PR 枠の案内（2026-10-22 代表「進めて」集客案1）。where は /submit/ の閲覧をどこから来たかで数えるための印。
+    「初回無料」は、その仕組みが入るまで書かない。"""
+    from html import escape as h
+    if not _uses("掲載申し込み"):
+        return ""
+    return (f'<aside class="prbox"><b>主催者の方へ：PR枠のお申し込み</b>'
+            f'<p>催しを{h(SITE_NAME)}の PR 枠に載せられます（{h(PR_PRICE)}）。表示には「PR」と付きます。'
+            f'<a href="{up}submit/?from={where}">お申し込みはこちら</a></p></aside>\n')
+
+
 def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
     from collections import Counter
     from html import escape as h
@@ -776,7 +789,7 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
 <p class="muted">日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・自治体などの公式）で必ず確かめてください。最終更新：{today.year}年{today.month}月{today.day}日</p>
 </div>
 {"".join(body)}
-<nav class="months">月別：{nav}</nav>
+{_pr_box("../../", "month")}<nav class="months">月別：{nav}</nav>
 <p><a href="../../">今週末のイベント・新しいお店を見る（{h(SITE_NAME)}）</a></p>
 """
     return _shell(title, desc, url, ld, main, "../../")
@@ -843,7 +856,7 @@ def render_weekend(data: dict, today: date) -> str:
 <p class="muted">日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・自治体などの公式）で必ず確かめてください。最終更新：{today.year}年{today.month}月{today.day}日</p>
 </div>
 {"".join(body)}
-<nav class="months">{links}</nav>
+{_pr_box("../", "weekend")}<nav class="months">{links}</nav>
 <p><a href="../">新しいお店・ほかの日のイベントを見る（{h(SITE_NAME)}）</a></p>
 """
     return _shell(title, desc, url, ld, main, "../")
@@ -983,7 +996,7 @@ def render_area(area: str, b: dict, today: date) -> str:
 <p class="muted">日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・自治体・お店の公式）で必ず確かめてください。最終更新：{today.year}年{today.month}月{today.day}日</p>
 </div>
 {"".join(body)}
-<nav class="months"><a href="../../weekend/">今週末の{h(KEN)}のイベント</a> ・ <a href="../../spot/">{h(KEN)}の新しいお店</a></nav>
+{_pr_box("../../", "area")}<nav class="months"><a href="../../weekend/">今週末の{h(KEN)}のイベント</a> ・ <a href="../../spot/">{h(KEN)}の新しいお店</a></nav>
 <p><a href="../../">{h(KEN)}のほかの市町のおでかけ情報を見る（{h(SITE_NAME)}）</a></p>
 """
     return _shell(title, desc, url, ld, main, "../../")
@@ -1011,6 +1024,7 @@ HOLD_LEAD = ("<p>いただいた情報は、主催者などの公式の案内で
              "<p><b>送信すると、お支払い画面（Stripe）に移ります。</b>カードで 5,500円（税込）を仮押さえしますが、"
              "掲載が決まるまで確定しません。掲載できない場合は取り消し、料金は請求されません。</p>")
 # 有料掲載で提供する内容（2026-10-20 代表の文。特商法の表記・申し込みフォームで同じ文を使う）
+PR_PRICE = "イベント掲載 1件 5,500円（税込）"   # 特商法の表記・フォームと同じ書き方（2026-10-20 代表）
 PAID_OFFER = (f"「{SITE_NAME}」PR枠への掲載（最長30日）、Threads での紹介（掲載を始めたとき・毎週1回・開催の前日と当日）、"
               "AI で作る紹介動画（1回）。表示や投稿には「PR」と付きます。")
 FORM_URL = "https://zynxnpwwmrxzyljrsmbs.supabase.co/functions/v1/odekake-form"
