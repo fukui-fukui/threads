@@ -45,6 +45,14 @@ class リールのテスト(unittest.TestCase):
         self.assertIn("afade=t=out:st=17.5:d=2.5", fc)
         self.assertEqual(cmd[cmd.index("-t") + 1], "20.0")
 
+    def test_使い始めの秒を指定できる(self):
+        台本2 = {**台本, "scenes": [{**台本["scenes"][0], "start": 1.5}, *台本["scenes"][1:]]}
+        with tempfile.TemporaryDirectory() as d:
+            cmd = リール.組み立て(台本2, Path("/x"), Path(d) / "o.mp4", "ig", None, Path(d), dry_run=True)
+        i = cmd.index("/x/1.mp4")
+        self.assertEqual(cmd[i - 3:i - 1], ["-ss", "1.5"])
+        self.assertEqual(cmd[cmd.index("/x/2.mp4") - 2], "0")
+
 
 if __name__ == "__main__":
     unittest.main()
