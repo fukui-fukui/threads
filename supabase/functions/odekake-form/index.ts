@@ -19,7 +19,8 @@ import * as pay from "./pay.ts";
 const ORIGINS = ["https://odekake.fukui-fukui.com", "https://ishikawa-odekake.fukui-fukui.com"];
 const REGION_OF: Record<string, string> = { [ORIGINS[0]]: "fukui", [ORIGINS[1]]: "ishikawa" };
 const MAX_FILE = 5 * 1024 * 1024;
-const PER_HOUR = 5;
+// 同じ回線から1時間に何件まで（申し込みと問い合わせは別々に数える。2026-10-21 代表「おまかせ」で 5件共通 → 各10件）
+const PER_HOUR = 10;
 const SUBMISSION_OPEN = true;
 // 仮押さえは、運営だけが読める表 odekake_settings の pay_mode で切り替える（off／test／live。既定は off）。
 // off のあいだは今まで通り（仮押さえ無し）。試験は、合言葉つきの試験の送信だけを試験の鍵で通す
@@ -187,7 +188,8 @@ Deno.serve(async (req) => {
     return reply(origin, 400, { error: "robot" });
   }
 
-  const ipHash = await sha256(`${ip}|${Deno.env.get("SUPABASE_URL")}|odekake-form`);
+  // 種類（inquiry / submission）ごとに印を分けて数える。同じ建物・同じ携帯回線の人が続けて送っても止まりにくくする
+  const ipHash = await sha256(`${ip}|${Deno.env.get("SUPABASE_URL")}|odekake-form|${type}`);
   const since = new Date(Date.now() - 3600_000).toISOString();
   const { count } = await db.from("odekake_form_hits").select("*", { count: "exact", head: true })
     .eq("ip_hash", ipHash).gte("created_at", since);
