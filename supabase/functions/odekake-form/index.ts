@@ -134,6 +134,12 @@ Deno.serve(async (req) => {
     try { return reply(origin, 200, { ok: true, results: await pay.selftest() }); }
     catch (e) { return reply(origin, 500, { error: String(e).slice(0, 200) }); }
   }
+  if (type === "testcoupon") {
+    // 試験だけ：試験の口座にクーポンを作る（本番の口座には作らない。本番は代表が Stripe の画面で作る）
+    if (!testing) return reply(origin, 403, { error: "token" });
+    try { return reply(origin, 200, { ok: true, ...(await pay.testCoupon(String(form.get("code") ?? ""))) }); }
+    catch (e) { return reply(origin, 500, { error: String(e).slice(0, 200) }); }
+  }
   if (type === "testhold") {
     // 試験だけ：申し込みに試験の仮押さえを付けて authorized にし、受付メールを送る（confirm の代わり）
     if (!testing) return reply(origin, 403, { error: "token" });
