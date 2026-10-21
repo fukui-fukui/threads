@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(node --check:*)",
+      "Bash(PYTHONPATH=src python3 -m unittest:*)",
+      "Bash(python3 -m unittest:*)",
+      "mcp__github__pull_request_read",
+      "mcp__github__get_file_contents",
+      "mcp__github__list_pull_requests",
+      "mcp__github__actions_list",
+      "mcp__github__get_job_logs",
+      "mcp__Supabase__list_tables",
+      "mcp__Supabase__list_edge_functions",
+      "mcp__Supabase__get_edge_function",
+      "mcp__Supabase__get_advisors",
+      "mcp__Supabase__query_logs",
+      "mcp__Google_Drive__search_files",
+      "mcp__Google_Drive__read_file_content",
+      "mcp__claude-code-remote__list_events",
+      "mcp__claude-code-remote__get_session",
+      "mcp__claude-code-remote__list_triggers",
+      "mcp__claude-code-remote__get_trigger"
+    ]
+  }
+}
