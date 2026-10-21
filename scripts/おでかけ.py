@@ -690,6 +690,7 @@ form.f .hp {{ position: absolute; left: -9999px; width: 1px; height: 1px; overfl
 form.f .req {{ color: #d9473a; font-weight: 800; margin: 0 4px 0 2px; flex: none; }}
 form.f .reqnote {{ font-size: .85rem; color: var(--muted); margin: 8px 0 0; }}
 .msg .rh {{ margin-top: 12px; font-weight: 700; }}
+.msg button.again {{ margin-top: 16px; }}
 .msg dl.receipt {{ display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 6px 0 0; font-size: .9rem; }}
 .msg dl.receipt dt {{ color: var(--muted); }}
 .msg dl.receipt dd {{ margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }}
@@ -1187,15 +1188,21 @@ def _form_script(kind: str) -> str:
           await new Promise((res) => setTimeout(res, 3000));
         }}
         if (j.ok) {{
-          f.querySelectorAll("input,textarea,select,button").forEach((x) => (x.disabled = true));
+          // 受け付け済み：入力欄・送信ボタン上の案内・送信ボタンは隠し、受付の案内と控えだけを出す（2026-10-21 代表）
+          for (const el of [...f.children]) if (el !== msg) el.style.display = "none";
+          for (const t of [...f.childNodes]) if (t.nodeType === 3) t.remove();
+          document.querySelectorAll(".lead").forEach((x) => (x.style.display = "none"));
           say(["受け付けました。申込番号：" + j.number,
                j.free ? "クーポンのご利用で 0円です（請求はありません）。" : "カードで 5,500円（税込）を仮押さえしました。まだ請求されていません。",
                j.free ? "公式の案内で確かめ、掲載が決まったらメールでお知らせします。"
                       : "公式の案内で確かめ、掲載が決まったら確定してメールでお知らせします。掲載できない場合は取り消し、料金は請求されません。",
                "受付のメールをお送りしました。届かない場合は迷惑メールのフォルダもご覧ください。"]);
           receipt();
+          const again = document.createElement("button"); again.type = "button"; again.className = "again"; again.textContent = "別の催しを申し込む";
+          again.addEventListener("click", () => {{ location.href = location.pathname; }});
+          msg.append(again);
           try {{ sessionStorage.setItem(doneKey, "1"); sessionStorage.removeItem(key); }} catch (_) {{}}
-          msg.scrollIntoView({{ block: "center" }});
+          msg.scrollIntoView({{ block: "start" }});
         }} else {{
           refill();
           say(["受付の確認に時間がかかっています（申込番号：" + n + "）。",
