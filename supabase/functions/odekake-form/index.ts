@@ -126,7 +126,8 @@ Deno.serve(async (req) => {
   const trusted = !!settings.process_token && String(form.get("token") ?? "") === settings.process_token;
   const testing = trusted && form.get("test") === "1";
   pay.useTest(testing || settings.pay_mode === "test");
-  const PAY_HOLD = testing || settings.pay_mode === "live";
+  // test のときも支払い画面へ移す（試験の鍵なので請求は出ない。代表がスマホで支払い画面を試すため。2026-10-21）
+  const PAY_HOLD = testing || settings.pay_mode === "live" || settings.pay_mode === "test";
   if (type === "confirm") return reply(origin, 200, await confirm(db, String(form.get("n") ?? ""), String(form.get("s") ?? "")));
   if (type === "selftest") {
     if (!testing) return reply(origin, 403, { error: "token" });
