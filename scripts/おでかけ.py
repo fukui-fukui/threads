@@ -692,6 +692,18 @@ form.f .reqnote {{ font-size: .85rem; color: var(--muted); margin: 8px 0 0; }}
 form.f .bad {{ border-color: #d9473a !important; outline: 2px solid #d9473a33; }}
 form.f label.check.bad {{ border: 1.5px solid #d9473a; border-radius: 8px; padding: 4px 6px; }}
 form.f .ferr {{ color: #d9473a; font-size: .85rem; font-weight: 700; margin: 4px 0 0; }}
+form.f .flyer {{ margin-top: 20px; }}
+form.f .flyer input[type=file] {{ position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }}
+form.f label.filebtn {{ display: flex; align-items: center; gap: 12px; margin: 0; min-height: 64px; padding: 14px 18px; border: 2px dashed var(--main); border-radius: 14px; background: color-mix(in srgb, var(--main) 10%, var(--surface)); color: var(--ink); font-size: 1.05rem; cursor: pointer; }}
+form.f label.filebtn .ic {{ font-size: 1.6rem; line-height: 1; }}
+form.f label.filebtn small {{ display: block; font-size: .8rem; }}
+form.f .flyer input[type=file]:focus-visible + label.filebtn {{ outline: 3px solid var(--main); outline-offset: 2px; }}
+form.f .picked {{ display: flex; align-items: center; gap: 12px; margin-top: 8px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); }}
+form.f .picked[hidden] {{ display: none; }}
+form.f .picked img {{ width: 64px; height: 64px; object-fit: cover; border-radius: 8px; flex: none; }}
+form.f .picked .pdf {{ width: 64px; height: 64px; display: grid; place-items: center; border-radius: 8px; background: var(--bg); font-weight: 800; flex: none; }}
+form.f .picked .nm {{ flex: 1; min-width: 0; font-size: .9rem; overflow-wrap: anywhere; }}
+form.f button.clear {{ margin: 0; padding: 8px 14px; background: transparent; color: var(--ink); border: 1.5px solid var(--line); font-weight: 600; }}
 table.toku {{ width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 14px; overflow: hidden; margin-top: 16px; font-size: .92rem; }}
 table.toku th, table.toku td {{ text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }}
 table.toku th {{ width: 34%; color: var(--muted); font-weight: 700; }}
@@ -1189,11 +1201,28 @@ def render_submit(today: date) -> str:
 <label for="city">市町</label><input type="text" id="city" name="city" maxlength="30" required placeholder="例：{h(AREAS[0][1] if AREAS else '')}">
 <label for="address">住所 <small>（あれば）</small></label><input type="text" id="address" name="address" maxlength="200">
 <label for="fee">料金 <small>（例：無料／大人500円）</small></label><input type="text" id="fee" name="fee" maxlength="100">
+<div class="flyer"><input type="file" id="flyer" name="flyer" accept="image/jpeg,image/png,image/webp,application/pdf"><label for="flyer" class="filebtn"><span class="ic" aria-hidden="true">📎</span><span>チラシ・画像を添付する<small>あれば。画像（JPEG・PNG・WebP）か PDF、5MB まで。チラシがあると内容を早く確かめられます</small></span></label>
+<div class="picked" id="flyer-picked" hidden><span id="flyer-thumb"></span><span class="nm" id="flyer-name"></span><button type="button" class="clear" id="flyer-clear">取り消す</button></div></div>
+<script>(() => {{
+  const i = document.getElementById("flyer"), box = document.getElementById("flyer-picked"),
+    th = document.getElementById("flyer-thumb"), nm = document.getElementById("flyer-name");
+  let url = "";
+  const show = () => {{
+    if (url) URL.revokeObjectURL(url), url = "";
+    const f = i.files && i.files[0];
+    box.hidden = !f; th.textContent = "";
+    if (!f) return;
+    nm.textContent = `${{f.name}}（${{f.size < 1048576 ? Math.ceil(f.size / 1024) + "KB" : (f.size / 1048576).toFixed(1) + "MB"}}）${{f.size > 5242880 ? " ※5MB を超えています" : ""}}`;
+    if (f.type.startsWith("image/")) {{ const im = document.createElement("img"); url = URL.createObjectURL(f); im.src = url; im.alt = ""; th.append(im); }}
+    else {{ const d = document.createElement("span"); d.className = "pdf"; d.textContent = "PDF"; th.append(d); }}
+  }};
+  i.addEventListener("change", show);
+  document.getElementById("flyer-clear").addEventListener("click", () => {{ i.value = ""; show(); }});
+}})();</script>
 <label for="body">催しの内容 <small>（300字まで）</small></label><textarea id="body" name="body" maxlength="300" required></textarea>
 <label for="target">対象・事前申し込み・締め切り <small>（あれば）</small></label><input type="text" id="target" name="target" maxlength="300">
 <label for="organizer">主催者</label><input type="text" id="organizer" name="organizer" maxlength="100" required>
 <label for="official_url">公式の URL または SNS <small>（ここを出典にします）</small></label><input type="url" id="official_url" name="official_url" maxlength="300" required placeholder="https://">
-<label for="flyer">チラシの画像または PDF <small>（あれば。5MB まで、JPEG・PNG・WebP・PDF）</small></label><input type="file" id="flyer" name="flyer" accept="image/jpeg,image/png,image/webp,application/pdf">
 <label for="wish_from">掲載したい期間 <small>（あれば。最長30日）</small></label><input type="date" id="wish_from" name="wish_from"> 〜 <input type="date" id="wish_to" name="wish_to">
 <label for="contact_name">ご担当者のお名前 <small>（公開しません）</small></label><input type="text" id="contact_name" name="contact_name" maxlength="100" required autocomplete="name">
 <label for="contact_email">ご担当者のメールアドレス <small>（公開しません）</small></label><input type="email" id="contact_email" name="contact_email" maxlength="200" required autocomplete="email">
