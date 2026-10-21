@@ -87,8 +87,13 @@ for (const 別 of 設定['別に数える'] ?? []) {
   }
   別の合計 = Math.round(別の合計 * 100) / 100;
   const 別の割合 = 別.月の予算ドル ? 別の合計 / 別.月の予算ドル : 0;
-  const 別のまとめ = { 割合: Math.round(別の割合 * 1000) / 10 + '%' };
-  // まとめはファイルにしない（公開リポジトリに金額を残さない）。ログとジョブの概要にだけ出す
+  const 別のまとめ = { 月, 合計ドル: 別の合計, 予算ドル: 別.月の予算ドル, 割合: Math.round(別の割合 * 1000) / 10 + '%', 内訳: 別の内訳,
+    作成: 今.toISOString().slice(0, 16).replace('T', ' ') + ' JST' };
+  // まとめは公開リポジトリの外（ジョブの一時フォルダ）に書き、ワークフローが非公開の置き場の <置き場>/state/usage-summary.json に置く
+  // （2026-10-22 運用部・ぎふあいち「福井のように usage-summary.json がほしい」）。ログとジョブの概要には割合だけ出す
+  const 別の置き = `${process.env.RUNNER_TEMP || '/tmp'}/usage-summary/${別.置き場}/state`;
+  mkdirSync(別の置き, { recursive: true });
+  writeFileSync(`${別の置き}/usage-summary.json`, JSON.stringify(別のまとめ, null, 2) + '\n');
   console.log(`${別.名} ${月}：予算の ${別のまとめ.割合}`);
   if (process.env.GITHUB_STEP_SUMMARY) {
     const { appendFileSync } = await import('node:fs');

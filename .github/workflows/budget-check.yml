@@ -34,3 +34,10 @@ jobs:
       - name: まとめをコミットする
         run: |
           ./scripts/commit_file.sh state/usage-summary.json "chore(usage): AI の使用量のまとめ"
+      - name: 別に数えるサイトのまとめを、非公開の置き場のそれぞれの場所に置く（石川・ぎふあいちなど）
+        run: |
+          for d in "${RUNNER_TEMP}"/usage-summary/*/; do
+            [ -d "$d" ] || continue
+            k="$(basename "$d")"
+            (cd "$d" && DATA_DIR="$k" "${GITHUB_WORKSPACE}/scripts/非公開.sh" push state/usage-summary.json "chore(usage): AI の使用量のまとめ（${k}）") || echo "::warning::${k} のまとめを置けませんでした"
+          done
