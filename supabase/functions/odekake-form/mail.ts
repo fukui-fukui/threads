@@ -1,5 +1,5 @@
 // おでかけのフォームの自動メール（2026-10-20 代表 OK の文面）。
-// 送るのは Resend（エキマエと同じ鍵 RESEND_API_KEY）。差出人は返信を受けない no-reply、返信先は contact@。
+// 送るのは Resend（エキマエと同じ鍵 RESEND_API_KEY）。差出人・返信先（Reply-To）とも contact@（2026-10-21 代表「A」）。
 // 決済リンクはメールに入れない（仮押さえは申し込みの画面で済ませる）。
 
 export const SITES: Record<string, { name: string; url: string }> = {
@@ -16,18 +16,17 @@ type Row = Record<string, unknown>;
 const s = (v: unknown) => (v == null ? "" : String(v));
 // クーポンで 0円になった申し込み（pay.ts の FREE）。仮押さえ・請求の文を出さない
 const free = (r: Row) => r.payment_intent === "free";
-const foot = () => [
-  "",
-  `ご連絡は ${CONTACT} までお願いします（このメールは送信専用です）。`,
-];
+// 差出人も返信先も contact@（2026-10-21 代表「A」。「送信専用」の文はやめた：代表「送信用アドレスなのにここに連絡しては変ですよ」）
+const foot = () => ["", "ご不明な点は、このメールにそのままご返信ください。"];
 
-function mail(region: string, to: string, subject: string, lines: string[]): Mail {
+// toOperator：運営あてのお知らせには連絡先の案内を付けない（2026-10-21 代表「運営宛てに連絡先の案内はいらない」）
+function mail(region: string, to: string, subject: string, lines: string[], toOperator = false): Mail {
   const site = SITES[region] ?? SITES.fukui;
   return {
     to,
     subject: `【${site.name}】${subject}`,
-    text: [...lines, ...foot(), "", site.name, site.url + "/"].join("\n"),
-    from: `${site.name} <no-reply@fukui-fukui.com>`,
+    text: [...lines, ...(toOperator ? [] : foot()), "", site.name, site.url + "/"].join("\n"),
+    from: `${site.name} <${CONTACT}>`,
     replyTo: CONTACT,
   };
 }
@@ -132,7 +131,7 @@ export function noticeSubmission(r: Row): Mail {
     "",
     "全項目とチラシは、ダッシュボードの「掲載申込」で見られます（反映は毎朝 8:30 ごろ。急ぐときは統括へ）。",
     "「受ける／受けない」は、仮押さえの期限（7日）までに選んでください。",
-  ]);
+  ], true);
 }
 
 export function noticeInquiry(r: Row): Mail {
@@ -143,7 +142,7 @@ export function noticeInquiry(r: Row): Mail {
     `・お名前：${s(r.name)}`,
     "",
     "中身とメールアドレスは、ダッシュボードの「問合せ」で見られます（反映は毎朝 8:30 ごろ）。",
-  ]);
+  ], true);
 }
 
 /** Resend で送る。鍵が無ければ送らずに false */
