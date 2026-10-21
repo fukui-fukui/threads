@@ -5,7 +5,7 @@
 
 export const AMOUNT = 5500;
 // 支払いボタンのすぐ上に出す文（2026-10-21 代表 OK の (a)）
-export const SUBMIT_TEXT = "いまはカードの仮押さえです。掲載が決まった時点で 5,500円（税込）を請求します。掲載できない場合や、7日以内に掲載を決められなかった場合は仮押さえを取り消し、請求はありません。";
+export const SUBMIT_TEXT = "いまはカードの仮押さえです。掲載が決まった時点で 5,500円（税込）を請求します。掲載できない場合や、7日以内に掲載を決められなかった場合は仮押さえを取り消し、請求はありません。クーポンで0円になる場合は、請求はありません。";
 // クーポンで 0円になった申し込み（Stripe は仮押さえを作らない）の印。payment_intent の欄にこの値を入れる
 export const FREE = "free";
 // 仮押さえはカードでふつう7日で切れる。切れる前に余裕をもって取り消す（6日と12時間）
@@ -80,7 +80,8 @@ export const account = () => api("GET", "account");
  *  クーポンで 0円になって完了したもの（Stripe は仮押さえを作らない）は FREE を返す */
 export function heldIntent(session: Record<string, unknown>, number: string): string | null {
   if (session.client_reference_id !== number) return null;
-  if (session.status === "complete" && session.payment_status === "no_payment_required" && session.amount_total === 0) return FREE;
+  // 合計 0円で完了したもの。payment_status は「no_payment_required」とも「paid」とも返るので見ない（2026-10-21 本番で取りこぼした）
+  if (session.status === "complete" && Number(session.amount_total) === 0) return FREE;
   const pi = session.payment_intent as Record<string, unknown> | string | null;
   if (pi && typeof pi === "object" && pi.status === "requires_capture") return String(pi.id);
   return null;
