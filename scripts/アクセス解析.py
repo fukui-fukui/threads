@@ -86,7 +86,7 @@ def 計測ID(よ: 読み手, prop: str) -> list[str]:
 
 
 def _表(よ: 読み手, prop: str, 期間: tuple[str, str], 次元: list[str], 指標: list[str], 件: int = 10,
-       並べる: str | None = None, イベント: str | None = None) -> list[dict]:
+       並べる: str | None = None, イベント: str | None = None, ページ: str | None = None) -> list[dict]:
     body = {
         "dateRanges": [{"startDate": 期間[0], "endDate": 期間[1]}],
         "dimensions": [{"name": d} for d in 次元],
@@ -97,6 +97,8 @@ def _表(よ: 読み手, prop: str, 期間: tuple[str, str], 次元: list[str], 
         body["orderBys"] = [{"metric": {"metricName": 並べる}, "desc": True}]
     if イベント:
         body["dimensionFilter"] = {"filter": {"fieldName": "eventName", "stringFilter": {"value": イベント}}}
+    if ページ:
+        body["dimensionFilter"] = {"filter": {"fieldName": "pagePath", "stringFilter": {"matchType": "BEGINS_WITH", "value": ページ}}}
     d = よ.post(f"{DATA}/{prop}:runReport", body)
     行 = []
     for r in d.get("rows", []):
@@ -133,6 +135,8 @@ def GAを読む(よ: 読み手, prop: str) -> dict:
         "参照元": _表(よ, prop, 今週, ["sessionSource"], ["sessions"], 10, "sessions"),
         "よく見られたページ": _表(よ, prop, 今週, ["pagePath"], ["screenPageViews"], 10, "screenPageViews"),
         "よく見られたお店": お店を読む(よ, prop, 今週),
+        # 掲載の申し込みページの閲覧と、どこから来たか（?from=month・weekend・area。2026-10-22 代表「進めて」集客案1）
+        "申し込みページ": _表(よ, prop, 今週, ["pagePathPlusQueryString"], ["screenPageViews"], 20, "screenPageViews", ページ="/submit/"),
         "投稿ごと": 投稿ごとを読む(よ, prop, 今週),
     }
 
@@ -284,6 +288,10 @@ def まとめる(結果: dict) -> str:
         if g["よく見られたページ"]:
             行.append("- よく見られたページ：")
             行 += [f"  - {r['pagePath']} … {r['screenPageViews']}" for r in g["よく見られたページ"]]
+        if g.get("申し込みページ"):
+            計 = sum(r["screenPageViews"] for r in g["申し込みページ"])
+            行.append(f"- 掲載の申し込みページ（/submit/）の閲覧 {計}：" + "、".join(
+                f"{r['pagePathPlusQueryString']} {r['screenPageViews']}" for r in g["申し込みページ"]))
         if g.get("投稿ごと"):
             行.append("- Threads の投稿ごとの訪問（UTM）：" + "、".join(f"{r['投稿']} {r['訪問']}" for r in g["投稿ごと"]))
         if g.get("よく見られたお店"):
