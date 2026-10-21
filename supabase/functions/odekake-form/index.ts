@@ -148,6 +148,12 @@ Deno.serve(async (req) => {
     }
     return reply(origin, 200, { ok: true, flyers: out });
   }
+  if (type === "testmail") {
+    // 試験だけ：差出人を contact@ にしたメールが届くかを確かめる（運営あて1通と、Resend の試験の宛先あて1通。2026-10-22）
+    if (!testing) return reply(origin, 403, { error: "token" });
+    const r = { region, kind: "other", name: "（試験）おでかけ開発", email: "delivered@resend.dev", message: "差出人を contact@ にした試験です。" };
+    return reply(origin, 200, { ok: true, operator: await mail.send(mail.noticeInquiry(r)), guest: await mail.send(mail.inquiryReceived(r)) });
+  }
   if (type === "testcoupon") {
     // 試験だけ：試験の口座にクーポンを作る（本番の口座には作らない。本番は代表が Stripe の画面で作る）
     if (!testing) return reply(origin, 403, { error: "token" });
