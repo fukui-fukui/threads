@@ -229,7 +229,7 @@ async function settle(db: DB, r: Record<string, unknown>): Promise<string> {
   if (pi) {
     await db.from("odekake_submissions").update({ status: "authorized", payment_intent: pi, authorized_at: now() })
       .eq("number", r.number).eq("status", "pending_payment");
-    if (!r.mail_sent_at && await mail.send(mail.submissionReceived({ ...r, status: "authorized" }))) {
+    if (!r.mail_sent_at && await mail.send(mail.submissionReceived({ ...r, status: "authorized", payment_intent: pi }))) {
       await db.from("odekake_submissions").update({ mail_sent_at: now() }).eq("number", r.number);
     }
     return "authorized";
@@ -268,19 +268,19 @@ async function process(db: DB) {
         const st = await settle(db, r);
         if (st === "authorized" || st === "abandoned") out[st].push(n);
       } else if (r.status === "approve" && r.payment_intent) {
-        await pay.capture(String(r.payment_intent));
+        if (r.payment_intent !== pay.FREE) await pay.capture(String(r.payment_intent));
         await db.from("odekake_submissions").update({ status: "captured", decided_at: now() }).eq("number", n);
         if (await mail.send(mail.submissionCaptured(r))) await db.from("odekake_submissions").update({ result_mail_at: now() }).eq("number", n);
         out.captured.push(n);
       } else if (r.status === "reject" && r.payment_intent) {
-        await pay.cancel(String(r.payment_intent));
+        if (r.payment_intent !== pay.FREE) await pay.cancel(String(r.payment_intent));
         await db.from("odekake_submissions").update({ status: "canceled", decided_at: now() }).eq("number", n);
         if (await mail.send(mail.submissionCanceled(r))) await db.from("odekake_submissions").update({ result_mail_at: now() }).eq("number", n);
         out.canceled.push(n);
       } else if (r.status === "authorized" && r.authorized_at) {
         const age = Date.now() - new Date(String(r.authorized_at)).getTime();
         if (age > pay.HOLD_LIMIT_MS) {
-          await pay.cancel(String(r.payment_intent));
+          if (r.payment_intent !== pay.FREE) await pay.cancel(String(r.payment_intent));
           await db.from("odekake_submissions").update({ status: "expired", decided_at: now() }).eq("number", n);
           if (await mail.send(mail.submissionExpired(r))) await db.from("odekake_submissions").update({ result_mail_at: now() }).eq("number", n);
           out.expired.push(n);

@@ -4,6 +4,10 @@
 // 鍵：試験なら STRIPE_TEST_SECRET_KEY、ほかは STRIPE_SECRET_KEY（エキマエと同じ鍵）。
 
 export const AMOUNT = 5500;
+// 支払いボタンのすぐ上に出す文（2026-10-21 代表 OK の (a)）
+export const SUBMIT_TEXT = "いまはカードの仮押さえです。掲載が決まった時点で 5,500円（税込）を請求します。掲載できない場合や、7日以内に掲載を決められなかった場合は仮押さえを取り消し、請求はありません。";
+// クーポンで 0円になった申し込み（Stripe は仮押さえを作らない）の印。payment_intent の欄にこの値を入れる
+export const FREE = "free";
 // 仮押さえはカードでふつう7日で切れる。切れる前に余裕をもって取り消す（6日と12時間）
 export const HOLD_LIMIT_MS = 6.5 * 24 * 3600_000;
 // 何日目に「もうすぐ切れる」を出すか
@@ -55,6 +59,9 @@ export function checkoutBody(o: { number: string; region: string; siteName: stri
     // Managed Payments（Stripe が売り手になる仕組み）は使わない。販売事業者はふくふくプロジェクト（2026-10-21 代表）
     managed_payments: { enabled: "false" },
     payment_method_types: { 0: "card" },
+    // クーポン（プロモーションコード）を入れる欄を出す（2026-10-21 代表。WASHOOI2026 など）
+    allow_promotion_codes: "true",
+    custom_text: { submit: { message: SUBMIT_TEXT } },
     payment_intent_data: { capture_method: "manual", description: `イベント掲載 ${o.number}`,
       metadata: { number: o.number, region: o.region } },
     metadata: { number: o.number, region: o.region, kind: "odekake-submission" },
@@ -69,9 +76,11 @@ export const capture = (pi: string) => api("POST", `payment_intents/${encodeURIC
 export const cancel = (pi: string) => api("POST", `payment_intents/${encodeURIComponent(pi)}/cancel`, {});
 export const account = () => api("GET", "account");
 
-/** Checkout の結果から、仮押さえが済んだか（payment_intent が requires_capture）を返す */
+/** Checkout の結果から、仮押さえが済んだか（payment_intent が requires_capture）を返す。
+ *  クーポンで 0円になって完了したもの（Stripe は仮押さえを作らない）は FREE を返す */
 export function heldIntent(session: Record<string, unknown>, number: string): string | null {
   if (session.client_reference_id !== number) return null;
+  if (session.status === "complete" && session.payment_status === "no_payment_required" && session.amount_total === 0) return FREE;
   const pi = session.payment_intent as Record<string, unknown> | string | null;
   if (pi && typeof pi === "object" && pi.status === "requires_capture") return String(pi.id);
   return null;
