@@ -202,6 +202,7 @@ Deno.serve(async (req) => {
     if (await mail.send(mail.inquiryReceived(saved))) {
       await db.from("odekake_inquiries").update({ mail_sent_at: new Date().toISOString() }).eq("id", saved.id);
     }
+    await mail.send(mail.noticeInquiry(saved));   // 運営あてのお知らせ（2026-10-21 代表「B」）
     return reply(origin, 200, { ok: true });
   }
 
@@ -223,7 +224,10 @@ Deno.serve(async (req) => {
   const status = PAY_HOLD ? "pending_payment" : "open";
   const { error } = await db.from("odekake_submissions").insert({ ...row, region, number, flyer_path, flyer_type, status });
   if (error) return reply(origin, 500, { error: "save" });
-  if (!PAY_HOLD) return reply(origin, 200, { ok: true, number });
+  if (!PAY_HOLD) {
+    await mail.send(mail.noticeSubmission({ ...row, region, number, payment_intent: null }));
+    return reply(origin, 200, { ok: true, number });
+  }
   try {
     const site = mail.SITES[region];
     const s = await pay.createCheckout(pay.checkoutBody({ number, region, siteName: site.name, siteUrl: site.url,
@@ -250,6 +254,8 @@ async function settle(db: DB, r: Record<string, unknown>): Promise<string> {
       .eq("number", r.number).eq("status", "pending_payment");
     if (!r.mail_sent_at && await mail.send(mail.submissionReceived({ ...r, status: "authorized", payment_intent: pi }))) {
       await db.from("odekake_submissions").update({ mail_sent_at: now() }).eq("number", r.number);
+      // 運営あてのお知らせは、受付メールと同じく1回だけ（mail_sent_at が無かったときだけ）
+      await mail.send(mail.noticeSubmission({ ...r, payment_intent: pi }));
     }
     return "authorized";
   }
@@ -265,10 +271,12 @@ async function confirm(db: DB, number: string, session: string) {
   if (!/^S\d{6}-[0-9A-F]{6}$/.test(number)) return { error: "number" };
   const { data: r } = await db.from("odekake_submissions").select("*").eq("number", number).maybeSingle();
   if (!r || (session && r.stripe_session !== session)) return { error: "number" };
-  if (r.status !== "pending_payment") return { ok: r.status === "authorized" || r.status === "approve", number, status: r.status };
+  // free：クーポンで 0円の受付か（戻った画面の出し分けに使う。2026-10-21）
+  if (r.status !== "pending_payment") return { ok: r.status === "authorized" || r.status === "approve", number, status: r.status, free: r.payment_intent === pay.FREE };
   try {
     const st = await settle(db, r);
-    return { ok: st === "authorized", number, status: st };
+    const { data: now2 } = await db.from("odekake_submissions").select("payment_intent").eq("number", number).maybeSingle();
+    return { ok: st === "authorized", number, status: st, free: now2?.payment_intent === pay.FREE };
   } catch (e) {
     console.error(e);
     return { error: "pay" };

@@ -121,6 +121,31 @@ export function submissionExpired(r: Row): Mail {
   ]);
 }
 
+/** 運営あて（contact@ → 代表の Gmail）：届いたことだけを知らせる。中身はダッシュボードで見る（2026-10-21 代表「B」） */
+export function noticeSubmission(r: Row): Mail {
+  const site = SITES[s(r.region)] ?? SITES.fukui;
+  return mail(s(r.region), CONTACT, `新しい掲載の申し込み（申込番号 ${s(r.number)}）`, [
+    `${site.name}に、イベント掲載の申し込みが届きました。`,
+    `・申込番号：${s(r.number)}`,
+    `・催し：${s(r.event_name)}`,
+    `・料金：${free(r) ? "無料（クーポン）" : r.payment_intent ? "5,500円を仮押さえ済み（未確定）" : "まだお支払いなし（仮押さえを使っていないとき）"}`,
+    "",
+    "全項目とチラシは、ダッシュボードの「掲載申込」で見られます（反映は毎朝 8:30 ごろ。急ぐときは統括へ）。",
+    "「受ける／受けない」は、仮押さえの期限（7日）までに選んでください。",
+  ]);
+}
+
+export function noticeInquiry(r: Row): Mail {
+  const site = SITES[s(r.region)] ?? SITES.fukui;
+  return mail(s(r.region), CONTACT, `新しいお問い合わせ（${KIND[s(r.kind)] ?? "そのほか"}）`, [
+    `${site.name}に、お問い合わせが届きました。`,
+    `・ご用件：${KIND[s(r.kind)] ?? "そのほか"}`,
+    `・お名前：${s(r.name)}`,
+    "",
+    "中身とメールアドレスは、ダッシュボードの「問合せ」で見られます（反映は毎朝 8:30 ごろ）。",
+  ]);
+}
+
 /** Resend で送る。鍵が無ければ送らずに false */
 export async function send(m: Mail): Promise<boolean> {
   const key = Deno.env.get("RESEND_API_KEY");
