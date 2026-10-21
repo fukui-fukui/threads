@@ -689,6 +689,7 @@ form.f .hp {{ position: absolute; left: -9999px; width: 1px; height: 1px; overfl
 .msg.err {{ border: 1.5px solid #d9473a; }}
 form.f .req {{ color: #d9473a; font-weight: 800; margin: 0 4px 0 2px; flex: none; }}
 form.f .reqnote {{ font-size: .85rem; color: var(--muted); margin: 8px 0 0; }}
+form.f .paynote {{ margin: 20px 0 0; padding: 12px 14px; border: 2px solid var(--main); border-radius: 12px; background: var(--surface); font-weight: 700; }}
 form.f .bad {{ border-color: #d9473a !important; outline: 2px solid #d9473a33; }}
 form.f label.check.bad {{ border: 1.5px solid #d9473a; border-radius: 8px; padding: 4px 6px; }}
 form.f .ferr {{ color: #d9473a; font-size: .85rem; font-weight: 700; margin: 4px 0 0; }}
@@ -1025,7 +1026,10 @@ def _form_script(kind: str) -> str:
           '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>') if sitekey else ""
     done = ('"受け付けました。申込番号：" + (j.number || "") + "。公式の案内で確かめてから、メールでご連絡します。"'
             if kind == "submission" else '"送信しました。ありがとうございます。お返事が必要な内容には、メールでご連絡します。"')
-    return ts + f"""<button type="submit">送信する</button>
+    # 送信すると支払い画面に移ることを、ボタンのすぐ上で先に伝える（2026-10-21 代表「それでOK」の文）
+    pay = ('<p class="paynote">送信すると、カードの確認画面に移ります。この時点では請求されず、'
+           '掲載が決まってから 5,500円（税込）を請求します。</p>') if kind == "submission" and _uses("仮押さえ") else ""
+    return ts + pay + f"""<button type="submit">送信する</button>
 <div class="msg" id="msg" hidden></div>
 </form>
 <script>
