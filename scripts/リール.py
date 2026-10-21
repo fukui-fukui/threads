@@ -14,8 +14,8 @@
     "date": "10/24(土)・25(日)",
     "scenes": [
       {"clip": "1.mp4", "name": "福井そば博2026", "date": "10/24(土)・25(日)",
-       "place": "福井駅前 ハピリン", "point": "そばの食べ比べ9ブース"},
-      ... 3つ
+       "place": "福井駅前 ハピリン", "point": "そばの食べ比べ9ブース", "start": 1.5},
+      ... 3つ（start は使い始めの秒。省略すると頭から）
     ]
   }
   clip は台本.json からの相対パスでもよい。
@@ -87,7 +87,8 @@ def 組み立て(台本: dict, base: Path, out: Path, kind: str, bgm: Path | Non
 
     for s in scenes:
         clip = Path(s["clip"])
-        inputs += ["-i", str(clip if clip.is_absolute() else base / clip)]
+        # 代表が Google Vids で作った動画は長いので、使い始めの秒（start）から5秒を使う
+        inputs += ["-ss", str(s.get("start", 0)), "-i", str(clip if clip.is_absolute() else base / clip)]
 
     # はじめ：1本目の絵をぼかして題名
     chains.append(
