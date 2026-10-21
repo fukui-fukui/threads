@@ -202,6 +202,7 @@ Deno.serve(async (req) => {
     if (await mail.send(mail.inquiryReceived(saved))) {
       await db.from("odekake_inquiries").update({ mail_sent_at: new Date().toISOString() }).eq("id", saved.id);
     }
+    await mail.send(mail.noticeInquiry(saved));   // 運営あてのお知らせ（2026-10-21 代表「B」）
     return reply(origin, 200, { ok: true });
   }
 
@@ -223,7 +224,10 @@ Deno.serve(async (req) => {
   const status = PAY_HOLD ? "pending_payment" : "open";
   const { error } = await db.from("odekake_submissions").insert({ ...row, region, number, flyer_path, flyer_type, status });
   if (error) return reply(origin, 500, { error: "save" });
-  if (!PAY_HOLD) return reply(origin, 200, { ok: true, number });
+  if (!PAY_HOLD) {
+    await mail.send(mail.noticeSubmission({ ...row, region, number, payment_intent: null }));
+    return reply(origin, 200, { ok: true, number });
+  }
   try {
     const site = mail.SITES[region];
     const s = await pay.createCheckout(pay.checkoutBody({ number, region, siteName: site.name, siteUrl: site.url,
@@ -250,6 +254,8 @@ async function settle(db: DB, r: Record<string, unknown>): Promise<string> {
       .eq("number", r.number).eq("status", "pending_payment");
     if (!r.mail_sent_at && await mail.send(mail.submissionReceived({ ...r, status: "authorized", payment_intent: pi }))) {
       await db.from("odekake_submissions").update({ mail_sent_at: now() }).eq("number", r.number);
+      // 運営あてのお知らせは、受付メールと同じく1回だけ（mail_sent_at が無かったときだけ）
+      await mail.send(mail.noticeSubmission({ ...r, payment_intent: pi }));
     }
     return "authorized";
   }
