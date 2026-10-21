@@ -1086,7 +1086,11 @@ def ask(api_key: str, model: str, prompt: str) -> str:
     道具: list[dict] = []
     文たち: list[str] = []  # 途中で止まった回の文も、つなげて使う
     for _ in range(4):
-        body = {"model": model, "max_tokens": 16000, "messages": messages}
+        # 16000 だと、考える分で使い切って本文が3本ほどで切れ、残りをもう一度頼む回が出ていた
+        # （2026-10-21 福井・10/22 ぎふあいち。10/20 に作成の決まりが増えてから出力が 14,000〜16,000 に）。
+        # 上げても使った分しか払わないので、やり直しの分（入力の出し直し）が減る。流さない（stream なし）呼び出しで
+        # 10分の上限にかからないよう 24000 にとどめる
+        body = {"model": model, "max_tokens": 24000, "messages": messages}
         if 道具:
             body["tools"] = 道具
         try:
