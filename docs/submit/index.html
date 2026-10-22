@@ -89,7 +89,7 @@ table.toku th { width: 34%; color: var(--muted); font-weight: 700; }
 <h1>イベント掲載の申し込み</h1>
 <div class="lead">
 <p><b>主催者の方からのみ受け付けます。</b></p>
-<p>いただいた情報は、主催者などの公式の案内で確かめてから掲載します。</p><p><b>送信すると、お支払い画面（Stripe）に移ります。</b>カードで 5,500円（税込）を仮押さえしますが、掲載が決まるまで確定しません。掲載できない場合は取り消し、料金は請求されません。</p>
+<p><b>初めてのお申し込みは無料です（1つの主催者につき1回）。</b>2回目からは イベント掲載 1件 5,500円（税込）です。</p><p>いただいた情報は、主催者などの公式の案内で確かめてから掲載します。</p><p><b>2回目からは、送信するとお支払い画面（Stripe）に移ります。</b>カードで 5,500円（税込）を仮押さえしますが、掲載が決まるまで確定しません。掲載できない場合は取り消し、料金は請求されません。</p>
 <p>掲載の内容：「ふくいおでかけ」PR枠への掲載（最長30日）、Threads での紹介（掲載を始めたとき・毎週1回・開催の前日と当日）、AI で作る紹介動画（1回）。表示や投稿には「PR」と付きます。料金は 1件 5,500円（税込）です。</p>
 <p>お支払いのあとの返金は、原則できません。事情がある場合は、<a href="../contact/">お問い合わせ</a>から運営へご連絡ください。料金などは<a href="../tokushoho/">特定商取引法に基づく表記</a>をご覧ください。</p>
 <p class="muted">フォームでいただいたお名前・メールアドレスは、ご連絡と掲載の確認のためだけに使い、公開や第三者への提供はしません。運営者だけが見られる場所に保存し、用件が済んで1年たったものは消します。</p>
@@ -132,7 +132,7 @@ table.toku th { width: 34%; color: var(--muted); font-weight: 700; }
 <label for="contact_email">ご担当者のメールアドレス <small>（公開しません）</small></label><input type="email" id="contact_email" name="contact_email" maxlength="200" required autocomplete="email">
 <label class="check"><input type="checkbox" name="agree" value="1" required>公式の案内で確かめてから掲載すること、上の個人情報の扱いに同意します</label>
 <label class="check"><input type="checkbox" name="agree_flyer" value="1" required>提供した画像・チラシを、掲載・投稿に使ってよいことに同意します</label>
-<div class="cf-turnstile" data-sitekey="0x4AAAAAAFdguZP3dVL_r1uN" data-language="ja"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><p class="paynote">送信すると、カードの確認画面に移ります。この時点では請求されず、掲載が決まってから 5,500円（税込）を請求します。</p><button type="submit">送信する</button>
+<div class="cf-turnstile" data-sitekey="0x4AAAAAAFdguZP3dVL_r1uN" data-language="ja"></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><p class="paynote">初めてのお申し込みは無料で、カードの入力はありません。2回目からは、送信するとカードの確認画面に移ります。この時点では請求されず、掲載が決まってから 5,500円（税込）を請求します。</p><button type="submit">送信する</button>
 <div class="msg" id="msg" hidden></div>
 </form>
 <script>
@@ -222,6 +222,31 @@ table.toku th { width: 34%; color: var(--muted); font-weight: 700; }
         } catch (_) {}
         say("お支払い画面（Stripe）に移ります…");
         location.href = j.pay_url;
+        return;
+      }
+      if (r.ok && j.ok && j.first) {
+        // 初回のお申し込み（無料）：支払い画面には移らない。カードのときの戻った画面と同じく、受付の案内と入力の控えだけを出す
+        const list = [];
+        for (const x of fields) {
+          if (x.type === "file") { const fl = x.files && x.files[0]; if (fl) list.push(["チラシ", fl.name]); continue; }
+          if (x.type !== "checkbox" && x.value.trim()) list.push([nameOf(x), x.value.trim()]);
+        }
+        for (const el of [...f.children]) if (el !== msg) el.style.display = "none";
+        for (const t of [...f.childNodes]) if (t.nodeType === 3) t.remove();
+        document.querySelectorAll(".lead").forEach((x) => (x.style.display = "none"));
+        say(["受け付けました。申込番号：" + j.number, "初回のお申し込みのため無料です（請求はありません）。",
+             "公式の案内で確かめ、掲載が決まったらメールでお知らせします。",
+             "受付のメールをお送りしました。届かない場合は迷惑メールのフォルダもご覧ください。"]);
+        if (list.length) {
+          const hd = document.createElement("div"); hd.className = "rh"; hd.textContent = "お申し込み内容の控え";
+          const dl = document.createElement("dl"); dl.className = "receipt";
+          for (const [k, v] of list) { const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; dl.append(dt, dd); }
+          msg.append(hd, dl);
+        }
+        const again = document.createElement("button"); again.type = "button"; again.className = "again"; again.textContent = "別の催しを申し込む";
+        again.addEventListener("click", () => { location.href = location.pathname; });
+        msg.append(again);
+        msg.scrollIntoView({ block: "start" });
         return;
       }
       if (r.ok && j.ok) {

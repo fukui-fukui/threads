@@ -236,6 +236,14 @@ Deno.serve(async (req) => {
     await mail.send(mail.noticeSubmission({ ...row, region, number, payment_intent: null }));
     return reply(origin, 200, { ok: true, number });
   }
+  if (await isFirst(db, region, String(row.contact_email), String(row.organizer)).catch(() => false)) {
+    // 初回は支払い画面を通さずに受け付ける（代表の「受ける／受けない」は今までどおり）
+    const r = { ...row, region, number, flyer_path, status: "authorized", payment_intent: pay.FIRST };
+    await db.from("odekake_submissions").update({ status: "authorized", payment_intent: pay.FIRST, authorized_at: now() }).eq("number", number);
+    if (await mail.send(mail.submissionReceived(r))) await db.from("odekake_submissions").update({ mail_sent_at: now() }).eq("number", number);
+    await mail.send(mail.noticeSubmission(r));
+    return reply(origin, 200, { ok: true, number, first: true });
+  }
   try {
     const site = mail.SITES[region];
     const s = await pay.createCheckout(pay.checkoutBody({ number, region, siteName: site.name, siteUrl: site.url,
@@ -251,6 +259,19 @@ Deno.serve(async (req) => {
 
 type DB = ReturnType<typeof createClient>;
 const now = () => new Date().toISOString();
+
+/** 名前・メールを比べやすくする（全角半角・大文字小文字・空白の違いをなくす） */
+export const norm = (v: unknown) => String(v ?? "").normalize("NFKC").replace(/\s+/g, "").toLowerCase();
+
+/** 初回のお申し込みか（2026-10-22 代表「進めて」）。同じ地域の受け付け済み（仮押さえ中・受けた・掲載決定）に、
+ *  同じメールアドレスか同じ主催者名があれば2回目以降。受けない・期限切れ・やめたものは数えない */
+async function isFirst(db: DB, region: string, email: string, organizer: string): Promise<boolean> {
+  const { data, error } = await db.from("odekake_submissions").select("contact_email,organizer")
+    .eq("region", region).in("status", ["authorized", "approve", "captured"]);
+  if (error) return false;   // 確かめられないときは無料にしない（ふつうの仮押さえに進む）
+  const e = norm(email), o = norm(organizer);
+  return !(data ?? []).some((r) => norm(r.contact_email) === e || norm(r.organizer) === o);
+}
 
 /** 仮押さえが済んでいれば authorized にして受付メールを送る。済んでいなければ何もしない */
 async function settle(db: DB, r: Record<string, unknown>): Promise<string> {
@@ -280,11 +301,11 @@ async function confirm(db: DB, number: string, session: string) {
   const { data: r } = await db.from("odekake_submissions").select("*").eq("number", number).maybeSingle();
   if (!r || (session && r.stripe_session !== session)) return { error: "number" };
   // free：クーポンで 0円の受付か（戻った画面の出し分けに使う。2026-10-21）
-  if (r.status !== "pending_payment") return { ok: r.status === "authorized" || r.status === "approve", number, status: r.status, free: r.payment_intent === pay.FREE };
+  if (r.status !== "pending_payment") return { ok: r.status === "authorized" || r.status === "approve", number, status: r.status, free: pay.noCharge(r.payment_intent) };
   try {
     const st = await settle(db, r);
     const { data: now2 } = await db.from("odekake_submissions").select("payment_intent").eq("number", number).maybeSingle();
-    return { ok: st === "authorized", number, status: st, free: now2?.payment_intent === pay.FREE };
+    return { ok: st === "authorized", number, status: st, free: pay.noCharge(now2?.payment_intent) };
   } catch (e) {
     console.error(e);
     return { error: "pay" };
@@ -303,19 +324,19 @@ async function process(db: DB) {
         const st = await settle(db, r);
         if (st === "authorized" || st === "abandoned") out[st].push(n);
       } else if (r.status === "approve" && r.payment_intent) {
-        if (r.payment_intent !== pay.FREE) await pay.capture(String(r.payment_intent));
+        if (!pay.noCharge(r.payment_intent)) await pay.capture(String(r.payment_intent));
         await db.from("odekake_submissions").update({ status: "captured", decided_at: now() }).eq("number", n);
         if (await mail.send(mail.submissionCaptured(r))) await db.from("odekake_submissions").update({ result_mail_at: now() }).eq("number", n);
         out.captured.push(n);
       } else if (r.status === "reject" && r.payment_intent) {
-        if (r.payment_intent !== pay.FREE) await pay.cancel(String(r.payment_intent));
+        if (!pay.noCharge(r.payment_intent)) await pay.cancel(String(r.payment_intent));
         await db.from("odekake_submissions").update({ status: "canceled", decided_at: now() }).eq("number", n);
         if (await mail.send(mail.submissionCanceled(r))) await db.from("odekake_submissions").update({ result_mail_at: now() }).eq("number", n);
         out.canceled.push(n);
       } else if (r.status === "authorized" && r.authorized_at) {
         const age = Date.now() - new Date(String(r.authorized_at)).getTime();
         if (age > pay.HOLD_LIMIT_MS) {
-          if (r.payment_intent !== pay.FREE) await pay.cancel(String(r.payment_intent));
+          if (!pay.noCharge(r.payment_intent)) await pay.cancel(String(r.payment_intent));
           await db.from("odekake_submissions").update({ status: "expired", decided_at: now() }).eq("number", n);
           if (await mail.send(mail.submissionExpired(r))) await db.from("odekake_submissions").update({ result_mail_at: now() }).eq("number", n);
           out.expired.push(n);

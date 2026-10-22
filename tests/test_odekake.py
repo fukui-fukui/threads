@@ -383,7 +383,7 @@ class WeekendTest(unittest.TestCase):
         self.assertIn('<link rel="canonical" href="https://odekake.fukui-fukui.com/weekend/">', html)
 
     def test_pages_show_pr_box_for_organizers(self):
-        # 主催者向けの PR 枠の案内（2026-10-22 代表「進めて」）。「初回無料」はまだ書かない
+        # 主催者向けの PR 枠の案内（2026-10-22 代表「進めて」）。初回無料の一言も（同日 代表「進めて」）
         ev = {"kind": "催し", "start": "2026-10-24", "end": "2026-10-24", "area": "福井市",
               "text": "「土曜市」開催", "note": "", "source": None}
         wk = odekake.render_weekend({"items": [ev]}, date(2026, 10, 20))
@@ -391,7 +391,33 @@ class WeekendTest(unittest.TestCase):
         self.assertIn('href="../submit/?from=weekend"', wk)
         self.assertIn('href="../../submit/?from=month"', mo)
         self.assertIn("主催者の方へ：PR枠のお申し込み", mo)
-        self.assertNotIn("無料", wk + mo)
+        self.assertIn("初めてのお申し込みは無料です。", mo)
+
+
+class StayPageTest(unittest.TestCase):
+    def test_stay_pages_and_links(self):
+        # 泊まるのページ（2026-10-22 代表「1 OK」）：3軒以上の市町にページ、催しのカードに「近くに泊まる（PR）」
+        hs = [{"id": i, "name": f"宿{i}", "city": "福井市" if i < 3 else "鯖江市", "area": "福井市", "features": ["温泉"],
+               "url": f"https://a.r10.to/x{i}", "reviews": i, "rating": 4.0, "price": 5000, "checked": "2026-10-19"} for i in range(4)]
+        odekake.HOTELS[:] = hs
+        odekake.STAY_CITIES.clear(); odekake.STAY_CITIES.add("福井市")
+        try:
+            ev = {"kind": "催し", "start": "2026-10-24", "end": "2026-10-24", "area": "福井市",
+                  "text": "「土曜市」開催", "note": "", "source": None}
+            city = odekake.render_stay_city("福井市", hs[:3], {"items": [ev]}, date(2026, 10, 20))
+            self.assertIn("福井市の宿・ホテル（3軒）", city)
+            self.assertIn('rel="sponsored noopener"', city)
+            self.assertIn("PR：このページの宿のリンクは", city)
+            self.assertIn("土曜市", city)          # その市町のこれからの催し
+            self.assertIn('"@type": "LodgingBusiness"', city)
+            wk = odekake.render_weekend({"items": [ev]}, date(2026, 10, 20))
+            self.assertIn("/stay/%E7%A6%8F%E4%BA%95%E5%B8%82/", wk)
+            self.assertIn("福井市に泊まる（PR）", wk)
+            idx = odekake.render_stay_index(hs, date(2026, 10, 20))
+            self.assertIn("鯖江市（1軒）", idx)
+        finally:
+            odekake.HOTELS[:] = []
+            odekake.STAY_CITIES.clear()
 
 
 class SpotPageTest(unittest.TestCase):
