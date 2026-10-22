@@ -33,10 +33,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: データを作り直す
-        run: python scripts/おでかけ.py --thumbs
+      # 宿のデータを先に作る（おでかけ.py が泊まるのページ /stay/ に使う。2026-10-22）
       - name: 宿のデータを作り直す
         run: python scripts/おでかけ_宿.py --images
+      - name: データを作り直す
+        run: python scripts/おでかけ.py --thumbs
       - name: コミットする
         run: |
           ./scripts/commit_file.sh docs/data.json "chore(odekake): ネタ帳からサイトのデータを更新"
@@ -54,3 +55,4 @@ jobs:
           ./scripts/commit_file.sh docs/tokushoho "chore(odekake): 特商法の表記を更新"
           ./scripts/commit_file.sh docs/submit "chore(odekake): 掲載の申し込みのページを更新"
           ./scripts/commit_file.sh docs/hotels.json "chore(odekake): 宿のデータを更新"
+          ./scripts/commit_file.sh docs/stay "chore(odekake): 泊まるのページを更新"

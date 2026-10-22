@@ -627,6 +627,9 @@ def _page_card(it: dict, today: date) -> str:
         out.append(f'<p class="src"><a href="{h(it["source"])}" rel="noopener" target="_blank">{h(site)}で詳しく見る</a></p>')
     elif it.get("instagram"):
         out.append(f'<p class="src"><a href="{h(it["instagram"])}" rel="noopener" target="_blank">お店の Instagram を見る</a></p>')
+    # 同じ市町の宿のページがあれば「近くに泊まる（PR）」（2026-10-22 代表「OK」泊まるの直し案2）。終わった催しには付けない
+    if not ended and it.get("kind") != "スポット" and it.get("area") in STAY_CITIES:
+        out.append(f'<p class="src"><a href="{SITE}/stay/{quote(it["area"])}/">{h(it["area"])}に泊まる（PR）</a></p>')
     out.append("</article>")
     return "".join(out)
 
@@ -997,10 +1000,185 @@ def render_area(area: str, b: dict, today: date) -> str:
 <p class="muted">日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・自治体・お店の公式）で必ず確かめてください。最終更新：{today.year}年{today.month}月{today.day}日</p>
 </div>
 {"".join(body)}
-{_pr_box("../../", "area")}<nav class="months"><a href="../../weekend/">今週末の{h(KEN)}のイベント</a> ・ <a href="../../spot/">{h(KEN)}の新しいお店</a></nav>
+{_stay_box(area, "../../")}{_pr_box("../../", "area")}<nav class="months"><a href="../../weekend/">今週末の{h(KEN)}のイベント</a> ・ <a href="../../spot/">{h(KEN)}の新しいお店</a></nav>
 <p><a href="../../">{h(KEN)}のほかの市町のおでかけ情報を見る（{h(SITE_NAME)}）</a></p>
 """
     return _shell(title, desc, url, ld, main, "../../")
+
+
+# ---- 泊まるのページ（2026-10-22 代表「1 OK」泊まるの SEO の直し案1・2） ----
+# トップの「泊まる」タブは画面を開いてから宿を並べるので、検索に出ない。宿の一覧 /stay/ と、宿が STAY_MIN 軒以上ある
+# 市町のページ /stay/<市町>/ を静的に作る。宿のデータは docs/hotels.json（scripts/おでかけ_宿.py が作る。楽天トラベルの
+# アフィリエイト）。どこにも「PR」と書く。紹介文は楽天の文なので、特徴の数・その市町の催しなど、このサイトの中身も足す。
+STAY_DIR = ROOT / "docs" / "stay"
+STAY_MIN = 3
+STAY_CITIES: set[str] = set()   # 市町のページがある市町（催しのカード・市町のページから「泊まる」へ）
+HOTELS: list[dict] = []
+STAY_FEATURES = ("温泉", "露天風呂", "サウナ", "大浴場", "朝食バイキング", "チェックアウト遅め", "一棟貸し", "グランピング")
+
+
+def load_hotels() -> list[dict]:
+    try:
+        return json.loads((ROOT / "docs" / "hotels.json").read_text(encoding="utf-8")).get("items", [])
+    except (OSError, ValueError):
+        return []
+
+
+def _hotel_card(x: dict) -> str:
+    from html import escape as h
+    meta = "・".join(v for v in (x.get("area") or x.get("city") or "", "・".join(x.get("features") or [])) if v)
+    out = [f'<article><h3>{h(x["name"])}<small>PR</small></h3>']
+    if meta:
+        out.append(f'<p class="meta">{h(meta)}</p>')
+    if x.get("text"):
+        out.append(f"<p>{h(x['text'])}</p>")
+    facts = []
+    if x.get("rating") and x.get("reviews"):
+        facts.append(f"楽天トラベルの評価 {x['rating']}（{int(x['reviews']):,}件）")
+    if x.get("price"):
+        facts.append(f"最安 {int(x['price']):,}円〜" + (f"（{x['checked']} 時点）" if x.get("checked") else ""))
+    if facts:
+        out.append(f'<p class="muted">{h("・".join(facts))}</p>')
+    out.append(f'<p class="src"><a href="{h(x["url"])}" rel="sponsored noopener" target="_blank">楽天トラベルで空室・料金を見る</a></p>')
+    out.append("</article>")
+    return "".join(out)
+
+
+def _hotel_order(hs: list[dict]) -> list[dict]:
+    """手で選んだ宿 → レビューの多い順"""
+    return sorted(hs, key=lambda x: (not x.get("pick"), -(x.get("reviews") or 0)))
+
+
+def _hotel_ld(x: dict) -> dict:
+    """構造化データ。書くのは名前と市町だけ（評価・料金は楽天のもので変わるので入れない）"""
+    region = KEN if KEN.endswith(("県", "府", "都", "道")) else f"{KEN}県"
+    return {"@type": "LodgingBusiness", "name": x["name"],
+            "address": {"@type": "PostalAddress", "addressLocality": x.get("city") or "", "addressRegion": region,
+                        "addressCountry": "JP"}}
+
+
+STAY_PR = "PR：このページの宿のリンクは、楽天トラベルのアフィリエイトリンクです。"
+
+
+def _feature_counts(hs: list[dict]) -> str:
+    from collections import Counter
+    c = Counter(f for x in hs for f in (x.get("features") or []))
+    return "・".join(f"{k} {c[k]}軒" for k in STAY_FEATURES if c.get(k))
+
+
+def render_stay_city(city: str, hs: list[dict], data: dict, today: date) -> str:
+    from html import escape as h
+    url = f"{SITE}/stay/{quote(city)}/"
+    hs = _hotel_order(hs)
+    areas = sorted({x["area"] for x in hs if x.get("area") and x["area"] != city})
+    where = f"{city}（{'・'.join(areas)}）" if areas else city
+    feats = _feature_counts(hs)
+    title = f"{city}の宿・ホテル {len(hs)}軒｜温泉・サウナ・朝食で比べる｜{SITE_NAME}"
+    desc = (f"{KEN}・{where}の宿・ホテル・旅館 {len(hs)}軒を、温泉・サウナ・朝食バイキングなどの特徴と、楽天トラベルの評価・最安料金でまとめました。"
+            f"{city}のこれからのイベントも。PR")
+    body = []
+    groups: dict[str, list] = {}
+    for x in hs:
+        groups.setdefault(x.get("area") or city, []).append(x)
+    if len(groups) > 1:
+        for a, xs in groups.items():
+            body.append(f"<h2>{h(a)}の宿（{len(xs)}軒）</h2>" + "".join(_hotel_card(x) for x in xs))
+    else:
+        body.append(f"<h2>{h(city)}の宿（{len(hs)}軒）</h2>" + "".join(_hotel_card(x) for x in hs))
+    evs = sorted(_area_items(data, today).get(city, {}).get("events", []), key=lambda it: _span(it)[0])[:6]
+    if evs:
+        more = (f'<p><a href="../../area/{quote(city)}/">{h(city)}のイベント・おでかけ情報をもっと見る</a></p>'
+                if (AREA_DIR / city).is_dir() else "")
+        body.append(f"<h2>{h(city)}のこれからのイベント</h2>"
+                    "<p class=\"muted\">泊まりがけで行ける、この市町の催しです。</p>"
+                    + "".join(_page_card(it, today) for it in evs) + more)
+    crumbs = {"@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": f"{SITE}/"},
+        {"@type": "ListItem", "position": 2, "name": f"{KEN}の宿", "item": f"{SITE}/stay/"},
+        {"@type": "ListItem", "position": 3, "name": f"{city}の宿", "item": url}]}
+    lst = {"@type": "ItemList", "name": f"{city}の宿・ホテル", "numberOfItems": len(hs),
+           "itemListElement": [{"@type": "ListItem", "position": i, "item": _hotel_ld(x)} for i, x in enumerate(hs, start=1)]}
+    ld = json.dumps({"@context": "https://schema.org", "@graph": [crumbs, lst]}, ensure_ascii=False).replace("</", "<\\/")
+    others = " ・ ".join(f'<a href="../{quote(c)}/">{h(c)}</a>' for c in sorted(STAY_CITIES) if c != city)
+    main = f"""<h1>{h(city)}の宿・ホテル（{len(hs)}軒）</h1>
+<div class="lead">
+<p>{h(KEN)}・{h(where)}の宿を、楽天トラベルに載っている{len(hs)}軒からまとめました。{h(f"特徴で見ると、{feats}です。") if feats else ""}</p>
+<p class="muted">{h(STAY_PR)}評価・料金は調べた時点の楽天トラベルのもので、変わることがあります。予約の前に楽天トラベルでご確認ください。</p>
+</div>
+{"".join(body)}
+<nav class="months"><a href="../">{h(KEN)}の宿（市町別）</a>{f" ・ ほかの市町：{others}" if others else ""}</nav>
+<p><a href="../../">{h(KEN)}のイベント・新しいお店を見る（{h(SITE_NAME)}）</a></p>
+"""
+    return _shell(title, desc, url, ld, main, "../../")
+
+
+def render_stay_index(hotels: list[dict], today: date) -> str:
+    from html import escape as h
+    url = f"{SITE}/stay/"
+    by: dict[str, list] = {}
+    for x in _hotel_order(hotels):
+        by.setdefault(x.get("city") or "そのほか", []).append(x)
+    cities = sorted(by, key=lambda c: -len(by[c]))
+    title = f"{KEN}の宿・ホテル・温泉旅館 {len(hotels)}軒（市町別）｜{SITE_NAME}"
+    desc = (f"{KEN}県内の宿・ホテル・旅館 {len(hotels)}軒を、市町別に、温泉・サウナ・朝食バイキングなどの特徴と楽天トラベルの評価でまとめました。PR")
+    body = []
+    for c in cities:
+        link = f'（<a href="./{quote(c)}/">{h(c)}の宿をくわしく見る</a>）' if c in STAY_CITIES else ""
+        body.append(f"<h2>{h(c)}（{len(by[c])}軒）</h2>{f'<p>{link}</p>' if link else ''}"
+                    + "".join(_hotel_card(x) for x in by[c]))
+    crumbs = {"@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": f"{SITE}/"},
+        {"@type": "ListItem", "position": 2, "name": f"{KEN}の宿", "item": url}]}
+    lst = {"@type": "ItemList", "name": f"{KEN}の宿・ホテル", "numberOfItems": len(hotels),
+           "itemListElement": [{"@type": "ListItem", "position": i, "item": _hotel_ld(x)}
+                               for i, x in enumerate([x for c in cities for x in by[c]], start=1)]}
+    ld = json.dumps({"@context": "https://schema.org", "@graph": [crumbs, lst]}, ensure_ascii=False).replace("</", "<\\/")
+    jump = " ・ ".join(f'<a href="./{quote(c)}/">{h(c)}</a>' for c in cities if c in STAY_CITIES)
+    feats = _feature_counts(hotels)
+    main = f"""<h1>{h(KEN)}の宿・ホテル（市町別）</h1>
+<div class="lead">
+<p>{h(KEN)}県内の宿を、楽天トラベルに載っている{len(hotels)}軒から、市町ごとにまとめました。{h(f"特徴で見ると、{feats}です。") if feats else ""}</p>
+{f'<p>市町のページ：{jump}</p>' if jump else ""}
+<p class="muted">{h(STAY_PR)}評価・料金は調べた時点の楽天トラベルのもので、変わることがあります。予約の前に楽天トラベルでご確認ください。</p>
+</div>
+{"".join(body)}
+<p><a href="../weekend/">今週末の{h(KEN)}のイベントを見る</a></p>
+<p><a href="../">{h(KEN)}のイベント・新しいお店を見る（{h(SITE_NAME)}）</a></p>
+"""
+    return _shell(title, desc, url, ld, main, "../")
+
+
+def _stay_box(city: str, up: str) -> str:
+    """市町のページの「〇〇に泊まる（PR）」（直し案2）。宿の多い順に3軒と、宿のページへのリンク"""
+    from html import escape as h
+    hs = _hotel_order([x for x in HOTELS if x.get("city") == city])[:3]
+    if not hs:
+        return ""
+    more = (f'<a href="{up}stay/{quote(city)}/">{h(city)}の宿をもっと見る</a>' if city in STAY_CITIES
+            else f'<a href="{up}stay/">{h(KEN)}の宿（市町別）を見る</a>')
+    return (f"<h2>{h(city)}に泊まる（PR）</h2><p class=\"muted\">{h(STAY_PR)}</p>"
+            + "".join(_hotel_card(x) for x in hs) + f"<p>{more}</p>\n")
+
+
+def prepare_stay() -> None:
+    """宿のデータを読み、市町のページを作る市町を決める（月・今週末・市町のページより先に呼ぶ）"""
+    from collections import Counter
+    HOTELS[:] = load_hotels() if _uses("宿") else []
+    n = Counter(x.get("city") for x in HOTELS if x.get("city"))
+    STAY_CITIES.clear()
+    STAY_CITIES.update(c for c, k in n.items() if k >= STAY_MIN)
+
+
+def write_stay(data: dict, today: date) -> list[str]:
+    if not HOTELS:
+        return []
+    STAY_DIR.mkdir(parents=True, exist_ok=True)
+    (STAY_DIR / "index.html").write_text(render_stay_index(HOTELS, today), encoding="utf-8")
+    for c in sorted(STAY_CITIES):
+        (STAY_DIR / c).mkdir(parents=True, exist_ok=True)
+        (STAY_DIR / c / "index.html").write_text(
+            render_stay_city(c, [x for x in HOTELS if x.get("city") == c], data, today), encoding="utf-8")
+    return sorted(STAY_CITIES)
 
 
 def write_areas(data: dict, today: date) -> list[str]:
@@ -1444,6 +1622,7 @@ a {{ color: #1f7a57; font-weight: 700; }}
 
 
 def write_static(data: dict, today: date) -> None:
+    prepare_stay()
     months = write_months(data, today)
     (ROOT / "docs" / "404.html").write_text(render_404(months, today), encoding="utf-8")
     WEEKEND_DIR.mkdir(parents=True, exist_ok=True)
@@ -1451,6 +1630,7 @@ def write_static(data: dict, today: date) -> None:
     SPOT_DIR.mkdir(parents=True, exist_ok=True)
     (SPOT_DIR / "index.html").write_text(render_spot(data, today), encoding="utf-8")
     areas = write_areas(data, today)
+    stays = write_stay(data, today)
     if _uses("問い合わせ"):
         CONTACT_DIR.mkdir(parents=True, exist_ok=True)
         (CONTACT_DIR / "index.html").write_text(render_contact(today), encoding="utf-8")
@@ -1469,7 +1649,8 @@ def write_static(data: dict, today: date) -> None:
     ma, mb = html_text.find(MONTHS_MARK[0]), html_text.find(MONTHS_MARK[1])
     if ma >= 0 and mb >= 0:
         links = ('<a href="./weekend/">今週末のイベント</a><br><a href="./spot/">新しいお店</a><br>'
-                 + ("市町別：" + " ・ ".join(f'<a href="./area/{quote(a)}/">{a}</a>' for a in areas) + "<br>" if areas else "")) + "".join(f'<a href="./month/{k}/">{_month_label(k)}のイベント</a><br>' for k in months)
+                 + ("市町別：" + " ・ ".join(f'<a href="./area/{quote(a)}/">{a}</a>' for a in areas) + "<br>" if areas else "")
+                 + (f'<a href="./stay/">{KEN}の宿（市町別・PR）</a>' + "".join(f' ・ <a href="./stay/{quote(c)}/">{c}</a>' for c in stays) + "<br>" if HOTELS else "")) + "".join(f'<a href="./month/{k}/">{_month_label(k)}のイベント</a><br>' for k in months)
         html_text = html_text[:ma] + MONTHS_MARK[0] + links + html_text[mb:]
     INDEX.write_text(html_text, encoding="utf-8")
     lastmod = data.get("updated") or today.isoformat()
@@ -1478,6 +1659,8 @@ def write_static(data: dict, today: date) -> None:
             *([(f"{SITE}/contact/", "2026-10-20", "yearly")] if _uses("問い合わせ") else []),
             *([(f"{SITE}/submit/", "2026-10-20", "yearly")] if _uses("掲載申し込み") else []),
             *[(f"{SITE}/area/{quote(a)}/", lastmod, "daily") for a in areas],
+            *([(f"{SITE}/stay/", today.isoformat(), "weekly")] if HOTELS else []),
+            *[(f"{SITE}/stay/{quote(c)}/", today.isoformat(), "weekly") for c in stays],
             (f"{SITE}/about/", "2026-10-04", "monthly")]
     urls += [(f"{SITE}/month/{k}/", lastmod, "daily") for k in months]
     SITEMAP.write_text(
