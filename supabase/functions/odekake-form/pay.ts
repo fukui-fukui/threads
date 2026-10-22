@@ -8,6 +8,10 @@ export const AMOUNT = 5500;
 export const SUBMIT_TEXT = "いまはカードの仮押さえです。掲載が決まった時点で 5,500円（税込）を請求します。掲載できない場合や、7日以内に掲載を決められなかった場合は仮押さえを取り消し、請求はありません。クーポンで0円になる場合は、請求はありません。";
 // クーポンで 0円になった申し込み（Stripe は仮押さえを作らない）の印。payment_intent の欄にこの値を入れる
 export const FREE = "free";
+// 初回のお申し込みで無料にしたもの（2026-10-22 代表「進めて」）。Stripe を通さないので、確定・取り消しで Stripe を呼ばない
+export const FIRST = "first";
+/** 請求の無い申し込み（クーポンで 0円・初回無料）か */
+export const noCharge = (pi: unknown) => pi === FREE || pi === FIRST;
 // 仮押さえはカードでふつう7日で切れる。切れる前に余裕をもって取り消す（6日と12時間）
 export const HOLD_LIMIT_MS = 6.5 * 24 * 3600_000;
 // 何日目に「もうすぐ切れる」を出すか

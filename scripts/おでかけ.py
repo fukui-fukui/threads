@@ -732,12 +732,13 @@ table.toku th {{ width: 34%; color: var(--muted); font-weight: 700; }}
 
 def _pr_box(up: str, where: str) -> str:
     """主催者向けの PR 枠の案内（2026-10-22 代表「進めて」集客案1）。where は /submit/ の閲覧をどこから来たかで数えるための印。
-    「初回無料」は、その仕組みが入るまで書かない。"""
+    「初回無料」の一言は region.json の 使う.初回無料 のときだけ（2026-10-22 代表「進めて」）。"""
     from html import escape as h
     if not _uses("掲載申し込み"):
         return ""
     return (f'<aside class="prbox"><b>主催者の方へ：PR枠のお申し込み</b>'
             f'<p>催しを{h(SITE_NAME)}の PR 枠に載せられます（{h(PR_PRICE)}）。表示には「PR」と付きます。'
+            + ("初めてのお申し込みは無料です。" if _uses("初回無料") else "") +
             f'<a href="{up}submit/?from={where}">お申し込みはこちら</a></p></aside>\n')
 
 
@@ -1023,6 +1024,12 @@ def write_areas(data: dict, today: date) -> list[str]:
 HOLD_LEAD = ("<p>いただいた情報は、主催者などの公式の案内で確かめてから掲載します。</p>"
              "<p><b>送信すると、お支払い画面（Stripe）に移ります。</b>カードで 5,500円（税込）を仮押さえしますが、"
              "掲載が決まるまで確定しません。掲載できない場合は取り消し、料金は請求されません。</p>")
+# 初回のお申し込みは無料（2026-10-22 代表「B　案内文も書くように」「進めて」。region.json の 使う.初回無料）。
+# 初回かどうかは受付の仕組み（odekake-form）が、同じ地域の受け付け済みの申し込みと、メールアドレス・主催者名で照らして決める
+FIRST_LEAD = "<p><b>初めてのお申し込みは無料です（1つの主催者につき1回）。</b>2回目からは イベント掲載 1件 5,500円（税込）です。</p>"
+FIRST_HOLD_LEAD = ("<p>いただいた情報は、主催者などの公式の案内で確かめてから掲載します。</p>"
+                   "<p><b>2回目からは、送信するとお支払い画面（Stripe）に移ります。</b>カードで 5,500円（税込）を仮押さえしますが、"
+                   "掲載が決まるまで確定しません。掲載できない場合は取り消し、料金は請求されません。</p>")
 # 有料掲載で提供する内容（2026-10-20 代表の文。特商法の表記・申し込みフォームで同じ文を使う）
 PR_PRICE = "イベント掲載 1件 5,500円（税込）"   # 特商法の表記・フォームと同じ書き方（2026-10-20 代表）
 PAID_OFFER = (f"「{SITE_NAME}」PR枠への掲載（最長30日）、Threads での紹介（掲載を始めたとき・毎週1回・開催の前日と当日）、"
@@ -1049,6 +1056,9 @@ def _form_script(kind: str) -> str:
     # 送信すると支払い画面に移ることを、ボタンのすぐ上で先に伝える（2026-10-21 代表「それでOK」の文）
     pay = ('<p class="paynote">送信すると、カードの確認画面に移ります。この時点では請求されず、'
            '掲載が決まってから 5,500円（税込）を請求します。</p>') if kind == "submission" and _uses("仮押さえ") else ""
+    if pay and _uses("初回無料"):
+        pay = ('<p class="paynote">初めてのお申し込みは無料で、カードの入力はありません。2回目からは、送信するとカードの確認画面に移ります。'
+               'この時点では請求されず、掲載が決まってから 5,500円（税込）を請求します。</p>')
     return ts + pay + f"""<button type="submit">送信する</button>
 <div class="msg" id="msg" hidden></div>
 </form>
@@ -1139,6 +1149,31 @@ def _form_script(kind: str) -> str:
         }} catch (_) {{}}
         say("お支払い画面（Stripe）に移ります…");
         location.href = j.pay_url;
+        return;
+      }}
+      if (r.ok && j.ok && j.first) {{
+        // 初回のお申し込み（無料）：支払い画面には移らない。カードのときの戻った画面と同じく、受付の案内と入力の控えだけを出す
+        const list = [];
+        for (const x of fields) {{
+          if (x.type === "file") {{ const fl = x.files && x.files[0]; if (fl) list.push(["チラシ", fl.name]); continue; }}
+          if (x.type !== "checkbox" && x.value.trim()) list.push([nameOf(x), x.value.trim()]);
+        }}
+        for (const el of [...f.children]) if (el !== msg) el.style.display = "none";
+        for (const t of [...f.childNodes]) if (t.nodeType === 3) t.remove();
+        document.querySelectorAll(".lead").forEach((x) => (x.style.display = "none"));
+        say(["受け付けました。申込番号：" + j.number, "初回のお申し込みのため無料です（請求はありません）。",
+             "公式の案内で確かめ、掲載が決まったらメールでお知らせします。",
+             "受付のメールをお送りしました。届かない場合は迷惑メールのフォルダもご覧ください。"]);
+        if (list.length) {{
+          const hd = document.createElement("div"); hd.className = "rh"; hd.textContent = "お申し込み内容の控え";
+          const dl = document.createElement("dl"); dl.className = "receipt";
+          for (const [k, v] of list) {{ const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; dl.append(dt, dd); }}
+          msg.append(hd, dl);
+        }}
+        const again = document.createElement("button"); again.type = "button"; again.className = "again"; again.textContent = "別の催しを申し込む";
+        again.addEventListener("click", () => {{ location.href = location.pathname; }});
+        msg.append(again);
+        msg.scrollIntoView({{ block: "start" }});
         return;
       }}
       if (r.ok && j.ok) {{
@@ -1270,7 +1305,7 @@ def render_submit(today: date) -> str:
     main = f"""<h1>イベント掲載の申し込み</h1>
 <div class="lead">
 <p><b>主催者の方からのみ受け付けます。</b></p>
-{HOLD_LEAD if _uses("仮押さえ") else '<p>いただいた情報は、主催者などの公式の案内で確かめてから掲載します。掲載できる場合は、お支払いのご案内をメールでお送りします。</p>'}
+{FIRST_LEAD if _uses("初回無料") else ""}{(FIRST_HOLD_LEAD if _uses("初回無料") else HOLD_LEAD) if _uses("仮押さえ") else '<p>いただいた情報は、主催者などの公式の案内で確かめてから掲載します。掲載できる場合は、お支払いのご案内をメールでお送りします。</p>'}
 <p>掲載の内容：{h(PAID_OFFER)}料金は 1件 5,500円（税込）です。</p>
 <p>お支払いのあとの返金は、原則できません。事情がある場合は、<a href="../contact/">お問い合わせ</a>から運営へご連絡ください。料金などは<a href="../tokushoho/">特定商取引法に基づく表記</a>をご覧ください。</p>
 <p class="muted">{h(PRIVACY_FORM)}</p>
@@ -1335,7 +1370,9 @@ def render_tokushoho(today: date) -> str:
         ("所在地", "請求があった場合には遅滞なく開示します"),
         ("電話番号", "請求があった場合には遅滞なく開示します"),
         ("メールアドレス", TOKUSHOHO_MAIL),
-        ("販売価格", "イベント掲載 1件 5,500円（税込）"),
+        ("販売価格", "イベント掲載 1件 5,500円（税込）"
+                     + ("。初回のお申し込み（同じ主催者・同じメールアドレスで初めてのもの）は無料。"
+                        "初回の判定は運営が行い、同じ主催者と判断した場合は通常の料金となります" if _uses("初回無料") else "")),
         ("提供する内容", PAID_OFFER),
         ("商品代金以外の必要料金", "なし（インターネット接続にかかる通信料はお客様のご負担です）"),
         ("掲載の可否", "お申し込みの内容は、主催者などの公式の案内で確かめてから掲載します。"
