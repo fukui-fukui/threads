@@ -383,7 +383,7 @@ class WeekendTest(unittest.TestCase):
         self.assertIn('<link rel="canonical" href="https://odekake.fukui-fukui.com/weekend/">', html)
 
     def test_pages_show_pr_box_for_organizers(self):
-        # 主催者向けの PR 枠の案内（2026-10-22 代表「進めて」）。「初回無料」はまだ書かない
+        # 主催者向けの PR 枠の案内（2026-10-22 代表「進めて」）。初回無料の一言も（同日 代表「進めて」）
         ev = {"kind": "催し", "start": "2026-10-24", "end": "2026-10-24", "area": "福井市",
               "text": "「土曜市」開催", "note": "", "source": None}
         wk = odekake.render_weekend({"items": [ev]}, date(2026, 10, 20))
@@ -391,7 +391,7 @@ class WeekendTest(unittest.TestCase):
         self.assertIn('href="../submit/?from=weekend"', wk)
         self.assertIn('href="../../submit/?from=month"', mo)
         self.assertIn("主催者の方へ：PR枠のお申し込み", mo)
-        self.assertNotIn("無料", wk + mo)
+        self.assertIn("初めてのお申し込みは無料です。", mo)
 
 
 class SpotPageTest(unittest.TestCase):

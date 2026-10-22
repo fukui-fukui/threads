@@ -15,7 +15,9 @@ type Row = Record<string, unknown>;
 
 const s = (v: unknown) => (v == null ? "" : String(v));
 // クーポンで 0円になった申し込み（pay.ts の FREE）。仮押さえ・請求の文を出さない
-const free = (r: Row) => r.payment_intent === "free";
+const free = (r: Row) => r.payment_intent === "free" || r.payment_intent === "first";
+// 初回のお申し込みで無料（pay.ts の FIRST。2026-10-22 代表）
+const first = (r: Row) => r.payment_intent === "first";
 // 差出人も返信先も contact@（2026-10-21 代表「A」。「送信専用」の文はやめた：代表「送信用アドレスなのにここに連絡しては変ですよ」）
 const foot = () => ["", "ご不明な点は、このメールにそのままご返信ください。"];
 
@@ -70,7 +72,7 @@ export function submissionReceived(r: Row): Mail {
     "お申し込みありがとうございます。次の内容で受け付けました。",
     ...summary(r),
     ...(free(r) ? [
-      "・料金：クーポンのご利用で 0円です（請求はありません）",
+      first(r) ? "・料金：初回のお申し込みのため無料です（請求はありません）" : "・料金：クーポンのご利用で 0円です（請求はありません）",
       "",
       "これから、主催者などの公式の案内で内容を確かめます。",
       "掲載が決まったら、掲載を始める日をお知らせします。",
@@ -94,7 +96,7 @@ export function submissionCaptured(r: Row): Mail {
     `${s(r.contact_name)} 様`,
     "",
     `「${s(r.event_name)}」の掲載が決まりました。`,
-    free(r) ? "クーポンのご利用のため、料金はかかりません。" : `${PRICE_TEXT}を確定しました。Stripe から領収書をお送りします。`,
+    first(r) ? "初回のお申し込みのため、料金はかかりません。" : free(r) ? "クーポンのご利用のため、料金はかかりません。" : `${PRICE_TEXT}を確定しました。Stripe から領収書をお送りします。`,
     "掲載は、確定した日から3日以内に始めます。表示や投稿には「PR」と付きます。",
   ]);
 }
@@ -127,7 +129,7 @@ export function noticeSubmission(r: Row): Mail {
     `${site.name}に、イベント掲載の申し込みが届きました。`,
     `・申込番号：${s(r.number)}`,
     `・催し：${s(r.event_name)}`,
-    `・料金：${free(r) ? "無料（クーポン）" : r.payment_intent ? "5,500円を仮押さえ済み（未確定）" : "まだお支払いなし（仮押さえを使っていないとき）"}`,
+    `・料金：${first(r) ? "無料（初回）" : free(r) ? "無料（クーポン）" : r.payment_intent ? "5,500円を仮押さえ済み（未確定）" : "まだお支払いなし（仮押さえを使っていないとき）"}`,
     "",
     "全項目とチラシは、ダッシュボードの「掲載申込」で見られます（反映は毎朝 8:30 ごろ。急ぐときは統括へ）。",
     "「受ける／受けない」は、仮押さえの期限（7日）までに選んでください。",
