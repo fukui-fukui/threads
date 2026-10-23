@@ -30,6 +30,10 @@ SKIP = {
     # 福井の中身なので写さない（どれも無ければ仕組みが自分で作る。2026-10-15 ぎふあいち開発の気づき）
     "neta/外した候補.md", "neta/楽天の成果.jsonl", "neta/載せないもの.jsonl",
     "docs/data.json", "docs/hotels.json", "docs/month", "docs/sitemap.xml", "docs/CNAME",
+    # おでかけ.py が作る福井のページ・福井のリール・インスタ用の画像。写し先では自分で作る（使わない県は作らない）
+    # （2026-10-23 写し直しで、ぎふあいちに福井の市町・宿のページと掲載申し込みのページが混ざった）
+    "docs/area", "docs/stay", "docs/spot", "docs/weekend", "docs/reel", "docs/ig",
+    "docs/submit", "docs/tokushoho", "docs/contact",
     "scripts/_アーカイブ", "scripts/地域の写し.py",
     # 予算の見張りは福井のリポジトリでまとめて行う（石川の分も足す）
     "予算.json", "scripts/予算.mjs", ".github/workflows/budget-check.yml",
@@ -63,6 +67,9 @@ def 共通(文: str, 地: dict) -> str:
     文 = 文.replace(福井["サイトURL"].rstrip("/"), 地["サイトURL"].rstrip("/"))
     文 = 文.replace(f"@{福井['アカウント']}", f"@{地['アカウント']}")
     文 = 文.replace(福井["サイト名"], 地["サイト名"])
+    # 「ふくい おでかけ」のような、ひらがなの呼び名を空けて書いた表記ゆれ（トップの alternateName）も置きかえる
+    if 福井["サイト名"].endswith("おでかけ") and 地["サイト名"].endswith("おでかけ"):
+        文 = 文.replace(f"{福井['サイト名'][:-4]} おでかけ", f"{地['サイト名'][:-4]} おでかけ")
     # Google アナリティクス・Cloudflare は、写し先に ID が無ければタグごと外す
     if 地.get("GA"):
         文 = 文.replace(福井["GA"], 地["GA"])
@@ -126,16 +133,21 @@ def トップ(文: str, 地: dict) -> str:
         文 = 文.replace("福井に泊まる", f"{県名}に泊まる")
     # 残りの「福井」（見出し・説明文）を県名にする。福井県 → 石川県 を先に
     文 = 文.replace("福井県", 県).replace("福井", 県名)
+    # ひらがなの「ふくい」（別名の「ふくい おでかけ」など。#272）は、サイト名のひらがな（いしかわ・ぎふあいち）にする
+    文 = 文.replace("ふくい", 地["サイト名"].removesuffix("おでかけ"))
     # 「岐阜おでかけ」「愛知おでかけ」のような呼び名でも検索に出るように、title・説明・h1・構造化データに入れる
     # （2026-10-23 代表「各サイトの検索、福井おでかけ 石川おでかけ 岐阜おでかけ 愛知おでかけ でも検索で引っかかるように」）
     呼び = 地.get("検索の呼び名") or []
     if 呼び:
         並べ = "・".join(呼び[:3])
+        # 2県のサイトでは「岐阜・愛知おでかけ」という呼び方はしないので、呼び名（岐阜おでかけ・愛知おでかけ）に置きかえる
+        文 = 文.replace(f"{県名}おでかけ", "・".join(呼び[:2]))
+        全部 = "・".join(呼び)  # 漢字・ひらがなの表記ゆれも説明文に入れる（2026-10-23 代表「漢字ひらがなのバリエーションで引っかかるように」）
         文 = 正規(文, r"<title>.*?</title>", f"<title>{地['サイト名']}｜{並べ}情報｜今週末のイベントと新しいお店</title>")
         別名 = json.dumps([*呼び, f"{県名}のおでかけ情報"], ensure_ascii=False, separators=(",", ":"))
         文 = 正規(文, r'"alternateName":\[[^\]]*\]', lambda m: f'"alternateName":{別名}')
-        文 = 置く(文, '<meta name="description" content="', f'<meta name="description" content="{並べ}の情報サイト。', 1)
-        文 = 置く(文, '<meta property="og:description" content="', f'<meta property="og:description" content="{並べ}の情報サイト。', 1)
+        文 = 置く(文, '<meta name="description" content="', f'<meta name="description" content="{全部}の情報サイト。', 1)
+        文 = 置く(文, '<meta property="og:description" content="', f'<meta property="og:description" content="{全部}の情報サイト。', 1)
         文 = 正規(文, r"<h1>[^<]*</h1>", f"<h1>{'・'.join(呼び[:2])}情報</h1>")
     return 文
 
