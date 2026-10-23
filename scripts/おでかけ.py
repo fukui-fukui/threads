@@ -35,7 +35,9 @@ KEN = 地域.県名
 SITE_NAME = 地域.地域["サイト名"]
 # 「岐阜おでかけ」のような呼び名でも検索に出るように、各ページの title の後ろに添える（region.json の「検索の呼び名」。2026-10-23 代表）
 _呼び名 = 地域.地域.get("検索の呼び名") or []
-TITLE_SITE = f"{SITE_NAME}（{'・'.join(_呼び名[:2])}）" if _呼び名 else SITE_NAME
+# 呼び名が無い地域は「ふくいおでかけ（福井おでかけ）」のように県名＋おでかけを添える（2026-10-23 代表。#270）
+TITLE_SITE = (f"{SITE_NAME}（{'・'.join(_呼び名[:2])}）" if _呼び名
+              else f"{SITE_NAME}（{地域.県名}おでかけ）" if SITE_NAME != f"{地域.県名}おでかけ" else SITE_NAME)
 ACCOUNT = 地域.地域["アカウント"]
 NETA = ROOT / "neta" / "ネタ帳.md"
 OUT = ROOT / "docs" / "data.json"
