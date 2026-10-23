@@ -841,7 +841,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "",
         "**12:00・19:00・21:00 も、同じ日に同じ催しを出さないこと。** それぞれ違う催しを選んでください。",
         "",
-        "## 使えない出典と、使えない店・催しの名前（出典は直近14日で2回／3日以内、名前は直近7日に出したもの。手で入れた投稿も含む。機械で止めます）",
+        "## 使えない出典と、使えない店・催しの名前（出典は直近14日で2回／3日以内、名前は前後7日に入っているもの（先の日に手で入れた投稿も含む）。機械で止めます）",
         "",
         使えない or "（なし）",
         "",
@@ -1751,26 +1751,33 @@ def 名前たち(e: dict, 見出しも: bool = True) -> set[str]:
 
 
 def 名の記録(投稿たち: list[dict], target_date) -> dict[str, tuple[str, int]]:
-    """名前 → 直近に出した (日付, 時)。対象日より前の7日（手で入れた投稿も含む）。"""
+    """名前 → 直近に出した (日付, 時)。対象日より前の7日と、キューにある先の7日（手で入れた投稿も含む）。
+    先の日に手で入れた店を、その晩の作成がネタ帳から先に使ってしまうため、先の予定も見る
+    （2026-10-23 運用部・福井：陶あかり 10/21・ROKKA 10/22・越ノ龍 10/23 で3回）。"""
     記: dict[str, tuple[str, int]] = {}
     for e in 投稿たち:
         at = str(e.get("scheduled_at", ""))
         d = at[:10]
-        if not d or d >= target_date.isoformat() or e.get("reply_to") or e.get("reply_to_id"):
+        if not d or d == target_date.isoformat() or e.get("reply_to") or e.get("reply_to_id"):
             continue
         try:
             差 = (target_date - datetime.strptime(d, "%Y-%m-%d").date()).days
             時 = int(at[11:13])
         except ValueError:
             continue
-        if 差 > 同じ名を空ける日数:
+        if abs(差) > 同じ名を空ける日数:
             continue
         # 6:00 の「今日で終わる」まとめと金曜の今週末まとめは、並べた催しの見出しまでは数えない（止めるほうでも見ていないため）
         まとめ = 時 == 6 or (今週末まとめの日(datetime.strptime(d, "%Y-%m-%d").date()) and 時 == WEEKEND_HOUR)
         for n in 名前たち(e, 見出しも=not まとめ):
-            if n not in 記 or 記[n] < (d, 時):
+            # 前の日と先の日の両方にあるときは、対象日に近いほうを残す
+            if n not in 記 or abs(_日差(d, target_date)) < abs(_日差(記[n][0], target_date)):
                 記[n] = (d, 時)
     return 記
+
+
+def _日差(d: str, target_date) -> int:
+    return (target_date - datetime.strptime(d, "%Y-%m-%d").date()).days
 
 
 def 名で止める理由(e: dict, 名記: dict) -> str | None:
@@ -1779,7 +1786,7 @@ def 名で止める理由(e: dict, 名記: dict) -> str | None:
     for n in sorted(名前たち(e)):
         if n in 名記:
             d, 時 = 名記[n]
-            return f"「{n}」を {d} {時}:00 に出したばかり（同じ店・催しは{同じ名を空ける日数}日あける）"
+            return f"「{n}」を {d} {時}:00 にも入れている（同じ店・催しは前後{同じ名を空ける日数}日あける）"
     return None
 
 
@@ -1807,7 +1814,7 @@ def 使えない出典の一覧(記: dict, 投稿たち: list[dict], target_date
 def 使えない名の一覧(名記: dict) -> str:
     if not 同じ名を見る:
         return ""
-    return "\n".join(f"- 「{n}」（最後 {d} {時}:00）" for n, (d, 時) in sorted(名記.items(), key=lambda x: x[1], reverse=True))
+    return "\n".join(f"- 「{n}」（{d} {時}:00 に入っている）" for n, (d, 時) in sorted(名記.items(), key=lambda x: x[1], reverse=True))
 
 
 # ---- 15時：催し × 近くの宿1軒（福井だけ。2026-09-29 代表了承） -------------
