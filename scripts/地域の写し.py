@@ -30,6 +30,10 @@ SKIP = {
     # 福井の中身なので写さない（どれも無ければ仕組みが自分で作る。2026-10-15 ぎふあいち開発の気づき）
     "neta/外した候補.md", "neta/楽天の成果.jsonl", "neta/載せないもの.jsonl",
     "docs/data.json", "docs/hotels.json", "docs/month", "docs/sitemap.xml", "docs/CNAME",
+    # おでかけ.py が作る福井のページ・福井のリール・インスタ用の画像。写し先では自分で作る（使わない県は作らない）
+    # （2026-10-23 写し直しで、ぎふあいちに福井の市町・宿のページと掲載申し込みのページが混ざった）
+    "docs/area", "docs/stay", "docs/spot", "docs/weekend", "docs/reel", "docs/ig",
+    "docs/submit", "docs/tokushoho", "docs/contact",
     "scripts/_アーカイブ", "scripts/地域の写し.py",
     # 予算の見張りは福井のリポジトリでまとめて行う（石川の分も足す）
     "予算.json", "scripts/予算.mjs", ".github/workflows/budget-check.yml",
