@@ -131,11 +131,12 @@ def トップ(文: str, 地: dict) -> str:
     呼び = 地.get("検索の呼び名") or []
     if 呼び:
         並べ = "・".join(呼び[:3])
+        全部 = "・".join(呼び)  # 漢字・ひらがなの表記ゆれも説明文に入れる（2026-10-23 代表「漢字ひらがなのバリエーションで引っかかるように」）
         文 = 正規(文, r"<title>.*?</title>", f"<title>{地['サイト名']}｜{並べ}情報｜今週末のイベントと新しいお店</title>")
         別名 = json.dumps([*呼び, f"{県名}のおでかけ情報"], ensure_ascii=False, separators=(",", ":"))
         文 = 正規(文, r'"alternateName":\[[^\]]*\]', lambda m: f'"alternateName":{別名}')
-        文 = 置く(文, '<meta name="description" content="', f'<meta name="description" content="{並べ}の情報サイト。', 1)
-        文 = 置く(文, '<meta property="og:description" content="', f'<meta property="og:description" content="{並べ}の情報サイト。', 1)
+        文 = 置く(文, '<meta name="description" content="', f'<meta name="description" content="{全部}の情報サイト。', 1)
+        文 = 置く(文, '<meta property="og:description" content="', f'<meta property="og:description" content="{全部}の情報サイト。', 1)
         文 = 正規(文, r"<h1>[^<]*</h1>", f"<h1>{'・'.join(呼び[:2])}情報</h1>")
     return 文
 
