@@ -41,12 +41,12 @@ jobs:
       REVIEW_HOLD_DAYS: ${{ vars.REVIEW_HOLD_DAYS }}
     steps:
       # 起動の時点ではなく、動き出した時点の main を取る（同じ時刻に2回起動されたとき、あとの回が前の回の投稿済み記録を見られるように。2026-10-17 cron-job.org の引っ越しで重なった）
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.repository.default_branch }}
       - name: 非公開の置き場から写す（odekake-data。鍵が無いあいだは何もしない）
         run: ./scripts/非公開.sh pull
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 

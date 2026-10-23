@@ -15,7 +15,7 @@ jobs:
     env:
       DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: 写す
         run: |
           set -euo pipefail

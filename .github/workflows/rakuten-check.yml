@@ -18,10 +18,10 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
       - name: 楽天に1回だけ聞いてみる
         env:
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
