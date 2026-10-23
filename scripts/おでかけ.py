@@ -32,6 +32,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import 地域  # noqa: E402  どの県のおでかけか（region.json）
 
 KEN = 地域.県名
+# 題名・見出しで使う地域の呼び方。2県のサイトは「岐阜・愛知・名古屋」のように、検索でよく使う地名まで入れる
+# （region.json の「見出しの地域」。2026-10-23 代表「福井 イベント なども入れて」）。無ければ県名のまま
+HEAD_KEN = 地域.地域.get("見出しの地域") or KEN
 SITE_NAME = 地域.地域["サイト名"]
 # 「岐阜おでかけ」のような呼び名でも検索に出るように、各ページの title の後ろに添える（region.json の「検索の呼び名」。2026-10-23 代表）
 _呼び名 = 地域.地域.get("検索の呼び名") or []
@@ -508,9 +511,9 @@ def prerender(data: dict, today: date, limit_events: int = 40, limit_spots: int 
     spots = sorted((it for it in items if it["kind"] == "スポット" and it.get("start")),
                    key=lambda it: it["start"], reverse=True)
     parts = [MARK_START, '<div class="prerender">']
-    parts.append(f"<h2>今日開催中・これからの{KEN}のイベント（{today.month}月{today.day}日時点）</h2>")
+    parts.append(f"<h2>今日開催中・これからの{HEAD_KEN}のイベント（{today.month}月{today.day}日時点）</h2>")
     parts += [_card(it) for it in events[:limit_events]]
-    parts.append(f"<h2>{KEN}に新しくできたお店・スポット</h2>")
+    parts.append(f"<h2>{HEAD_KEN}に新しくできたお店・スポット</h2>")
     parts += [_card(it) for it in spots[:limit_spots]]
     parts.append("</div>")
     parts.append(MARK_END)
@@ -762,7 +765,7 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
     area_txt = "、".join(f"{a}（{n}件）" for a, n in areas)
     url = f"{SITE}/month/{key}/"
     # 「福井 イベント 10月」で出やすいよう、月を前に（2026-10-23 代表「福井 イベント なども入れて」）
-    title = f"{m}月の{KEN}のイベント一覧（{y}年）｜祭り・マルシェ・展示｜{TITLE_SITE}"
+    title = f"{m}月の{HEAD_KEN}のイベント一覧（{y}年）｜祭り・マルシェ・展示｜{TITLE_SITE}"
     past = (y, m) < (today.year, today.month)
     desc = (f"{label}に{KEN}県内で{'開かれた' if past else '開かれる'}イベント・祭り・マルシェ・展示を日付順にまとめました。"
             f"全{len(short) + len(long_)}件、主催者や自治体などの出典つき。")
@@ -785,14 +788,14 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
     nav = " ・ ".join(f'<a href="../{k}/">{_month_label(k)}</a>' if k != key else f"<b>{_month_label(k)}</b>" for k in keys)
     crumbs = {"@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": f"{SITE}/"},
-        {"@type": "ListItem", "position": 2, "name": f"{KEN}のイベント {label}", "item": url}]}
+        {"@type": "ListItem", "position": 2, "name": f"{HEAD_KEN}のイベント {label}", "item": url}]}
     # 催しの一覧（ItemList の中に Event）。Google のイベントの欄に出るように（2026-10-20 代表 OK）
     events = [{"@type": "ListItem", "position": n, "item": _event_ld(it, url)}
               for n, it in enumerate(short + long_, start=1)]
-    graph = [crumbs] + ([{"@type": "ItemList", "name": f"{KEN}のイベント {label}", "numberOfItems": len(events),
+    graph = [crumbs] + ([{"@type": "ItemList", "name": f"{HEAD_KEN}のイベント {label}", "numberOfItems": len(events),
                            "itemListElement": events}] if events else [])
     ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False).replace("</", "<\\/")
-    main = f"""<h1>{m}月の{h(KEN)}のイベント（{y}年）</h1>
+    main = f"""<h1>{m}月の{h(HEAD_KEN)}のイベント（{y}年）</h1>
 <div class="lead">
 <p>{h(MONTH_NOTE[m])}</p>
 <p>{h(label)}に{h(KEN)}県内で開かれるイベントを、日付順にまとめました。1日〜数日の催しが{len(short)}件、期間中いつでも行ける展示・フェアが{len(long_)}件です。{h(f"多いのは{area_txt}。") if area_txt else ""}</p>
@@ -836,7 +839,7 @@ def render_weekend(data: dict, today: date) -> str:
     f = lambda d: f"{d.month}月{d.day}日（{WD[d.weekday()]}）"
     url = f"{SITE}/weekend/"
     n = len(both) + len(only_sat) + len(only_sun) + len(long_)
-    title = f"今週末の{KEN}のイベント（{sat.month}/{sat.day}・{sun.day if sun.month == sat.month else f'{sun.month}/{sun.day}'}）｜土日のおでかけ情報｜{TITLE_SITE}"
+    title = f"今週末の{HEAD_KEN}のイベント（{sat.month}/{sat.day}・{sun.day if sun.month == sat.month else f'{sun.month}/{sun.day}'}）｜土日のおでかけ情報｜{TITLE_SITE}"
     desc = (f"{f(sat)}・{f(sun)}に{KEN}県内で行けるイベント・祭り・マルシェ・展示{n}件を、土曜・日曜・両日に分けてまとめました。"
             "毎日更新、主催者や自治体などの出典つき。")
     body = []
@@ -854,13 +857,13 @@ def render_weekend(data: dict, today: date) -> str:
                        for k in months if (MONTH_DIR / k).is_dir())
     crumbs = {"@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": f"{SITE}/"},
-        {"@type": "ListItem", "position": 2, "name": f"今週末の{KEN}のイベント", "item": url}]}
+        {"@type": "ListItem", "position": 2, "name": f"今週末の{HEAD_KEN}のイベント", "item": url}]}
     allev = sorted(both, key=key) + sorted(only_sat, key=key) + sorted(only_sun, key=key) + long_
-    graph = [crumbs] + ([{"@type": "ItemList", "name": f"今週末の{KEN}のイベント", "numberOfItems": len(allev),
+    graph = [crumbs] + ([{"@type": "ItemList", "name": f"今週末の{HEAD_KEN}のイベント", "numberOfItems": len(allev),
                            "itemListElement": [{"@type": "ListItem", "position": i, "item": _event_ld(it, url)}
                                                for i, it in enumerate(allev, start=1)]}] if allev else [])
     ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False).replace("</", "<\\/")
-    main = f"""<h1>今週末の{h(KEN)}のイベント・おでかけ情報（{h(f(sat))}・{h(f(sun))}）</h1>
+    main = f"""<h1>今週末の{h(HEAD_KEN)}のイベント・おでかけ情報（{h(f(sat))}・{h(f(sun))}）</h1>
 <div class="lead">
 <p>この土日に{h(KEN)}県内で行けるイベントを、両日・土曜だけ・日曜だけに分けてまとめました。全{n}件です。</p>
 <p class="muted">日付・内容は集めた時点のものです。お出かけ前に、出典（主催者・自治体などの公式）で必ず確かめてください。最終更新：{today.year}年{today.month}月{today.day}日</p>
@@ -912,7 +915,7 @@ def render_spot(data: dict, today: date) -> str:
         if d <= today:
             groups.setdefault(f"{d.year}年{d.month}月にオープン", []).append(it)
     url = f"{SITE}/spot/"
-    title = f"{KEN}の新しいお店・新店オープン情報（{today.year}年{today.month}月更新）｜{TITLE_SITE}"
+    title = f"{HEAD_KEN}の新しいお店・新店オープン情報（{today.year}年{today.month}月更新）｜{TITLE_SITE}"
     areas = [a for a, _ in Counter(it.get("area") for it in shops if it.get("area")).most_common(3)]
     desc = (f"{KEN}県内で新しくオープンしたお店・スポット{len(shops)}件を、オープン日の新しい順にまとめました。"
             + (f"{'・'.join(areas)}など。" if areas else "") + "お店の公式や自治体などの出典つき。")
@@ -925,13 +928,13 @@ def render_spot(data: dict, today: date) -> str:
         body.append("<p>新しいお店の情報は、まだ集まっていません。</p>")
     crumbs = {"@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": f"{SITE}/"},
-        {"@type": "ListItem", "position": 2, "name": f"{KEN}の新しいお店", "item": url}]}
+        {"@type": "ListItem", "position": 2, "name": f"{HEAD_KEN}の新しいお店", "item": url}]}
     allshops = soon + [i for its in groups.values() for i in its]
-    graph = [crumbs] + ([{"@type": "ItemList", "name": f"{KEN}の新しいお店", "numberOfItems": len(allshops),
+    graph = [crumbs] + ([{"@type": "ItemList", "name": f"{HEAD_KEN}の新しいお店", "numberOfItems": len(allshops),
                            "itemListElement": [{"@type": "ListItem", "position": i, "item": _shop_ld(it, url)}
                                                for i, it in enumerate(allshops, start=1)]}] if allshops else [])
     ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False).replace("</", "<\\/")
-    main = f"""<h1>{h(KEN)}の新しいお店・新店オープン情報</h1>
+    main = f"""<h1>{h(HEAD_KEN)}の新しいお店・新店オープン情報</h1>
 <div class="lead">
 <p>{h(KEN)}県内で新しくオープンしたお店・スポットを、オープン日の新しい順にまとめました。ここ{SPOT_MONTHS}か月ほどの{len(shops)}件です。</p>
 <p class="muted">営業時間・定休日などは集めた時点のものです。お出かけ前に、お店の公式で必ず確かめてください。最終更新：{today.year}年{today.month}月{today.day}日</p>
@@ -1596,7 +1599,7 @@ def render_404(months: list[str], today: date) -> str:
     """見つからないページ。消えた月のページなどから来た人を、トップと月のページへ案内する（2026-10-20）。"""
     ym = f"{today.year}-{today.month:02d}"
     near = [k for k in months if k >= ym][:2] or months[-2:]
-    links = "".join(f'<li><a href="/month/{k}/">{_month_label(k)}の{KEN}のイベント</a></li>' for k in near)
+    links = "".join(f'<li><a href="/month/{k}/">{_month_label(k)}の{HEAD_KEN}のイベント</a></li>' for k in near)
     return f"""<!doctype html>
 <html lang="ja">
 <head>
