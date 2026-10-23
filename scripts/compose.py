@@ -2118,6 +2118,16 @@ def main() -> None:
             print("作れる枠がありません。何もしません。")
             return
 
+    # 毎週土曜12時は、運用部が手で入れる「まとめ」の専用の枠（region.json の 使う.土曜12時は手入れのまとめ。
+    # 2026-10-24 代表・運用部・石川）。作成は作らず、予備でも埋めない。空いたままなら health.json で気づく
+    if 地域.地域.get("使う", {}).get("土曜12時は手入れのまとめ", False) and target_date.weekday() == 5:
+        if any(h == 12 for h, *_ in needed):
+            print(f"{target_date} は土曜なので、12:00 は運用部が手で入れるまとめの枠です（作らない）。")
+        needed = [slot for slot in needed if slot[0] != 12]
+        if not needed:
+            print("作れる枠がありません。何もしません。")
+            return
+
     if 予備だけ:
         # compose が失敗したとき（残高切れなど）に、空いた枠を予備で埋める。API は使わない。
         今日の出典: set[str] = set()
