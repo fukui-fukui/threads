@@ -33,8 +33,11 @@ import 地域  # noqa: E402  どの県のおでかけか（region.json）
 
 KEN = 地域.県名
 SITE_NAME = 地域.地域["サイト名"]
-# 検索で「福井おでかけ」「石川おでかけ」（漢字）でも引っかかるように、ページの題名の後ろに付ける名前（2026-10-23 代表）
-SITE_TITLE = f"{SITE_NAME}（{地域.県名}おでかけ）" if SITE_NAME != f"{地域.県名}おでかけ" else SITE_NAME
+# 「岐阜おでかけ」のような呼び名でも検索に出るように、各ページの title の後ろに添える（region.json の「検索の呼び名」。2026-10-23 代表）
+_呼び名 = 地域.地域.get("検索の呼び名") or []
+# 呼び名が無い地域は「ふくいおでかけ（福井おでかけ）」のように県名＋おでかけを添える（2026-10-23 代表。#270）
+TITLE_SITE = (f"{SITE_NAME}（{'・'.join(_呼び名[:2])}）" if _呼び名
+              else f"{SITE_NAME}（{地域.県名}おでかけ）" if SITE_NAME != f"{地域.県名}おでかけ" else SITE_NAME)
 ACCOUNT = 地域.地域["アカウント"]
 NETA = ROOT / "neta" / "ネタ帳.md"
 OUT = ROOT / "docs" / "data.json"
@@ -758,7 +761,7 @@ def render_month(key: str, b: dict, keys: list[str], today: date) -> str:
     areas = Counter(it.get("area") for it in short + long_ if it.get("area")).most_common(3)
     area_txt = "、".join(f"{a}（{n}件）" for a, n in areas)
     url = f"{SITE}/month/{key}/"
-    title = f"{KEN}のイベント {label}｜{SITE_TITLE}"
+    title = f"{KEN}のイベント {label}｜{TITLE_SITE}"
     past = (y, m) < (today.year, today.month)
     desc = (f"{label}に{KEN}県内で{'開かれた' if past else '開かれる'}イベント・祭り・マルシェ・展示を日付順にまとめました。"
             f"全{len(short) + len(long_)}件、主催者や自治体などの出典つき。")
@@ -832,7 +835,7 @@ def render_weekend(data: dict, today: date) -> str:
     f = lambda d: f"{d.month}月{d.day}日（{WD[d.weekday()]}）"
     url = f"{SITE}/weekend/"
     n = len(both) + len(only_sat) + len(only_sun) + len(long_)
-    title = f"今週末の{KEN}のイベント・おでかけ情報（{sat.month}/{sat.day}・{sun.day if sun.month == sat.month else f'{sun.month}/{sun.day}'}）｜{SITE_TITLE}"
+    title = f"今週末の{KEN}のイベント・おでかけ情報（{sat.month}/{sat.day}・{sun.day if sun.month == sat.month else f'{sun.month}/{sun.day}'}）｜{TITLE_SITE}"
     desc = (f"{f(sat)}・{f(sun)}に{KEN}県内で行けるイベント・祭り・マルシェ・展示{n}件を、土曜・日曜・両日に分けてまとめました。"
             "毎日更新、主催者や自治体などの出典つき。")
     body = []
@@ -908,7 +911,7 @@ def render_spot(data: dict, today: date) -> str:
         if d <= today:
             groups.setdefault(f"{d.year}年{d.month}月にオープン", []).append(it)
     url = f"{SITE}/spot/"
-    title = f"{KEN}の新しいお店・新店オープン情報｜{SITE_TITLE}"
+    title = f"{KEN}の新しいお店・新店オープン情報｜{TITLE_SITE}"
     areas = [a for a, _ in Counter(it.get("area") for it in shops if it.get("area")).most_common(3)]
     desc = (f"{KEN}県内で新しくオープンしたお店・スポット{len(shops)}件を、オープン日の新しい順にまとめました。"
             + (f"{'・'.join(areas)}など。" if areas else "") + "お店の公式や自治体などの出典つき。")
@@ -977,8 +980,8 @@ def render_area(area: str, b: dict, today: date) -> str:
     shops = sorted(b["shops"], key=lambda it: it["start"], reverse=True)
     url = f"{SITE}/area/{quote(area)}/"
     n = len(evs) + len(shops)
-    title = f"{area}のイベント・おでかけ情報と新しいお店｜{SITE_TITLE}"
-    desc = (f"{KEN}・{area}で開かれるイベント・祭り・マルシェ・展示と、新しくオープンしたお店を{n}件まとめました。"
+    title = f"{area}のイベント・おでかけ情報と新しいお店｜{TITLE_SITE}"
+    desc = (f"{area if '・' in KEN else KEN + '・' + area}で開かれるイベント・祭り・マルシェ・展示と、新しくオープンしたお店を{n}件まとめました。"
             "毎日更新、主催者や自治体などの出典つき。")
     f = lambda d: f"{d.month}月{d.day}日（{WD[d.weekday()]}）"
     body = []
@@ -1075,7 +1078,7 @@ def render_stay_city(city: str, hs: list[dict], data: dict, today: date) -> str:
     areas = sorted({x["area"] for x in hs if x.get("area") and x["area"] != city})
     where = f"{city}（{'・'.join(areas)}）" if areas else city
     feats = _feature_counts(hs)
-    title = f"{city}の宿・ホテル {len(hs)}軒｜温泉・サウナ・朝食で比べる｜{SITE_TITLE}"
+    title = f"{city}の宿・ホテル {len(hs)}軒｜温泉・サウナ・朝食で比べる｜{TITLE_SITE}"
     desc = (f"{KEN}・{where}の宿・ホテル・旅館 {len(hs)}軒を、温泉・サウナ・朝食バイキングなどの特徴と、楽天トラベルの評価・最安料金でまとめました。"
             f"{city}のこれからのイベントも。PR")
     body = []
@@ -1121,7 +1124,7 @@ def render_stay_index(hotels: list[dict], today: date) -> str:
     for x in _hotel_order(hotels):
         by.setdefault(x.get("city") or "そのほか", []).append(x)
     cities = sorted(by, key=lambda c: -len(by[c]))
-    title = f"{KEN}の宿・ホテル・温泉旅館 {len(hotels)}軒（市町別）｜{SITE_TITLE}"
+    title = f"{KEN}の宿・ホテル・温泉旅館 {len(hotels)}軒（市町別）｜{TITLE_SITE}"
     desc = (f"{KEN}県内の宿・ホテル・旅館 {len(hotels)}軒を、市町別に、温泉・サウナ・朝食バイキングなどの特徴と楽天トラベルの評価でまとめました。PR")
     body = []
     for c in cities:

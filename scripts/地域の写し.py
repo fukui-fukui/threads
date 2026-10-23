@@ -126,6 +126,17 @@ def トップ(文: str, 地: dict) -> str:
         文 = 文.replace("福井に泊まる", f"{県名}に泊まる")
     # 残りの「福井」（見出し・説明文）を県名にする。福井県 → 石川県 を先に
     文 = 文.replace("福井県", 県).replace("福井", 県名)
+    # 「岐阜おでかけ」「愛知おでかけ」のような呼び名でも検索に出るように、title・説明・h1・構造化データに入れる
+    # （2026-10-23 代表「各サイトの検索、福井おでかけ 石川おでかけ 岐阜おでかけ 愛知おでかけ でも検索で引っかかるように」）
+    呼び = 地.get("検索の呼び名") or []
+    if 呼び:
+        並べ = "・".join(呼び[:3])
+        文 = 正規(文, r"<title>.*?</title>", f"<title>{地['サイト名']}｜{並べ}情報｜今週末のイベントと新しいお店</title>")
+        別名 = json.dumps([*呼び, f"{県名}のおでかけ情報"], ensure_ascii=False, separators=(",", ":"))
+        文 = 正規(文, r'"alternateName":\[[^\]]*\]', lambda m: f'"alternateName":{別名}')
+        文 = 置く(文, '<meta name="description" content="', f'<meta name="description" content="{並べ}の情報サイト。', 1)
+        文 = 置く(文, '<meta property="og:description" content="', f'<meta property="og:description" content="{並べ}の情報サイト。', 1)
+        文 = 正規(文, r"<h1>[^<]*</h1>", f"<h1>{'・'.join(呼び[:2])}情報</h1>")
     return 文
 
 
