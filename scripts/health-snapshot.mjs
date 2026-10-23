@@ -127,12 +127,21 @@ function tomorrowQueue() {
     };
   });
   const times = items.map((x) => x.時刻);
+  // 毎週土曜12時は運用部が手で入れるまとめの枠（作成は作らない。2026-10-24）。入れ忘れに気づけるように
+  let 土曜まとめ = null;
+  try {
+    const 使う = JSON.parse(fs.readFileSync("region.json", "utf8")).使う || {};
+    if (使う["土曜12時は手入れのまとめ"] && new Date(`${tomorrow}T00:00:00Z`).getUTCDay() === 6) {
+      土曜まとめ = times.includes("12:00") ? "入っている" : "まだ入っていない（運用部が手で入れる枠）";
+    }
+  } catch {}
   return {
     対象日: tomorrow,
     本数: items.length,
     予定本数: EXPECTED || null,
     足りない: EXPECTED ? Math.max(0, EXPECTED - items.length) : null,
     時刻: times,
+    ...(土曜まとめ ? { 土曜12時のまとめ: 土曜まとめ } : {}),
     同じ時刻が2本以上: [...new Set(times.filter((t, i) => times.indexOf(t) !== i))],
     読めない行: broken,
     投稿: items,
