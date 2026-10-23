@@ -20,10 +20,10 @@ jobs:
     env:
       DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: 非公開の置き場から写す（odekake-data。鍵が無いあいだは何もしない）
         run: ./scripts/非公開.sh pull
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: 集める

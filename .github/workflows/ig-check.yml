@@ -12,7 +12,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: 確かめる
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
