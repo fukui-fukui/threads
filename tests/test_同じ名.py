@@ -42,6 +42,16 @@ class 同じ名のテスト(unittest.TestCase):
               "thread": ["金沢｜なにか展（10/19まで）\n…"]}
         self.assertNotIn("なにか展", compose.名の記録([朝], date(2026, 10, 22)))
 
+    def test_先の日に手で入れた名も避ける(self):
+        # 10/23 運用部・福井：先の日に手で入れた店を、その晩の作成がネタ帳から先に使った
+        先 = {"id": "h", "scheduled_at": "2026-10-24T09:00:00+09:00", "text": "「越ノ龍」が新しくオープン"}
+        名記 = compose.名の記録([先], date(2026, 10, 23))
+        self.assertIn("越ノ龍", 名記)
+        if compose.同じ名を見る:
+            self.assertIn("7日あける", compose.名で止める理由({"text": "「越ノ龍」の話"}, 名記))
+        # 8日より先と、対象日そのもの（同じ日の重なりは別に見ている）は入れない
+        self.assertNotIn("越ノ龍", compose.名の記録([先], date(2026, 10, 16)))
+        self.assertNotIn("越ノ龍", compose.名の記録([先], date(2026, 10, 24)))
 
 
 if __name__ == "__main__":
