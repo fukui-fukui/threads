@@ -52,6 +52,19 @@ class 同じ名のテスト(unittest.TestCase):
         # 8日より先と、対象日そのもの（同じ日の重なりは別に見ている）は入れない
         self.assertNotIn("越ノ龍", compose.名の記録([先], date(2026, 10, 16)))
         self.assertNotIn("越ノ龍", compose.名の記録([先], date(2026, 10, 24)))
+    def test_並べる投稿から7日以内の名の行を外す(self):
+        # 10/24 運用部・石川：10/22 に出したナイトミュージアムが 10/25 6:00 の並べる投稿に入っていた
+        名記 = {"ナイトミュージアム": ("2026-10-22", 19)}
+        t = "今日で終わる催し3つ\n\n①「ナイトミュージアム」\n金沢市\n②「秋の茶会」\n小松市\n③「菊花展」\n白山市\n\n石川イベント"
+        新, 外した = compose.並べる投稿から外す(t, 名記)
+        self.assertEqual([n for n, _ in 外した], ["ナイトミュージアム"])
+        self.assertNotIn("ナイトミュージアム", 新)
+        self.assertIn("①「秋の茶会」", 新)
+        self.assertIn("②「菊花展」", 新)
+        self.assertTrue(新.endswith("石川イベント"))
+        # 外すと1行しか残らないときは外さない
+        t2 = "①「ナイトミュージアム」\n②「秋の茶会」"
+        self.assertEqual(compose.並べる投稿から外す(t2, 名記), (t2, []))
 
 
 if __name__ == "__main__":
