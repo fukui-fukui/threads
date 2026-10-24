@@ -162,6 +162,17 @@
       "url": "https://toyota.keizai.biz/rss.xml"
     },
     {
+      "名前": "名古屋情報通（新店）",
+      "区分": "新店",
+      "url": "https://jouhou.nagoya/category/open/feed",
+      "_注": "2026-10-24 代表「名古屋情報通は入れる」。文は写さず事実だけ。出典はできるだけお店の公式"
+    },
+    {
+      "名前": "名古屋情報通",
+      "区分": "地元メディア",
+      "url": "https://jouhou.nagoya/feed"
+    },
+    {
       "名前": "号外NET 一宮市（開店・閉店）",
       "区分": "新店",
       "url": "https://ichinomiya.goguynet.jp/category/cat_openclose/feed/"
