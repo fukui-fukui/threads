@@ -1834,6 +1834,42 @@ def _日差(d: str, target_date) -> int:
     return (target_date - datetime.strptime(d, "%Y-%m-%d").date()).days
 
 
+_番号 = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫"
+_番号の行 = re.compile(rf"^\s*[{_番号}]")
+
+
+def 並べる投稿から外す(text: str, 名記: dict) -> tuple[str, list[tuple[str, str]]]:
+    """①②…で始まる行（とその下の説明行）のうち、7日以内に出した名前を含むものを外し、番号を振り直す。
+    行が2つより少なくなるときは外さない（まとめが成り立たないので、警告だけ）。"""
+    行たち = text.split("\n")
+    塊: list[list[str]] = []   # 番号の行から次の番号の行・空行の手前まで
+    頭: list[str] = []
+    尾: list[str] = []
+    for l in 行たち:
+        if _番号の行.match(l):
+            塊.append([l])
+        elif 塊 and l.strip() and not 尾:
+            塊[-1].append(l)
+        elif 塊:
+            尾.append(l)
+        else:
+            頭.append(l)
+    外す, 外した = [], []
+    for i, b in enumerate(塊):
+        名 = sorted(n for n in 名前たち({"text": "\n".join(b)}, 見出しも=False) if n in 名記)
+        if 名:
+            外す.append(i)
+            外した.append((名[0], b[0]))
+    if 外す and len(塊) - len(外す) < 2:
+        print(f"::warning::まとめの行に7日以内に出した「{外した[0][0]}」がありますが、外すと2行未満になるので残します。運用で見てください。")
+    if not 外す or len(塊) - len(外す) < 2:
+        return text, []
+    残り = [b for i, b in enumerate(塊) if i not in 外す]
+    for k, b in enumerate(残り):
+        b[0] = re.sub(rf"^(\s*)[{_番号}]", lambda m: m.group(1) + _番号[k], b[0], count=1)
+    return "\n".join(頭 + [l for b in 残り for l in b] + 尾), 外した
+
+
 def 名で止める理由(e: dict, 名記: dict) -> str | None:
     if not 同じ名を見る:
         return None
@@ -2503,6 +2539,12 @@ def main() -> None:
                 if わけ:
                     print(f"::warning::{hour}:00 は{わけ}ので入れません。この枠はあとで予備で埋めます。")
                     continue
+            elif 同じ名を見る:
+                # ①②と並べるまとめ（6:00・金曜の今週末）は、7日以内に出した店・催しの行を外す
+                # （2026-10-24 運用部・石川：10/22 に出したナイトミュージアムが 10/25 6:00 の並べる投稿に入っていた）
+                text, 外した行 = 並べる投稿から外す(text, 名記)
+                for n, 行 in 外した行:
+                    print(f"::warning::{hour}:00 のまとめから「{n}」の行を外しました（{名記[n][0]} {名記[n][1]}:00 に出したばかり）：{行[:40]}")
             重なり = source_urls(text, thread) & set(出典の枠)
             if 重なり:
                 # 重なった枠だけを落とす。ここで fail すると、その日の10本が
