@@ -715,10 +715,14 @@ function 順に取る(候補たち, 上限) {
   }
   const 列 = [...先ごと.values()];
   const 出 = [];
+  // 巡回先の「1巡で渡す数」があれば、1巡でその数だけ取る（無ければ1件ずつ）
   for (let i = 0; 出.length < 上限; i++) {
     let 足した = false;
     for (const l of 列) {
-      if (i < l.length && 出.length < 上限) { 出.push(l[i]); 足した = true; }
+      const 数 = l[0].一巡で ?? 1;
+      for (const c of l.slice(i * 数, (i + 1) * 数)) {
+        if (出.length < 上限) { 出.push(c); 足した = true; }
+      }
     }
     if (!足した) break;
   }

@@ -108,27 +108,37 @@
     {
       "名前": "号外NET 岐阜市（開店・閉店）",
       "区分": "新店",
-      "url": "https://gifu.goguynet.jp/category/cat_openclose/feed/"
+      "url": "https://gifu.goguynet.jp/category/cat_openclose/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
     },
     {
       "名前": "号外NET 岐阜市（イベント）",
       "区分": "地元メディア",
-      "url": "https://gifu.goguynet.jp/category/cat_event/feed/"
+      "url": "https://gifu.goguynet.jp/category/cat_event/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
     },
     {
       "名前": "号外NET 大垣市",
       "区分": "新店",
-      "url": "https://ogaki.goguynet.jp/feed/"
+      "url": "https://ogaki.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
     },
     {
       "名前": "号外NET 可児市",
       "区分": "新店",
-      "url": "https://kani.goguynet.jp/feed/"
+      "url": "https://kani.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
     },
     {
       "名前": "号外NET 多治見市",
       "区分": "新店",
-      "url": "https://tajimi.goguynet.jp/feed/"
+      "url": "https://tajimi.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
     },
     {
       "名前": "アクア・トトぎふ",
@@ -165,32 +175,122 @@
       "名前": "名古屋情報通（新店）",
       "区分": "新店",
       "url": "https://jouhou.nagoya/category/open/feed",
-      "_注": "2026-10-24 代表「名古屋情報通は入れる」。文は写さず事実だけ。出典はできるだけお店の公式"
+      "_注": "2026-10-24 代表「名古屋情報通は入れる」。文は写さず事実だけ。出典はできるだけお店の公式",
+      "最大件数": 10,
+      "1巡で渡す数": 2
     },
     {
       "名前": "名古屋情報通",
       "区分": "地元メディア",
-      "url": "https://jouhou.nagoya/feed"
+      "url": "https://jouhou.nagoya/feed",
+      "最大件数": 10,
+      "1巡で渡す数": 2
     },
     {
       "名前": "号外NET 一宮市（開店・閉店）",
       "区分": "新店",
-      "url": "https://ichinomiya.goguynet.jp/category/cat_openclose/feed/"
+      "url": "https://ichinomiya.goguynet.jp/category/cat_openclose/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
     },
     {
       "名前": "号外NET 春日井市（開店・閉店）",
       "区分": "新店",
-      "url": "https://kasugai.goguynet.jp/category/cat_openclose/feed/"
+      "url": "https://kasugai.goguynet.jp/category/cat_openclose/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
     },
     {
       "名前": "号外NET 岡崎市（開店・閉店）",
       "区分": "新店",
-      "url": "https://okazaki.goguynet.jp/category/cat_openclose/feed/"
+      "url": "https://okazaki.goguynet.jp/category/cat_openclose/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
     },
     {
       "名前": "号外NET 豊田市（開店・閉店）",
       "区分": "新店",
-      "url": "https://toyota.goguynet.jp/category/cat_openclose/feed/"
+      "url": "https://toyota.goguynet.jp/category/cat_openclose/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
+    },
+    {
+      "名前": "号外NET 名古屋 北区・東区",
+      "区分": "地元メディア",
+      "url": "https://nagoyakita-higashi.goguynet.jp/feed/",
+      "_注": "2026-10-24 代表「名古屋情報通、号外ネットから増やせるでしょ」。候補Aのうち、まだ入っていなかった11地区。どれも 10/21〜24 に記事が出ていることを確かめた。地区全体の RSS（催しも新店も入る）",
+      "最大件数": 10,
+      "1巡で渡す数": 2
+    },
+    {
+      "名前": "号外NET 名古屋 名東区・千種区",
+      "区分": "地元メディア",
+      "url": "https://nagoyameito-chikusa.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
+    },
+    {
+      "名前": "号外NET 名古屋 中川区・港区",
+      "区分": "地元メディア",
+      "url": "https://nagoyanakagawa-minato.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
+    },
+    {
+      "名前": "号外NET 名古屋 昭和区・瑞穂区",
+      "区分": "地元メディア",
+      "url": "https://nagoyashowa-mizuho.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
+    },
+    {
+      "名前": "号外NET 小牧市・犬山市",
+      "区分": "地元メディア",
+      "url": "https://komaki-inuyama.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
+    },
+    {
+      "名前": "号外NET 瀬戸市・尾張旭市",
+      "区分": "地元メディア",
+      "url": "https://seto-owariasahi.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
+    },
+    {
+      "名前": "号外NET 海部・津島・愛西",
+      "区分": "地元メディア",
+      "url": "https://ama-tsushima-aisai.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
+    },
+    {
+      "名前": "号外NET 刈谷市・知立市",
+      "区分": "地元メディア",
+      "url": "https://kariya-chiryu.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
+    },
+    {
+      "名前": "号外NET 安城・高浜・碧南",
+      "区分": "地元メディア",
+      "url": "https://anjo-takahama-hekinan.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
+    },
+    {
+      "名前": "号外NET 豊橋市・田原市",
+      "区分": "地元メディア",
+      "url": "https://toyohashi-tahara.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
+    },
+    {
+      "名前": "号外NET 豊川市・蒲郡市",
+      "区分": "地元メディア",
+      "url": "https://toyokawa-gamagori.goguynet.jp/feed/",
+      "最大件数": 10,
+      "1巡で渡す数": 2
     },
     {
       "名前": "名古屋市（新着）",
@@ -534,5 +634,6 @@
   "渡した候補を覚える": true,
   "_渡した候補の注": "候補が400件ほどあり、AI に渡す上限120件を超える。続けて回したときに同じ候補を渡さないよう、渡した URL を state/渡した候補.json に覚える（2026-10-15 代表「件数の上限になるようなら、すぐに次を回して。」）。",
   "失敗したらもう一度": true,
-  "_取り方の注": "愛知の市のサイト12か所（Imperva の守り）は、GitHub の機械から Node の fetch だと「転送が多すぎる」で断られ、同じ機械の curl なら読める（2026-10-15 巡回の診断で確かめた）。その12か所は「取り方: curl」。同時につないだときの時間切れ（7か所）は「失敗したらもう一度」で最後に1本ずつ取り直す。"
+  "_取り方の注": "愛知の市のサイト12か所（Imperva の守り）は、GitHub の機械から Node の fetch だと「転送が多すぎる」で断られ、同じ機械の curl なら読める（2026-10-15 巡回の診断で確かめた）。その12か所は「取り方: curl」。同時につないだときの時間切れ（7か所）は「失敗したらもう一度」で最後に1本ずつ取り直す。",
+  "_1巡で渡す数の注": "名古屋情報通と号外NETは「1巡で渡す数」2・「最大件数」10。AI に渡す最大80件は変えず、巡回先ごとに順に取るときに1巡で2件ずつ取る（2026-10-24 代表「名古屋情報通、号外ネットから増やせるでしょ」。費用は増えない）"
 }
