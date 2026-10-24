@@ -28,6 +28,12 @@ class 新店の型のテスト(unittest.TestCase):
         t = f"坂井市春江町のラーメン店「越ノ龍」が10月1日にオープンしました。\n鶏ガラ約10羽分の出汁。\n\n{compose.検索語_お店}"
         self.assertIsNone(compose.新店の型の気づき(t))
         self.assertIsNone(compose.新店の型の気づき(f"10時から。オープンガーデンが開かれます。\n\n{compose.検索語}"))
+    def test_型より前の新店の予備は使わない(self):
+        古い = f"福井駅から徒歩7分。「御宿 野乃福井」がオープンしたそうです。\n\n{compose.検索語}"
+        self.assertTrue(compose.型より前の新店(古い))
+        新しい = f"福井市の宿「御宿 野乃福井」が10月1日にオープンしました。\n大浴場があります。\n\n{compose.検索語_おでかけ}"
+        self.assertFalse(compose.型より前の新店(新しい))
+        self.assertFalse(compose.型より前の新店(f"10時から。オープンガーデンが開かれます。\n\n{compose.検索語}"))
 
 
 if __name__ == "__main__":
