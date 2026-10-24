@@ -1275,6 +1275,20 @@ def 検索語を外す(text: str) -> str:
 _オープン = re.compile(r"オープン|開店|開業|新店")
 
 
+_開店した = re.compile(r"オープンし|オープンする|オープン予定|開店|開業")
+
+
+def 型より前の新店(text: str) -> bool:
+    """予備に残っている新店・オープンの文が、10/24 の型（1行目の最初の文に「店名」・言い切り・お店/施設の検索語）より前のものか。"""
+    if not _開店した.search(text):
+        return False
+    一行目 = next((l for l in text.splitlines() if l.strip()), "")
+    if "「" not in 一行目.split("。")[0] or "オープンしたそうです" in text:
+        return True
+    分けている = any(w != 検索語 for w in (検索語_お店, 検索語_おでかけ))
+    return 分けている and not any(w in text for w in (検索語_お店, 検索語_おでかけ) if w != 検索語)
+
+
 def 新店の型の気づき(text: str) -> str | None:
     """新店・オープンの投稿なのに型から外れていたら、その中身を返す（枠は落とさず、記録に残して運用で見る）。"""
     if not _オープン.search(text) or not any(w in text for w in (検索語_お店, 検索語_おでかけ) if w != 検索語):
@@ -1993,6 +2007,10 @@ def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出�
                     continue  # 期限切れは捨てる
             except ValueError:
                 continue
+        if 型より前の新店(x.get("text", "")):
+            # 10/24 の新店の型・検索語の分け方より前に作った新店の文は使わない（10/25 の宿の投稿を運用部が手で直した）
+            print(f"::warning::予備の新店の文が型より前のものなので捨てます：{x['text'].splitlines()[0][:40]}")
+            continue
         urls = source_urls(x.get("text", ""), x.get("thread") or [])
         if 空き and not (urls & 今日の出典) and not 出典で止める理由(urls, 記, target_date) and not 名で止める理由(x, 名記 or {}):
             h = 空き.pop(0)
