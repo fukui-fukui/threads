@@ -34,6 +34,17 @@ class 新店の型のテスト(unittest.TestCase):
         新しい = f"福井市の宿「御宿 野乃福井」が10月1日にオープンしました。\n大浴場があります。\n\n{compose.検索語_おでかけ}"
         self.assertFalse(compose.型より前の新店(新しい))
         self.assertFalse(compose.型より前の新店(f"10時から。オープンガーデンが開かれます。\n\n{compose.検索語}"))
+    def test_新店の直しを見つける(self):
+        if compose.検索語_お店 == compose.検索語:
+            return
+        g = compose.検索語_お店
+        # 10/26 ぶん：言い切っていない・数字の書き出し・催しの検索語のまま
+        self.assertIn("そうです", compose.新店の直し(f"福井市の天ぷら店「たかさか」ができたそうです。\n\n{g}"))
+        self.assertIn("名前", compose.新店の直し(f"高さ約6mの立体迷路。越前市に「らくまるパーク」がオープンしました。\n\n{compose.検索語_おでかけ}"))
+        self.assertIn("検索語", compose.新店の直し(f"福井市に天ぷら店「たかさか」がオープンしました。\n\n{compose.検索語}"))
+        self.assertIsNone(compose.新店の直し(f"福井市の天ぷら店「たかさか」が10月1日にオープンしました。\n\n{g}"))
+        # 催しの投稿は見ない
+        self.assertIsNone(compose.新店の直し(f"10月31日、勝山市で「ダイナソーフェス」が開かれるそうです。\n\n{compose.検索語}"))
 
 
 if __name__ == "__main__":

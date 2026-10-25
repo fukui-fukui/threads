@@ -519,7 +519,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
     else:
         AB_CLOSING_RULE = (
             "**今日は「問いなし」の日です（奇数日）。** 紹介枠は事実で締めてください。"
-            "読者に問いかけない。「〜だそうです。」「〜が開かれます。」で終える"
+            "読者に問いかけない。「〜だそうです。」「〜が開かれます。」で終える（新しいお店・施設・宿の紹介は「〜そうです」「〜とのこと」を使わず言い切る。2026-10-24 代表の型）"
             "（出典元の行は今まで通り付けます）。"
         )
     sections = [
@@ -894,7 +894,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         f"1. **1行目に「どこの（市町）・何のお店（業種）・「店名」」。** 例：「〇〇市〇〇町のラーメン店「（店名）」が10月1日にオープンしました。」 数字の書き出しは使わず、数字は2行目以降に",
         "2. 2〜3行で、そのお店のおすすめ（出典にある看板メニュー・こだわり・特徴）",
         "3. そのあと本文に、場所・営業時間・定休日（出典にあるものだけ。無いものは書かない）。返信だけに入れない",
-        "4. 出典にある事実は言い切る（「オープンしました」「〜が看板です」）。「〜そうです」を重ねない。見立て・感想だけは決めつけない形で",
+        "4. 出典にある事実は言い切る（「オープンしました」「〜が看板です」）。**「〜そうです」「〜とのこと」は使わない**（お店・施設・宿の紹介すべて。開店から時間がたった店も同じ）。見立て・感想だけは決めつけない形で。型から外れた案は機械で作り直させます",
         "5. 開店から1か月以内なら、最後に「オープンおめでとうございます。」を添える。1か月より前に開いた店は、ふつうの紹介として書く（おめでとうは付けない）",
         "6. 返信（THREAD の1件目）の出典元は、お店の公式（公式サイト・公式 Instagram のアカウントなど）を最初に。公式が無いときだけ記事",
         "",
@@ -1176,6 +1176,7 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
     """
     expected = len(hours)
     集まった: dict[int, dict] = {}
+    直してほしい: dict[int, str] = {}
 
     for attempt in (1, 2, 3):
         if attempt == 1:
@@ -1194,6 +1195,11 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
                 + "**足りないのは "
                 + "、".join(f"{h}:00" for h in 残り)
                 + " です。この枠だけを作ってください。**"
+                + "".join(f"\n{h}:00 は前の案が新店・施設の型から外れていました（{直してほしい[h]}）。"
+                          "「新店・オープンの投稿の型」のとおり、1行目を「市町・何のお店（施設）・「名前」」にし、"
+                          "出典の事実は言い切り（「〜そうです」「〜とのこと」を使わない）、"
+                          f"最後の検索語はお店なら「{検索語_お店}」、施設・宿なら「{検索語_おでかけ}」にしてください。"
+                          for h in 残り if h in 直してほしい)
                 + "説明や ``` を付けず、@@@POST 〜 @@@END の組だけを返してください。"
             )
         text = ask(api_key, model, この回の指示)
@@ -1209,6 +1215,14 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
             except (TypeError, ValueError):
                 continue
             if hour in hours and hour not in 集まった and (post.get("text") or "").strip():
+                # 新店・施設の投稿が型（2026-10-24 代表）から外れていたら、2回目までは作り直させる
+                直し = 新店の直し(post.get("text") or "")
+                if 直し and attempt < 3:
+                    直してほしい[hour] = 直し
+                    print(f"::warning::{hour}:00 は新店・施設の型から外れているので作り直します（{直し}）")
+                    continue
+                if 直し:
+                    print(f"::warning::{hour}:00 は新店・施設の型から外れたままです（{直し}）。運用で見てください")
                 集まった[hour] = post
         if len(集まった) >= expected:
             return [集まった[h] for h in hours]
@@ -1289,6 +1303,30 @@ def 型より前の新店(text: str) -> bool:
         return True
     分けている = any(w != 検索語 for w in (検索語_お店, 検索語_おでかけ))
     return 分けている and not any(w in text for w in (検索語_お店, 検索語_おでかけ) if w != 検索語)
+
+
+_新店らしい = re.compile(r"オープン|開店|開業|新店|リニューアル|新しくでき|ができた|ができました")
+
+
+def 新店の直し(text: str) -> str | None:
+    """新店・施設の投稿が型から外れていたら、直してほしいところを返す（作成のときに作り直させる。2026-10-25 運用部・福井）。
+    お店・施設の検索語が付いている投稿か、新店らしい言葉がある投稿だけを見る。催しの投稿は見ない。"""
+    店の語 = [w for w in (検索語_お店, 検索語_おでかけ) if w != 検索語]
+    if not 店の語:
+        return None
+    店の投稿 = any(w in text for w in 店の語)
+    頭 = "\n".join([l for l in text.splitlines() if l.strip()][:2])
+    if not 店の投稿 and not _新店らしい.search(頭):
+        return None
+    わけ = []
+    一行目 = next((l for l in text.splitlines() if l.strip()), "")
+    if "「" not in 一行目.split("。")[0]:
+        わけ.append("1行目の最初の文に「名前」が無い")
+    if re.search(r"そうです|とのこと", text):
+        わけ.append("「〜そうです」「〜とのこと」がある")
+    if not 店の投稿:
+        わけ.append(f"最後の検索語が「{検索語}」のまま")
+    return "・".join(わけ) or None
 
 
 def 新店の型の気づき(text: str) -> str | None:
