@@ -551,8 +551,10 @@ def main() -> None:
         _prev = load_jsonl(CHANGES_PATH)
         _dates = [parse_iso(e.get("at", "")) for e in _prev]
         _dates = [d for d in _dates if d]
-        if _dates and max(_dates).astimezone(JST).date() == now.date():
-            log("::notice::今日はすでにレビュー済みです。何もしません（再実行するときは FORCE=true）")
+        # 日付で比べると、GitHub の定時実行が遅れて 0時ごろと 23時ごろに走った日に、
+        # あとの回が「今日はレビュー済み」で何もせず、1日ぶん抜けた（2026-10-24 石川）。前の回から12時間で見る
+        if _dates and now - max(_dates).astimezone(JST) < timedelta(hours=12):
+            log("::notice::12時間以内にレビュー済みです。何もしません（再実行するときは FORCE=true）")
             return
 
     targets = collect_targets(now.astimezone(timezone.utc))
