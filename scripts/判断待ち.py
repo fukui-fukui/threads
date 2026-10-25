@@ -230,6 +230,18 @@ def 引用を入れる(mine: list[dict], repo: Path) -> list[str]:
     return 済み
 
 
+_URLの形 = re.compile(r"https?://[^\s）)」、。]+")
+_名の形 = re.compile(r"「([^「」]{2,40})」")
+
+
+def すでにネタ帳にある(候補: str, ネタ帳: str) -> bool:
+    """候補の出典 URL か「」の名前が、ネタ帳のどこかにもうあるか。"""
+    for u in _URLの形.findall(候補):
+        if u.rstrip("/") in ネタ帳:
+            return True
+    return any(n in ネタ帳 for n in _名の形.findall(候補))
+
+
 def 反映(answers: list[dict], repos: dict[str, Path]) -> list[str]:
     名で = {v: k for k, v in 出どころの名.items()}
     済み = []
@@ -254,6 +266,11 @@ def 反映(answers: list[dict], repos: dict[str, Path]) -> list[str]:
             中身 = " ".join(str(a.get("中身") or "").split())
             一言 = " ".join(一言.split())
             行 = f"- 【代表：載せる】{中身}" + (f" {a['url']}" if a.get("url") else "") + (f"（代表の一言：{一言}）" if 一言 else "")
+            # もうネタ帳に載っているもの（前に取り込んで、運用部が「書き足す場所」に移したものなど）は足さない
+            # （2026-10-25 運用部・福井：同じ催しが別の候補として出て、代表がまた「載せる」を押し、調べものに戻ってきた）
+            if すでにネタ帳にある(中身 + " " + str(a.get("url") or ""), ネタ帳):
+                print(f"::notice::すでにネタ帳にあるので足しません：{中身[:40]}")
+                continue
             載せる行.append(行)
         if 載せる行:
             ネタ帳p.write_text(_調べもの節に足す(ネタ帳, 載せる行), encoding="utf-8")
