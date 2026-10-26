@@ -482,7 +482,34 @@ def render_table(title: str, table: dict, label_map=None) -> list[str]:
     return lines + [""]
 
 
-def render_learnings(now: datetime, summary: dict, decision: dict, keep: str, history: list[dict]) -> str:
+def views_drop_alert(rows: list[dict], now: datetime) -> str:
+    """投稿から24〜48時間で測った閲覧の中央値を、直近3日の投稿と、その前の7日の投稿で比べる。
+    半分を切っていたら知らせの文を返す（2026-10-26 代表「ここ数日の数字悪いですね」。日次レビューが気づかなかった）。
+    平均は1本の大当たりで振れるので、同じ経過時間の中央値で比べる。"""
+    first: dict[str, tuple[str, int]] = {}
+    for r in rows:
+        posted_at = parse_iso(r.get("posted_at", ""))
+        measured_at = parse_iso(r.get("measured_at", ""))
+        if not posted_at or not measured_at or r.get("id") in first:
+            continue
+        hours = (measured_at - posted_at).total_seconds() / 3600
+        if 20 <= hours <= 50:
+            first[r["id"]] = (r.get("date", ""), int(r.get("views", 0)))
+    today = now.astimezone(JST).date()
+    recent = [v for d, v in first.values() if d and (today - datetime.fromisoformat(d).date()).days <= 3]
+    before = [v for d, v in first.values() if d and 4 <= (today - datetime.fromisoformat(d).date()).days <= 10]
+    if len(recent) < 5 or len(before) < 10:
+        return ""
+    now_med, before_med = statistics.median(recent), statistics.median(before)
+    if before_med <= 0 or now_med >= before_med / 2:
+        return ""
+    return (
+        f"⚠ 閲覧が前の週の半分を切っています：投稿から24〜48時間の閲覧の中央値が、直近3日 {now_med:.0f}（{len(recent)}本）"
+        f"／その前の7日 {before_med:.0f}（{len(before)}本）。毎朝の作業で統括に知らせてください"
+    )
+
+
+def render_learnings(now: datetime, summary: dict, decision: dict, keep: str, history: list[dict], alert: str = "") -> str:
     active = [c for c in history if c.get("lever")][-3:]
     lines = [
         "# 検証チームからの指示（自動更新・毎日）",
@@ -491,6 +518,7 @@ def render_learnings(now: datetime, summary: dict, decision: dict, keep: str, hi
         "",
         "compose.py はこのファイルを読み、翌日の生成に反映する。運用ボードの文体・禁止事項・事実の扱いはこの指示より優先。",
         "",
+        *([alert, ""] if alert else []),
         "## 今日の変更（1 つだけ）",
         f"- レバー: {decision['lever'] or 'なし'}",
         f"- 指示: {decision['instruction']}",
@@ -511,12 +539,13 @@ def render_learnings(now: datetime, summary: dict, decision: dict, keep: str, hi
     return "\n".join(lines).rstrip() + "\n"
 
 
-def render_daily(now: datetime, measured: list[dict], summary: dict, decision: dict) -> str:
+def render_daily(now: datetime, measured: list[dict], summary: dict, decision: dict, alert: str = "") -> str:
     lines = [
         f"# 検証ログ {now.date().isoformat()}",
         "",
         f"測定: {len(measured)} 本（新規）／ 直近 {WINDOW_DAYS} 日の測定済み {summary['n']} 本",
         "",
+        *([alert, ""] if alert else []),
         "## 今日の変更",
         f"- {decision['lever'] or 'なし'}: {decision['instruction']}",
         f"- 根拠: {decision['reason']}",
@@ -603,8 +632,11 @@ def main() -> None:
     change = {"at": now.isoformat(), **decision, "n": summary["n"], "views_avg": summary["views_avg"]}
     keep = write_learning_text(summary, decision, history)
 
-    learnings = render_learnings(now, summary, decision, keep, history + [change])
-    daily = render_daily(now, measured, summary, decision)
+    alert = views_drop_alert(history_rows + measured, now)
+    if alert:
+        warn(alert)
+    learnings = render_learnings(now, summary, decision, keep, history + [change], alert)
+    daily = render_daily(now, measured, summary, decision, alert)
 
     if DRY_RUN:
         log("\n--- learnings.md (DRY_RUN) ---\n" + learnings)
