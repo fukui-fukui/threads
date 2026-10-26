@@ -43,6 +43,8 @@ class 新店の型のテスト(unittest.TestCase):
         self.assertIn("名前", compose.新店の直し(f"高さ約6mの立体迷路。越前市に「らくまるパーク」がオープンしました。\n\n{compose.検索語_おでかけ}"))
         self.assertIn("検索語", compose.新店の直し(f"福井市に天ぷら店「たかさか」がオープンしました。\n\n{compose.検索語}"))
         self.assertIsNone(compose.新店の直し(f"福井市の天ぷら店「たかさか」が10月1日にオープンしました。\n\n{g}"))
+        # 読む人への問いかけは見ない（10/26 3県とも14:00が毎回作り直しになった）
+        self.assertIsNone(compose.新店の直し(f"秋の夜、体が温まるものを1つだけ食べるなら、何にしますか？\n\n・打ち豆汁\n・ソースカツ丼\n\n{g}"))
         # 催しの投稿は見ない
         self.assertIsNone(compose.新店の直し(f"10月31日、勝山市で「ダイナソーフェス」が開かれるそうです。\n\n{compose.検索語}"))
 
