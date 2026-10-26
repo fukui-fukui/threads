@@ -1316,6 +1316,11 @@ def 新店の直し(text: str) -> str | None:
         return None
     店の投稿 = any(w in text for w in 店の語)
     頭 = "\n".join([l for l in text.splitlines() if l.strip()][:2])
+    # 読む人への問いかけ（1行目が問い）は紹介ではないので見ない。
+    # 食べもの・出かける先の問いはお店・おでかけの検索語で終わるため、毎日14:00が作り直しになり、
+    # AI を3回呼んでいた（2026-10-26 運用部・石川／統括。3県とも14:00だけ）
+    if re.search(r"[？?]", next((l for l in text.splitlines() if l.strip()), "")):
+        return None
     if not 店の投稿 and not _新店らしい.search(頭):
         return None
     わけ = []
