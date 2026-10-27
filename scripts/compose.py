@@ -1351,6 +1351,63 @@ def 定休日に当たる(text: str, 日) -> bool:
     return bool(re.search(rf"{曜}(?:曜|・|、|$)", m.group(1)))
 
 
+_営業時間 = re.compile(r"営業時間[はは：:\s]*([^。\n]{0,60})")
+_時刻の幅 = re.compile(r"(\d{1,2})[:：](\d{2})\s*[〜~～\-－ー]\s*(\d{1,2})[:：](\d{2})")
+
+
+def 閉まる時(text: str) -> int | None:
+    """本文の営業時間の、いちばん遅い閉まる時（時。0時をまたぐときは 24 以上）。書いていなければ None。"""
+    m = _営業時間.search(text or "")
+    if not m:
+        return None
+    閉 = None
+    for a, _, b, bm in _時刻の幅.findall(m.group(1)):
+        開, 終 = int(a), int(b) + (1 if int(bm) else 0)
+        if 終 <= 開:
+            終 += 24
+        閉 = max(閉 or 0, 終)
+    return 閉
+
+
+def 合わない理由(text: str, 日, 時: int) -> str | None:
+    """お店の紹介を、その日・その時刻に出すと行けないとき、その理由（2026-10-27 統括・運用部 福井／石川）。
+    - 出す日がそのお店の定休日
+    - 昼のうちに閉まるお店（閉まるのが20時まで）を、閉まったあとの時刻に出す（21時からの夜の枠は翌日に行く人向けなので、翌日の定休日を見る）"""
+    if 定休日に当たる(text, 日):
+        return "定休日の曜日"
+    閉 = 閉まる時(text)
+    if 閉 is None or 閉 > 20 or 時 < 閉:
+        return None
+    if 時 >= 21:
+        return "夜の枠で、翌日が定休日" if 定休日に当たる(text, 日 + timedelta(days=1)) else None
+    return f"{閉}時に閉まるお店を {時}:00 に出す"
+
+
+def 定休日と時刻で並べ直す(posts: list[dict], 日, 動かせない: set[int]) -> list[dict]:
+    """定休日・営業時間に合わない枠のお店を、合う枠の投稿と入れ替える。入れ替えられないものは外す（あとで予備で埋める）。
+    6時のまとめ・宿・ふるさと納税・今週末まとめの枠は動かさない。"""
+    by = {int(p["hour"]): p for p in posts if str(p.get("hour", "")).isdigit() or isinstance(p.get("hour"), int)}
+    for h in sorted(by):
+        p = by.get(h)
+        if p is None or h in 動かせない:
+            continue
+        わけ = 合わない理由(p.get("text") or "", 日, h)
+        if not わけ:
+            continue
+        相手 = next((h2 for h2 in sorted(by) if h2 != h and h2 not in 動かせない
+                    and not 合わない理由(p.get("text") or "", 日, h2)
+                    and not 合わない理由(by[h2].get("text") or "", 日, h)), None)
+        一行 = (p.get("text") or "").splitlines()[0][:40]
+        if 相手 is not None and わけ != "定休日の曜日":
+            by[h], by[相手] = by[相手], p
+            by[h]["hour"], by[相手]["hour"] = h, 相手
+            print(f"::warning::{h}:00 のお店が合わない（{わけ}）ので、{相手}:00 と入れ替えました：{一行}")
+        else:
+            del by[h]
+            print(f"::warning::{h}:00 のお店が合わない（{わけ}）ので外しました（予備で埋めます）：{一行}")
+    return [by[h] for h in sorted(by)]
+
+
 def 新店の型の気づき(text: str) -> str | None:
     """新店・オープンの投稿なのに型から外れていたら、その中身を返す（枠は落とさず、記録に残して運用で見る）。"""
     if not _オープン.search(text) or not any(w in text for w in (検索語_お店, 検索語_おでかけ) if w != 検索語):
@@ -2119,8 +2176,10 @@ def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出�
             print(f"::warning::予備の新店・施設の文が型から外れているので捨てます（{直し}）：{x['text'].splitlines()[0][:40]}")
             continue
         urls = source_urls(x.get("text", ""), x.get("thread") or [])
-        if 空き and not (urls & 今日の出典) and not 出典で止める理由(urls, 記, target_date) and not 名で止める理由(x, 名記 or {}):
-            h = 空き.pop(0)
+        合う = [h for h in 空き if not 合わない理由(x.get("text", ""), target_date, h)]
+        if 合う and not (urls & 今日の出典) and not 出典で止める理由(urls, 記, target_date) and not 名で止める理由(x, 名記 or {}):
+            h = 合う[0]
+            空き.remove(h)
             item = {"id": new_id(h, existing_ids), "text": x["text"],
                     "scheduled_at": f"{target_date.isoformat()}T{h:02d}:00:00+09:00",
                     "thread": x.get("thread") or [], "note": x.get("note") or "予備から"}
@@ -2383,10 +2442,15 @@ def main() -> None:
         予備の数=予備の数,
     )
     posts = generate(api_key, model, prompt, [hour for hour, *_ in needed])
-    for p in posts:
-        if 定休日に当たる(p.get("text") or "", target_date):
-            # 定休日の曜日にお店を紹介しない（2026-10-27 運用部・福井：水曜定休のてんやわんやを水曜に出しかけた）
-            print(f"::warning::{p.get('hour')}:00 は定休日の曜日にお店を紹介しています。運用で見てください：{(p.get('text') or '').splitlines()[0][:40]}")
+    # 定休日・営業時間に合わない枠のお店は、合う枠と入れ替えるか外す（2026-10-27 統括：てんやわんや・オギカフリーダが2日続けて定休日に入った）
+    動かせない = {6}
+    if 地域.使う("宿"):
+        動かせない.add(HOTEL_HOUR)
+    if kifu:
+        動かせない.add(KIFU_HOUR)
+    if 今週末まとめの日(target_date):
+        動かせない.add(WEEKEND_HOUR)
+    posts = 定休日と時刻で並べ直す(posts, target_date, 動かせない)
 
     by_hour = {int(p["hour"]): p for p in posts}
     new_lines = []
