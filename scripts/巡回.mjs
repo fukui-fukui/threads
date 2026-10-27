@@ -466,6 +466,9 @@ async function インスタを読む(先, 境目, 上限, 捨てる語 = []) {
   for (const m of 応答.business_discovery?.media?.data ?? []) {
     const 本文 = String(m.caption ?? '').replace(/#\S+/g, ' ').replace(/\s+/g, ' ').trim();
     if (!本文 || !m.permalink) continue;
+    // PR・提供の投稿は出典にしない。印の「#PR」はハッシュタグとして上で消えるので、元のキャプションで見る
+    // （2026-10-27 運用部・福井：#PR の紹介リールを出典に eX cafe の住所・時間を書いた）
+    if (/(^|[^A-Za-z])PR([^A-Za-z]|$)|＃PR|広告|タイアップ|プロモーション|提供[:：]|#提供/.test(String(m.caption ?? ''))) { 捨てた += 1; continue; }
     const タイトル = 本文.slice(0, 120);
     if (捨てるか(タイトル, 捨てる語)) { 捨てた += 1; continue; }
     const 日付 = m.timestamp ? new Date(m.timestamp) : null;
