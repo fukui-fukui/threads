@@ -140,6 +140,7 @@ def _入れる(名前: str) -> bool:
 今週末まとめを使う = _入れる("今週末まとめ")  # 金曜 19:00 を「今週末の◯◯」まとめにする
 メンションを使う = _入れる("メンション")      # 新店の投稿で、確かめたお店の公式 Threads をメンションする
 WEEKEND_HOUR = 19
+新店の作り直し回数 = int(地域.地域.get("新店の作り直し回数", 2))
 特集 = 地域.地域.get("特集", [])               # [{"名","見出し","月":[..],"説明"}]
 
 
@@ -1215,9 +1216,11 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
             except (TypeError, ValueError):
                 continue
             if hour in hours and hour not in 集まった and (post.get("text") or "").strip():
-                # 新店・施設の投稿が型（2026-10-24 代表）から外れていたら、2回目までは作り直させる
+                # 新店・施設の投稿が型（2026-10-24 代表）から外れていたら、2回目までは作り直させる。
+                # 作り直しは1回ごとに API をもう1回呼ぶので、region.json の「新店の作り直し回数」で減らせる
+                # （ぎふあいちは 0。10/26・27 に作成が1日3回になり、費用が倍になった。2026-10-27 運用部・ぎふあいち）
                 直し = 新店の直し(post.get("text") or "")
-                if 直し and attempt < 3:
+                if 直し and attempt <= min(2, 新店の作り直し回数):
                     直してほしい[hour] = 直し
                     print(f"::warning::{hour}:00 は新店・施設の型から外れているので作り直します（{直し}）")
                     continue
