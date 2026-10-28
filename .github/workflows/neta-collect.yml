@@ -42,14 +42,20 @@ jobs:
     outputs:
       run: ${{ steps.day.outputs.run }}
     steps:
-      - name: 集める日か（月・水・金）
+      # 曜日は region.json の「情報集めの曜日」（1=月 … 7=日。無ければ月・水・金）。ぎふあいちは月・木（2026-10-29 代表「C」）
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: region.json
+          sparse-checkout-cone-mode: false
+      - name: 集める日か（region.json の情報集めの曜日）
         id: day
         run: |
           dow=$(TZ=Asia/Tokyo date +%u)   # 1=月 … 7=日
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$dow" = "1" ] || [ "$dow" = "3" ] || [ "$dow" = "5" ]; then
+          days=$(python3 -c "import json,os; d=json.load(open('region.json')) if os.path.exists('region.json') else {}; print(' '.join(map(str, d.get('情報集めの曜日', [1, 3, 5]))))")
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [[ " $days " == *" $dow "* ]]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
-            echo "今日（曜日番号 ${dow}）は集めない日です。集めるのは月・水・金だけ。"
+            echo "今日（曜日番号 ${dow}）は集めない日です。集めるのは曜日番号 ${days} だけ。"
             echo "run=false" >> "$GITHUB_OUTPUT"
           fi
 

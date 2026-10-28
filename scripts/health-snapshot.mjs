@@ -173,7 +173,10 @@ if (SKIP_API) {
     for (const w of snapshot.ワークフロー) {
       if (毎日[w.ファイル] && w.今日走ったか === true && w.判定 === "失敗") 警告.push(`${毎日[w.ファイル]}（${w.ファイル}）が今日失敗しています。${w.最後の失敗?.理由 ? "理由：" + JSON.stringify(w.最後の失敗.理由).slice(0, 200) : "Actions のログを確かめてください"}`);
       // 情報集めは月・水・金だけ（2026-10-08 代表、10-28「週3にして」）。ほかの曜日は「まだ走っていない」を出さない（2026-10-24 運用部・石川）
-      const 集める日 = [1, 3, 5].includes(new Date(`${today}T00:00:00Z`).getUTCDay());
+      // 曜日は region.json の「情報集めの曜日」（1=月 … 7=日。無ければ月・水・金）
+      let 集める曜日 = [1, 3, 5];
+      try { 集める曜日 = JSON.parse(fs.readFileSync("region.json", "utf8"))["情報集めの曜日"] ?? 集める曜日; } catch {}
+      const 集める日 = 集める曜日.map((d) => d % 7).includes(new Date(`${today}T00:00:00Z`).getUTCDay());
       if (w.ファイル === "neta-collect.yml" && !集める日) continue;
       if (毎日[w.ファイル] && w.今日走ったか !== true) 警告.push(`${毎日[w.ファイル]}（${w.ファイル}）が今日まだ走っていません。cron-job.org の起動を確かめてください`);
       if (w.ファイル === "threads-post.yml" && (w["24時間の実行"] ?? 0) === 0) 警告.push("予約投稿（threads-post.yml）が24時間走っていません。cron-job.org の起動を確かめてください");
