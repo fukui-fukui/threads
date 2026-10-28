@@ -28,6 +28,10 @@ from datetime import date
 sys.path.insert(0, "scripts")
 spec = importlib.util.spec_from_file_location("compose", "scripts/compose.py")
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+# 検証チームの指示（insights/learnings.md）は県ごとのリポジトリにある日々のデータで、指示文の型ではないので読まない。
+# 福井版のリポジトリでほかの県を試すと、福井の learnings.md の例（「坂井市春江町に…」）が混ざって落ちた（2026-10-27）
+from pathlib import Path
+m.LEARNINGS_PATH = Path("/nonexistent/learnings.md")
 import 地域
 本物 = 地域.直す
 地域.直す = lambda t: t
