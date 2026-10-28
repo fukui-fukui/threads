@@ -1937,14 +1937,13 @@ def 名前たち(e: dict, 見出しも: bool = True) -> set[str]:
 
 def 催しの投稿(e: dict) -> bool:
     """催し（会期のあるもの）の投稿か。お店・施設・宿の投稿とで、あける日数を分ける（2026-10-28 代表「14日にして」）。
-    検索語を分けている県は、最後の検索語で見る（催しの語＝催し、お店・おでかけの語＝お店・施設）。"""
+    お店・おでかけの検索語か、オープン・開店などの言葉があればお店・施設、どちらも無ければ催し。"""
     文 = "\n".join([e.get("text") or "", *(e.get("thread") or []), e.get("note") or ""])
     if "宿まとめ" in (e.get("note") or ""):
         return False
     店の語 = [w for w in (検索語_お店, 検索語_おでかけ) if w != 検索語]
-    if 店の語:
-        return not any(w in (e.get("text") or "") for w in 店の語)
-    return not _新店らしい.search(文)
+    # 検索語を取り違えた新店の文もあるので、オープン・開店などの言葉があればお店とみる
+    return not (any(w in (e.get("text") or "") for w in 店の語) or _新店らしい.search(文))
 
 
 def 名の記録(投稿たち: list[dict], target_date) -> dict[str, tuple[str, int]]:
