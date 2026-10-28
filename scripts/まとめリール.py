@@ -45,7 +45,7 @@ FOOT_BASE = 480         # 注意・出典の見出し・下の名前の高さ（
 SOURCE_LINE = 44        # 出典1行の高さ
 HOLD_TOP = 2.5          # はじめに止める秒
 HOLD_END = 1.5          # 下まで来て止める秒
-SPEED = 130             # 流れる速さ（動画の px／秒、720 幅で）
+SPEED = 95              # 流れる速さ（動画の px／秒、720 幅で）
 OUTRO_SEC = 2.5
 
 _spec = importlib.util.spec_from_file_location("リール", Path(__file__).with_name("リール.py"))
@@ -65,7 +65,7 @@ def ページ(台本: dict, fonts_css: str = "") -> str:
         <div class="num">{i}</div>
         <div class="body">
           <div class="top"><span class="tag">{e(it["tag"])}</span><span class="open">{e(it.get("open", ""))}</span></div>
-          <h2>{e(it["name"])}</h2>
+          <h2 style="font-size:{56 if len(it["name"]) <= 14 else 44}px">{e(it["name"])}</h2>
           <p class="place">{e(it["place"])}</p>
           <p class="text">{e(it["text"])}</p>
         </div>
