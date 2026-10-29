@@ -2027,10 +2027,11 @@ def 並べる投稿から外す(text: str, 名記: dict) -> tuple[str, list[tupl
         if 名:
             外す.append(i)
             外した.append((名[0], b[0]))
-    if 外す and len(塊) - len(外す) < 2:
-        print(f"::warning::まとめの行に7日以内に出した「{外した[0][0]}」がありますが、外すと2行未満になるので残します。運用で見てください。")
-    if not 外す or len(塊) - len(外す) < 2:
+    if not 外す:
         return text, []
+    if len(塊) - len(外す) < 2:
+        # 外すと2行未満になるときは、投稿ごと外す（2026-10-29 運用部・石川：6:00 の2行とも重なっていたのに残っていた）
+        return None, 外した
     残り = [b for i, b in enumerate(塊) if i not in 外す]
     for k, b in enumerate(残り):
         b[0] = re.sub(rf"^(\s*)[{_番号}]", lambda m: m.group(1) + _番号[k], b[0], count=1)
@@ -2039,6 +2040,10 @@ def 並べる投稿から外す(text: str, 名記: dict) -> tuple[str, list[tupl
 
 def 名で止める理由(e: dict, 名記: dict) -> str | None:
     if not 同じ名を見る:
+        return None
+    # 読む人への問いかけ（1行目が問い）は紹介ではないので、名前の重なりでは止めない。同じ問いは指示で14日くり返さない
+    # （2026-10-29 運用部・石川：問いの言葉「冬の合図」が名前と見なされて 14:00 が落ち、予備が入った）
+    if re.search(r"[？?]", next((l for l in (e.get("text") or "").splitlines() if l.strip()), "")):
         return None
     for n in sorted(名前たち(e)):
         if 名が近い(n, 名記, 催しの投稿(e)):
@@ -2078,7 +2083,7 @@ def 使えない名の一覧(名記: dict) -> str:
 # ---- 15時：催し × 近くの宿1軒（福井だけ。2026-09-29 代表了承） -------------
 # 宿の一覧（まとめ型）は福井では 887〜1,155、【PR】始まりは 17。
 # 福井の読み手は福井の出来事を見に来ているので、1投稿目は催し、宿は返信で1軒だけ。
-def 催しと宿の材料(target_date, 宿たち: list[dict]) -> dict | None:
+def 催しと宿の材料(target_date, 宿たち: list[dict], 避ける: set[str] | frozenset = frozenset()) -> dict | None:
     エリア = [c for c in 宿.切り口たち if c.get("種類") == "エリア"]
     if not エリア or not 宿たち:
         return None
@@ -2090,8 +2095,17 @@ def 催しと宿の材料(target_date, 宿たち: list[dict]) -> dict | None:
         # 短縮リンクのある宿を先に（代表が作ったリンク）
         候補.sort(key=lambda h: (宿.宿のリンク先(h, 短縮).startswith("https://a.r10.to/") is False,
                                  -(float(h.get("評価") or 0))))
-        候補 = 候補[:8]
+        # 14日以内に出した宿は外す（2026-10-29 運用部・石川：小松・能美の宿が14日以内に全部出ていて、9日前の宿が入った）。
+        # その土地の宿がみな出ていたら、次の土地を見る
+        新しい = [h for h in 候補 if 宿.見せる名(h) not in 避ける][:8]
+        if 新しい:
+            return {"切り口": 切, "宿": 新しい, "短縮": 短縮}
+    # どの土地もみな出ていたら、前のとおり今日の土地から選ぶ
+    for ずれ in range(len(エリア)):
+        切 = エリア[(日数 + ずれ) % len(エリア)]
+        候補 = [h for h in 宿たち if 宿.当てはまる(切, h)][:8]
         if 候補:
+            print(f"::warning::どの土地の宿も14日以内に出ていたので、{切.get('名')}の宿から選びます。")
             return {"切り口": 切, "宿": 候補, "短縮": 短縮}
     return None
 
@@ -2196,11 +2210,18 @@ def 予備にする(posts: list[dict], target_date, 記: dict, 今日の出典: 
     return 出
 
 
+問いの時 = 14
+
+
 def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出典: set[str], existing_ids: set[str], 名記: dict | None = None) -> list[str]:
     """空いた枠を予備で埋める。15時（PR）は埋めない。使ったものは予備から消す。"""
     予備 = 予備を読む()
     残す, 行 = [], []
     空き = [h for h in 空き if (h != HOTEL_HOUR or not 地域.使う("宿")) and not (h == KIFU_HOUR and 地域.使う("ふるさと納税"))]
+    # 14:00 は問いかけの枠なので、予備（紹介の文）では埋めない（2026-10-29 運用部・石川：10/24・10/30 に予備が入った）
+    if 問いの時 in 空き:
+        空き.remove(問いの時)
+        print(f"::warning::{問いの時}:00（問いかけの枠）が空いています。予備では埋めません。運用で問いを入れてください。")
     now_jst = datetime.now(JST)
     空き = [h for h in 空き if datetime(target_date.year, target_date.month, target_date.day, h, tzinfo=JST) > now_jst]
     for x in 予備:
@@ -2463,7 +2484,10 @@ def main() -> None:
     # 宿の一覧の日も、5と0のつく日（クーポン）も、これに置きかえる。
     stay = None
     if (hotel or mugi) and 宿たち:
-        stay = 催しと宿の材料(target_date, 宿たち)
+        _始め, _終わり = (target_date - timedelta(days=店を空ける日数)).isoformat(), (target_date + timedelta(days=店を空ける日数)).isoformat()
+        _文 = "\n".join("\n".join([str(e.get("text") or ""), *(e.get("thread") or [])]) for e in 全投稿
+                        if _始め <= str(e.get("scheduled_at", ""))[:10] <= _終わり)
+        stay = 催しと宿の材料(target_date, 宿たち, {宿.見せる名(h) for h in 宿たち if 宿.見せる名(h) in _文})
         if stay:
             print(f"  → 15時は「催し × 宿1軒」（{stay['切り口']['名']}／候補 {len(stay['宿'])} 軒）")
             hotel = None
@@ -2727,6 +2751,9 @@ def main() -> None:
                 # ①②と並べるまとめ（6:00・金曜の今週末）は、7日以内に出した店・催しの行を外す
                 # （2026-10-24 運用部・石川：10/22 に出したナイトミュージアムが 10/25 6:00 の並べる投稿に入っていた）
                 text, 外した行 = 並べる投稿から外す(text, 名記)
+                if text is None:
+                    print(f"::warning::{hour}:00 のまとめは、並べた行が直近に出したもの（「{外した行[0][0]}」など）ばかりなので、投稿ごと外します。")
+                    continue
                 for n, 行 in 外した行:
                     print(f"::warning::{hour}:00 のまとめから「{n}」の行を外しました（{名記[n][0]} {名記[n][1]}:00 に出したばかり）：{行[:40]}")
             重なり = source_urls(text, thread) & set(出典の枠)
