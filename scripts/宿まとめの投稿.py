@@ -94,7 +94,7 @@ def 返信(i: int, h: dict) -> str:
     return "\n".join(行)
 
 
-def 直近に出した宿(すでに: list[dict], 日, 宿たち: list[dict], 日数: int = 7) -> set[str]:
+def 直近に出した宿(すでに: list[dict], 日, 宿たち: list[dict], 日数: int = 14) -> set[str]:  # 宿も14日あける（2026-10-28 代表「14日にして」）
     """対象日の前 日数 日の宿まとめ（note が「宿まとめ」）の本文に出ている宿の名前。"""
     始め = (日 - timedelta(days=日数)).isoformat()
     本文たち = [str(e.get("text") or "") for e in すでに

@@ -71,6 +71,12 @@ class 同じ名のテスト(unittest.TestCase):
             self.assertIsNotNone(compose.名で止める理由({"text": f"越前市のカフェ「茶寮うおとめ」がオープンしました。\n\n{compose.検索語_お店}"}, 名記))
             self.assertIsNone(compose.名で止める理由({"text": f"「茶寮うおとめ」で11月に催しが開かれます。\n\n{compose.検索語}"}, 名記))
 
+    def test_問いかけは名前の重なりで止めない(self):
+        # 2026-10-29 運用部・石川：問いの言葉「冬の合図」が名前と見なされて 14:00 が落ちた
+        前 = {"id": "q", "scheduled_at": "2026-10-23T14:00:00+09:00", "text": "あなたの「冬の合図」はどれですか？"}
+        名記 = compose.名の記録([前], date(2026, 10, 30))
+        self.assertIsNone(compose.名で止める理由({"text": "今年の「冬の合図」、どれを感じましたか？\n\n・雪吊り"}, 名記))
+
     def test_並べる投稿から7日以内の名の行を外す(self):
         # 10/24 運用部・石川：10/22 に出したナイトミュージアムが 10/25 6:00 の並べる投稿に入っていた
         名記 = {"ナイトミュージアム": ("2026-10-22", 19)}
@@ -83,7 +89,8 @@ class 同じ名のテスト(unittest.TestCase):
         self.assertTrue(新.endswith("石川イベント"))
         # 外すと1行しか残らないときは外さない
         t2 = "①「ナイトミュージアム」\n②「秋の茶会」"
-        self.assertEqual(compose.並べる投稿から外す(t2, 名記), (t2, []))
+        # 外すと2行未満になるときは、投稿ごと外す（2026-10-29 運用部・石川）
+        self.assertIsNone(compose.並べる投稿から外す(t2, 名記)[0])
 
 
 if __name__ == "__main__":
