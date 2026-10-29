@@ -58,8 +58,18 @@ class 同じ名のテスト(unittest.TestCase):
         店 = {"id": "s", "scheduled_at": "2026-10-18T12:00:00+09:00", "text": f"福井市の居酒屋「てんやわんや」がオープンしました。\n\n{compose.検索語_お店}"}
         催し = {"id": "e", "scheduled_at": "2026-10-18T13:00:00+09:00", "text": f"10月20日、「ダイナソーフェス」が開かれます。\n\n{compose.検索語}"}
         名記 = compose.名の記録([店, 催し], date(2026, 10, 29))
-        self.assertIn("てんやわんや", 名記)
-        self.assertNotIn("ダイナソーフェス", 名記)
+        self.assertTrue(compose.名が近い("てんやわんや", 名記, False))
+        self.assertTrue(compose.名が近い("てんやわんや", 名記, True))
+        # 催しを催しとしてもう一度出すときだけ、8日目から出してよい
+        self.assertFalse(compose.名が近い("ダイナソーフェス", 名記, True))
+
+    def test_前が催しの語でも今回お店なら14日(self):
+        # 2026-10-29 運用部・福井：10/20 に「福井イベント」で終わる文で出した茶寮うおとめを、10/30 にお店として出しかけた
+        前 = {"id": "a", "scheduled_at": "2026-10-20T08:00:00+09:00", "text": f"越前市の「茶寮うおとめ」で甘味。\n\n{compose.検索語}"}
+        名記 = compose.名の記録([前], date(2026, 10, 30))
+        if compose.同じ名を見る:
+            self.assertIsNotNone(compose.名で止める理由({"text": f"越前市のカフェ「茶寮うおとめ」がオープンしました。\n\n{compose.検索語_お店}"}, 名記))
+            self.assertIsNone(compose.名で止める理由({"text": f"「茶寮うおとめ」で11月に催しが開かれます。\n\n{compose.検索語}"}, 名記))
 
     def test_並べる投稿から7日以内の名の行を外す(self):
         # 10/24 運用部・石川：10/22 に出したナイトミュージアムが 10/25 6:00 の並べる投稿に入っていた
