@@ -1946,11 +1946,34 @@ def 催しの投稿(e: dict) -> bool:
     return not (any(w in (e.get("text") or "") for w in 店の語) or _新店らしい.search(文))
 
 
+class 名の記(dict):
+    """名前 → 直近に出した (日付, 時)。対象日と、直近がそれぞれ催しの投稿だった名前（催し）も持つ。"""
+    対象日 = None
+    催し: set = set()
+
+
+def 名が近い(n: str, 名記: dict, 新しいのが催し: bool) -> bool:
+    """その名前を、いま出すとあけ方の決まりに当たるか。
+    7日以内なら当たる。8〜14日は、前も今回も催しのときだけ当たらない（お店・施設・宿は14日。2026-10-28 代表「14日にして」）。
+    前の投稿の種類だけで見ると、催しの検索語で終わっていたお店を7日で見てしまった（2026-10-29 運用部・福井：茶寮うおとめが10日で2回目）。"""
+    if n not in 名記:
+        return False
+    対象日 = getattr(名記, "対象日", None)
+    if 対象日 is None:
+        return True
+    差 = abs(_日差(名記[n][0], 対象日))
+    if 差 <= 同じ名を空ける日数:
+        return True
+    return not (新しいのが催し and n in getattr(名記, "催し", set()))
+
+
 def 名の記録(投稿たち: list[dict], target_date) -> dict[str, tuple[str, int]]:
     """名前 → 直近に出した (日付, 時)。対象日より前の7日と、キューにある先の7日（手で入れた投稿も含む）。
     先の日に手で入れた店を、その晩の作成がネタ帳から先に使ってしまうため、先の予定も見る
     （2026-10-23 運用部・福井：陶あかり 10/21・ROKKA 10/22・越ノ龍 10/23 で3回）。"""
-    記: dict[str, tuple[str, int]] = {}
+    記 = 名の記()
+    記.対象日 = target_date
+    記.催し = set()
     for e in 投稿たち:
         at = str(e.get("scheduled_at", ""))
         d = at[:10]
@@ -1961,14 +1984,16 @@ def 名の記録(投稿たち: list[dict], target_date) -> dict[str, tuple[str, 
             時 = int(at[11:13])
         except ValueError:
             continue
-        if abs(差) > (同じ名を空ける日数 if 催しの投稿(e) else 店を空ける日数):
+        if abs(差) > 店を空ける日数:
             continue
+        催し = 催しの投稿(e)
         # 6:00 の「今日で終わる」まとめと金曜の今週末まとめは、並べた催しの見出しまでは数えない（止めるほうでも見ていないため）
         まとめ = 時 == 6 or (今週末まとめの日(datetime.strptime(d, "%Y-%m-%d").date()) and 時 == WEEKEND_HOUR)
         for n in 名前たち(e, 見出しも=not まとめ):
             # 前の日と先の日の両方にあるときは、対象日に近いほうを残す
             if n not in 記 or abs(_日差(d, target_date)) < abs(_日差(記[n][0], target_date)):
                 記[n] = (d, 時)
+                (記.催し.add if 催し else 記.催し.discard)(n)
     return 記
 
 
@@ -1998,7 +2023,7 @@ def 並べる投稿から外す(text: str, 名記: dict) -> tuple[str, list[tupl
             頭.append(l)
     外す, 外した = [], []
     for i, b in enumerate(塊):
-        名 = sorted(n for n in 名前たち({"text": "\n".join(b)}, 見出しも=False) if n in 名記)
+        名 = sorted(n for n in 名前たち({"text": "\n".join(b)}, 見出しも=False) if 名が近い(n, 名記, True))
         if 名:
             外す.append(i)
             外した.append((名[0], b[0]))
@@ -2016,7 +2041,7 @@ def 名で止める理由(e: dict, 名記: dict) -> str | None:
     if not 同じ名を見る:
         return None
     for n in sorted(名前たち(e)):
-        if n in 名記:
+        if 名が近い(n, 名記, 催しの投稿(e)):
             d, 時 = 名記[n]
             return f"「{n}」を {d} {時}:00 にも入れている（同じお店・施設は前後{店を空ける日数}日、催しは{同じ名を空ける日数}日あける）"
     return None
@@ -2046,7 +2071,8 @@ def 使えない出典の一覧(記: dict, 投稿たち: list[dict], target_date
 def 使えない名の一覧(名記: dict) -> str:
     if not 同じ名を見る:
         return ""
-    return "\n".join(f"- 「{n}」（{d} {時}:00 に入っている）" for n, (d, 時) in sorted(名記.items(), key=lambda x: x[1], reverse=True))
+    return "\n".join(f"- 「{n}」（{d} {時}:00 に入っている）" for n, (d, 時) in sorted(名記.items(), key=lambda x: x[1], reverse=True)
+                     if 名が近い(n, 名記, True) or n not in getattr(名記, "催し", set()))
 
 
 # ---- 15時：催し × 近くの宿1軒（福井だけ。2026-09-29 代表了承） -------------
