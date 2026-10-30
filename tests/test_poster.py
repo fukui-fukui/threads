@@ -1,5 +1,6 @@
 import unittest
 
+from threads_bot.client import ThreadsAPIError
 from threads_bot.config import Config
 from threads_bot.poster import publish_item
 from threads_bot.queue import QueueItem
@@ -94,6 +95,19 @@ class PublishItemTest(unittest.TestCase):
         publish_item(client, item, CONFIG)
         self.assertEqual(client.published, ["c1", "c2"])
         self.assertTrue(client.containers[1]["text"].endswith("https://a.r10.to/x"))
+
+    def test_main_post_is_kept_when_a_reply_fails(self):
+        # 2026-10-30：本体が出たあと返信で失敗し、失敗扱いで記録されず10分ごとに本体が出直した
+        class ReplyFails(RecordingClient):
+            def create_container(self, **kwargs):
+                if kwargs.get("reply_to_id"):
+                    raise ThreadsAPIError("HTTP 400: An unknown error occurred")
+                return super().create_container(**kwargs)
+
+        client = ReplyFails()
+        item = QueueItem(id="p1", text="本体", thread=["出典元：https://example.com/"])
+        result = publish_item(client, item, CONFIG)
+        self.assertEqual(result.post_id, "p1")
 
     def test_media_posts_wait_for_the_container(self):
         client = RecordingClient()
