@@ -2005,6 +2005,23 @@ _番号 = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫"
 _番号の行 = re.compile(rf"^\s*[{_番号}]")
 
 
+# 「① 🏯 わたしの本（金沢市・10/31〜11/1）」の、番号と絵文字のあと・（ の手前の名前
+_行の名 = re.compile(rf"^\s*[{_番号}]\s*(?:[^\w\s]+\s*)?([^（(\n]+?)\s*(?:[（(]|$)")
+
+
+def 行の名(行: str, 名記: dict) -> set[str]:
+    """並べた行の名前を、名記の名前と照らす。行には「」が無いので、名前たちでは拾えない
+    （2026-10-31 運用部・石川：11/1 6:00 に、10/26 のわたしの本・10/27 の響緑祭が残っていた）。
+    名記のほうが長い名（第22回石川県立大学学園祭 響緑祭）のこともあるので、3字以上ならどちらかが含んでいれば同じとみる。"""
+    m = _行の名.match(行)
+    if not m:
+        return set()
+    n = m.group(1).strip()
+    if len(n) < 3:
+        return set()
+    return {k for k in 名記 if len(k) >= 3 and (k in n or n in k)}
+
+
 def 並べる投稿から外す(text: str, 名記: dict) -> tuple[str, list[tuple[str, str]]]:
     """①②…で始まる行（とその下の説明行）のうち、7日以内に出した名前を含むものを外し、番号を振り直す。
     行が2つより少なくなるときは外さない（まとめが成り立たないので、警告だけ）。"""
@@ -2023,7 +2040,7 @@ def 並べる投稿から外す(text: str, 名記: dict) -> tuple[str, list[tupl
             頭.append(l)
     外す, 外した = [], []
     for i, b in enumerate(塊):
-        名 = sorted(n for n in 名前たち({"text": "\n".join(b)}, 見出しも=False) if 名が近い(n, 名記, True))
+        名 = sorted(n for n in 名前たち({"text": "\n".join(b)}, 見出しも=False) | 行の名(b[0], 名記) if 名が近い(n, 名記, True))
         if 名:
             外す.append(i)
             外した.append((名[0], b[0]))
