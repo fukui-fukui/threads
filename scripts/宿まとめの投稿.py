@@ -95,11 +95,148 @@ def 返信(i: int, h: dict) -> str:
 
 
 def 直近に出した宿(すでに: list[dict], 日, 宿たち: list[dict], 日数: int = 14) -> set[str]:  # 宿も14日あける（2026-10-28 代表「14日にして」）
-    """対象日の前 日数 日の宿まとめ（note が「宿まとめ」）の本文に出ている宿の名前。"""
-    始め = (日 - timedelta(days=日数)).isoformat()
-    本文たち = [str(e.get("text") or "") for e in すでに
-               if str(e.get("note") or "").startswith(印) and 始め <= str(e.get("scheduled_at") or "")[:10] < 日.isoformat()]
+    """対象日の前後 日数 日の投稿（宿◯選・催し × 宿・宿1軒のどれでも。本文と返信）に出ている宿の名前。"""
+    始め, 終わり = (日 - timedelta(days=日数)).isoformat(), (日 + timedelta(days=日数)).isoformat()
+    本文たち = ["\n".join([str(e.get("text") or ""), *[str(t) for t in (e.get("thread") or [])]]) for e in すでに
+               if 始め <= str(e.get("scheduled_at") or "")[:10] <= 終わり]
     return {宿.見せる名(h) for h in 宿たち if any(宿.見せる名(h) in t for t in 本文たち)}
+
+
+# ---------------------------------------------------------------
+# 宿1軒の紹介（2026-11-01 代表「まとめて数件の投稿だけでなく、1件をしっかりと紹介する投稿もするように」）
+# 参考：代表が共有した別アカウント（ひとり旅の宿）。本文で「誰に・一番の売り・料金」、返信に｜区切りの事実とリンク。
+# 書くのは宿のリスト（楽天トラベルの API で取った事実）だけ。AI は使わない。
+# 楽天の「最安」は1名1泊の料金とはかぎらないので、「1名◯円」とは書かず「最安◯円〜（◯/◯時点）」にする。
+# ---------------------------------------------------------------
+一軒の切り口の種類 = (None, "チェックアウト", "最終チェックイン", "朝食バイキング", "駐車場無料")
+
+
+def 一軒を選ぶ(日, 宿たち: list[dict], 避ける: set[str] = frozenset()) -> tuple[dict, dict, str] | None:
+    """その日の切り口と、当てはまる宿1軒と、当てはまった事実。日付から決める。"""
+    切り口 = [き for き in 宿.切り口たち if き.get("種類") in 一軒の切り口の種類]
+    n = (日 - 宿.起点).days
+    for i in range(len(切り口)):
+        き = 切り口[(n + i) % len(切り口)]
+        合う = [h for h in sorted(宿たち, key=lambda x: str(x.get("番号")))
+              if 宿.見せる名(h) not in 避ける and isinstance(h.get("最安"), int) and h["最安"] > 0 and 宿.当てはまる(き, h)]
+        if 合う:
+            h = 合う[n % len(合う)]
+            return き, h, 宿.当てはまる(き, h)
+    return None
+
+
+def _時点(h: dict) -> str:
+    d = str(h.get("調べた日") or "")
+    try:
+        x = datetime.strptime(d, "%Y-%m-%d")
+        return f"{x.month}/{x.day}時点"
+    except ValueError:
+        return "調べた日の時点"
+
+
+def _口コミ(h: dict) -> str:
+    評価, 件 = h.get("評価"), h.get("レビュー数")
+    if isinstance(評価, (int, float)) and 評価 > 0 and isinstance(件, int) and 件 > 0:
+        return f"{評価:.1f}（{件:,}件）"
+    return ""
+
+
+def 一軒の本文(き: dict, h: dict, 事実: str) -> str:
+    名 = 宿.見せる名(h)
+    問い = str(き.get("問い") or "").strip()
+    行 = [f"{宿.市町(h)}で、{問い}を探している人へ。", ""]
+    種類 = き.get("種類")
+    if 種類 is None:
+        # 設備の切り口の事実は宿の紹介文そのまま（「■大浴場は東館8階に…」のように長い・記号入り）のことがあるので、
+        # 本文では切り口の言葉で言う（おでかけ開発のレビュー）
+        行.append(f"「{名}」は、{問い}です。")
+    elif 種類 == "チェックアウト":
+        行.append(f"「{名}」は、チェックアウトが {h.get('チェックアウト')}。")
+    elif 種類 == "最終チェックイン":
+        行.append(f"「{名}」は、最終チェックインが {h.get('最終チェックイン')}。")
+    elif 種類 == "朝食バイキング":
+        行.append(f"「{名}」の朝食は、{事実}。")
+    else:
+        行.append(f"「{名}」の駐車場は、{事実}。")
+    if _口コミ(h):
+        行.append(f"楽天トラベルの口コミは {_口コミ(h)}。")
+    行 += ["", f"楽天トラベルの最安料金は {h['最安']:,}円〜（{_時点(h)}）。", "", "くわしくは返信で👇"]
+    return "\n".join(行)
+
+
+def _お風呂(h: dict) -> str:
+    風呂 = [str(x).strip() for x in (h.get("風呂") or []) if str(x).strip()]
+    if 風呂:
+        return "、".join(dict.fromkeys(x[:20] for x in 風呂[:2]))
+    設備 = [str(x) for x in (h.get("館内設備") or [])]
+    return "、".join(w for w in ("大浴場", "露天風呂", "サウナ") if any(w in x for x in 設備))
+
+
+def 一軒の返信(h: dict) -> str:
+    行 = ["【PR】", f"{絵文字(h)}{宿.見せる名(h)}｜{場所(h)}", f"｜最安 {h['最安']:,}円〜（{_時点(h)}）"]
+    if _お風呂(h):
+        行.append(f"｜お風呂：{_お風呂(h)}")
+    朝食 = "・".join(dict.fromkeys(str(x) for x in (h.get("朝食の場所") or []) if str(x).strip()))
+    if 朝食:
+        行.append(f"｜朝食：{朝食}")
+    if h.get("最寄駅"):
+        行.append(f"｜最寄り駅：{h['最寄駅']}")
+    駐車 = " ".join(str(h.get("駐車場") or "").replace("\\", "¥").split())
+    if 駐車:
+        行.append(f"｜駐車場：{駐車 if len(駐車) <= 40 else 駐車[:39] + '…'}")
+    if _口コミ(h):
+        行.append(f"｜口コミ：⭐{_口コミ(h)}")
+    行 += ["", "空室と今の料金はこちら👇", "※料金・プラン内容は宿泊日によって変動します"]
+    return "\n".join(行)
+
+
+def 最安を取り直す(h: dict) -> dict:
+    """宿の最安料金を、楽天トラベルの API（SimpleHotelSearch・無料）で取り直す。取れたら調べた日を今日にする。
+    宿のリストは週1回しか作らないので、出す日には1週間前の料金になってしまう（2026-11-01 統括）。
+    鍵が無いとき・取れないときは、リストの料金と調べた日のまま。鍵とURLはログに出さない。"""
+    アプリ, 鍵 = os.environ.get("RAKUTEN_APP_ID", "").strip(), os.environ.get("RAKUTEN_ACCESS_KEY", "").strip()
+    if not アプリ or not 鍵 or not h.get("番号"):
+        return h
+    import urllib.parse
+    import urllib.request
+    q = urllib.parse.urlencode({"applicationId": アプリ, "accessKey": 鍵, "format": "json", "hotelNo": h["番号"]})
+    ヘッダ = {"accept": "application/json"}
+    元 = os.environ.get("RAKUTEN_REFERER", "").strip()
+    if 元:
+        ヘッダ["referer"] = 元
+    try:
+        req = urllib.request.Request(f"https://openapi.rakuten.co.jp/engine/api/Travel/SimpleHotelSearch/20260731?{q}", headers=ヘッダ)
+        with urllib.request.urlopen(req, timeout=20) as r:
+            d = json.loads(r.read().decode("utf-8"))
+        束 = d["hotels"][0]["hotel"]
+        基本 = next(x["hotelBasicInfo"] for x in 束 if "hotelBasicInfo" in x)
+        最安 = 基本.get("hotelMinCharge")
+        if isinstance(最安, int) and 最安 > 0:
+            print(f"最安料金を取り直しました：{h['最安']:,}円 → {最安:,}円")
+            return {**h, "最安": 最安, "調べた日": datetime.now(JST).date().isoformat()}
+    except Exception as e:  # noqa: BLE001 取れなくてもリストの料金で出す
+        print(f"::warning::最安料金を取り直せませんでした（{type(e).__name__}）。リストの料金のまま出します")
+    return h
+
+
+def 一軒を組み立てる(日, 宿たち: list[dict], 時: int, 避ける: set[str] = frozenset()) -> dict | None:
+    選んだ = 一軒を選ぶ(日, 宿たち, 避ける)
+    if not 選んだ:
+        return None
+    き, h, 事実 = 選んだ
+    h = 最安を取り直す(h)
+    リンク = 宿.宿のリンク先(h, 宿.短縮を読む())
+    if not リンク.startswith("http"):
+        return None
+    印字 = "".join(random.choices(string.ascii_lowercase + string.digits, k=4))
+    return {
+        "id": f"p-{日:%Y%m%d}{時:02d}-{印字}",
+        "text": 一軒の本文(き, h, 事実),
+        "scheduled_at": f"{日.isoformat()}T{時:02d}:00:00+09:00",
+        "thread": [一軒の返信(h)],
+        "thread_links": [リンク],
+        "note": f"{印}（1軒・{き.get('名')}）／{宿.見せる名(h)}／返信のリンクはカードで見せる"[:120],
+    }
 
 
 def 組み立てる(日, 宿たち: list[dict], 時: int, 避ける: set[str] = frozenset()) -> dict | None:
@@ -133,8 +270,9 @@ def main() -> None:
         return
     時 = int(os.environ.get("ROUNDUP_HOUR", "15"))
     日 = 対象日()
-    if not 宿.まとめの日(日):
-        print(f"{日} は「催し × 宿」の日です。宿◯選は足しません。")
+    型 = 宿.十五時の型(日)
+    if 型 == "催し":
+        print(f"{日} は「催し × 宿」の日です。宿◯選・宿1軒は足しません。")
         return
     すでに = [json.loads(l) for l in QUEUE.read_text(encoding="utf-8").splitlines() if l.strip()] if QUEUE.exists() else []
     if any(str(e.get("scheduled_at", "")).startswith(f"{日.isoformat()}T{時:02d}:") for e in すでに):
@@ -142,11 +280,14 @@ def main() -> None:
         return
     宿たち = 宿.読む()
     避ける = 直近に出した宿(すでに, 日, 宿たち) if 宿たち else set()
-    投稿 = 組み立てる(日, 宿たち, 時, 避ける) if 宿たち else None
+    if 型 == "一軒":
+        投稿 = 一軒を組み立てる(日, 宿たち, 時, 避ける) if 宿たち else None
+    else:
+        投稿 = 組み立てる(日, 宿たち, 時, 避ける) if 宿たち else None
     if not 投稿:
-        print(f"::warning::{日} の宿まとめは作れませんでした（5軒そろう切り口が無い・リンクが無いなど）。")
+        print(f"::warning::{日} の宿の投稿（{型}）は作れませんでした（当てはまる宿が無い・リンクが無いなど）。")
         return
-    print(f"=== {時}:00 宿まとめ ({len(投稿['text'])} 字) ===\n{投稿['text']}")
+    print(f"=== {時}:00 宿の投稿（{型}） ({len(投稿['text'])} 字) ===\n{投稿['text']}")
     for t, u in zip(投稿["thread"], 投稿["thread_links"]):
         print(f"--- 返信 ---\n{t}\n[カード] {u}")
     if os.environ.get("DRY_RUN", "").lower() == "true":
