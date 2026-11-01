@@ -178,11 +178,41 @@ def 一軒の返信(h: dict) -> str:
     return "\n".join(行)
 
 
+def 最安を取り直す(h: dict) -> dict:
+    """宿の最安料金を、楽天トラベルの API（SimpleHotelSearch・無料）で取り直す。取れたら調べた日を今日にする。
+    宿のリストは週1回しか作らないので、出す日には1週間前の料金になってしまう（2026-11-01 統括）。
+    鍵が無いとき・取れないときは、リストの料金と調べた日のまま。鍵とURLはログに出さない。"""
+    アプリ, 鍵 = os.environ.get("RAKUTEN_APP_ID", "").strip(), os.environ.get("RAKUTEN_ACCESS_KEY", "").strip()
+    if not アプリ or not 鍵 or not h.get("番号"):
+        return h
+    import urllib.parse
+    import urllib.request
+    q = urllib.parse.urlencode({"applicationId": アプリ, "accessKey": 鍵, "format": "json", "hotelNo": h["番号"]})
+    ヘッダ = {"accept": "application/json"}
+    元 = os.environ.get("RAKUTEN_REFERER", "").strip()
+    if 元:
+        ヘッダ["referer"] = 元
+    try:
+        req = urllib.request.Request(f"https://openapi.rakuten.co.jp/engine/api/Travel/SimpleHotelSearch/20260731?{q}", headers=ヘッダ)
+        with urllib.request.urlopen(req, timeout=20) as r:
+            d = json.loads(r.read().decode("utf-8"))
+        束 = d["hotels"][0]["hotel"]
+        基本 = next(x["hotelBasicInfo"] for x in 束 if "hotelBasicInfo" in x)
+        最安 = 基本.get("hotelMinCharge")
+        if isinstance(最安, int) and 最安 > 0:
+            print(f"最安料金を取り直しました：{h['最安']:,}円 → {最安:,}円")
+            return {**h, "最安": 最安, "調べた日": datetime.now(JST).date().isoformat()}
+    except Exception as e:  # noqa: BLE001 取れなくてもリストの料金で出す
+        print(f"::warning::最安料金を取り直せませんでした（{type(e).__name__}）。リストの料金のまま出します")
+    return h
+
+
 def 一軒を組み立てる(日, 宿たち: list[dict], 時: int, 避ける: set[str] = frozenset()) -> dict | None:
     選んだ = 一軒を選ぶ(日, 宿たち, 避ける)
     if not 選んだ:
         return None
     き, h, 事実 = 選んだ
+    h = 最安を取り直す(h)
     リンク = 宿.宿のリンク先(h, 宿.短縮を読む())
     if not リンク.startswith("http"):
         return None
