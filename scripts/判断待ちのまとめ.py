@@ -76,8 +76,10 @@ def まとめる(既存: list[dict], 新: list[dict]) -> dict:
     for 番号 in 組.values():
         if len(番号) < 2:
             continue
-        # 既にある札を優先して残す（新しい候補は既存にまとめる）。その中でいちばん新しく入ったもの
-        並び = sorted(番号, key=lambda i: (not 札[i].get("_新"), str(札[i].get("入った日") or ""), str(札[i].get("日") or "")))
+        # 既にある札を優先して残す（新しい候補は既存にまとめる）。インスタの札は「引用」を選べるので、同じ並びならインスタを残す。
+        # その中でいちばん新しく入ったもの
+        並び = sorted(番号, key=lambda i: (not 札[i].get("_新"), str(札[i].get("種類") or "").startswith("インスタ"),
+                                          str(札[i].get("入った日") or ""), str(札[i].get("日") or "")))
         残す = 札[並び[-1]]
         ほか = [札[i] for i in 並び[:-1]]
         理由 = list(残す.get("ほかの理由") or [])
@@ -87,9 +89,13 @@ def まとめる(既存: list[dict], 新: list[dict]) -> dict:
                 set_.append({k: v for k, v in d.items() if k != "_新"} | {"まとめ先": 残す["id"]})
             else:
                 update.append({"id": d["id"], "data": {"まとめ先": 残す["id"]}})
-        update.append({"id": 残す["id"], "data": {"ほかの理由": 理由}})
+        if 残す.get("_新"):
+            # 残す札も今朝の新しい候補なら、まだ doc が無いので set の中身に入れる
+            set_.append({k: v for k, v in 残す.items() if k != "_新"} | {"ほかの理由": 理由})
+        else:
+            update.append({"id": 残す["id"], "data": {"ほかの理由": 理由}})
     # まとめられなかった新しい候補はそのまま set する
-    まとめた = {d["id"] for d in set_}
+    まとめた = {d["id"] for d in set_}  # まとめ先を付けた候補と、ほかの理由を足した新しい候補
     set_ += [d for d in 新 if d["id"] not in まとめた]
     return {"set": set_, "update": update}
 
@@ -104,10 +110,12 @@ def main() -> None:
     新 = json.loads(a.new.read_text(encoding="utf-8")) if a.new else []
     r = まとめる(既存, 新)
     a.out.write_text(json.dumps(r, ensure_ascii=False, indent=1), encoding="utf-8")
-    残す = [u for u in r["update"] if "ほかの理由" in u["data"]]
-    print(f"まとめた組：{len(残す)}・まとめ先を付けた札：{len(r['update']) - len(残す)}（既存）＋{sum(1 for d in r['set'] if d.get('まとめ先'))}（新しい候補）")
-    for u in 残す:
-        print(f"  残す {u['id']} ← {len(u['data']['ほかの理由'])} 件")
+    残す = [(u["id"], u["data"]["ほかの理由"]) for u in r["update"] if "ほかの理由" in u["data"]]
+    残す += [(d["id"], d["ほかの理由"]) for d in r["set"] if d.get("ほかの理由") and not d.get("まとめ先")]
+    既存 = sum(1 for u in r["update"] if "まとめ先" in u["data"])
+    print(f"まとめた組：{len(残す)}・まとめ先を付けた札：{既存}（既存）＋{sum(1 for d in r['set'] if d.get('まとめ先'))}（新しい候補）")
+    for i, 理由 in 残す:
+        print(f"  残す {i} ← {len(理由)} 件")
 
 
 if __name__ == "__main__":
