@@ -9,6 +9,10 @@ on:
         description: "検索するキーワード"
         required: false
         default: "おでかけ 福井"
+      profile:
+        description: "公開投稿を読むアカウント（@なし）"
+        required: false
+        default: "antyan_beauty"
   push:
     branches: [claude/research-check]
     paths:
@@ -31,4 +35,5 @@ jobs:
           THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           KEYWORD: ${{ inputs.keyword || 'おでかけ 福井' }}
+          PROFILE: ${{ inputs.profile || 'antyan_beauty' }}
         run: python "scripts/リサーチの確認.py"

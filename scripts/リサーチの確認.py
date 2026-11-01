@@ -10,7 +10,9 @@ Threads API で、ほかの人の投稿の「いいね数」などの数字が�
   4. その投稿者の profile_posts に数字の項目を付けて頼む
   5. その投稿の replies（ツリーの続きが取れるか）
 
-環境変数: THREADS_USER_ID / THREADS_ACCESS_TOKEN / KEYWORD（既定「おでかけ 福井」）
+検索が使えないときも、PROFILE のアカウントで 4（profile_lookup / profile_posts）と 2・3・5 を試す。
+
+環境変数: THREADS_USER_ID / THREADS_ACCESS_TOKEN / KEYWORD（既定「おでかけ 福井」）/ PROFILE（既定 antyan_beauty。いいねの多い公開アカウント）
 """
 from __future__ import annotations
 
@@ -78,10 +80,18 @@ def main() -> None:
         見つけた += 見せる(r)
         print()
 
-    if not 見つけた:
-        print("投稿が見つからないので、2〜5 は試せません。")
+    人 = (見つけた[0].get("username") if 見つけた else None) or os.environ.get("PROFILE", "").strip() or "antyan_beauty"
+    print(f"■ 4. profile_lookup / profile_posts（@{人}）")
+    r = 頼む(client, "プロフィール", "profile_lookup", {"username": 人, "fields": "username,name,follower_count,likes_count,quotes_count,reposts_count,views_count,is_verified"})
+    if r is not None:
+        print("  " + json.dumps(r, ensure_ascii=False)[:400])
+    公開 = 見せる(項目を探る(client, "公開投稿", "profile_posts", {"username": 人, "limit": 10}), 5)
+    print()
+
+    p = (見つけた or 公開 or [None])[0]
+    if not p:
+        print("投稿が1本も取れないので、2・3・5 は試せません。")
         return
-    p = 見つけた[0]
     print(f"■ 2. 投稿を ID で読む（{p.get('permalink')}）")
     見せる(項目を探る(client, "投稿", p["id"], {}))
     print()
@@ -91,11 +101,6 @@ def main() -> None:
     if r is not None:
         print("  " + json.dumps(r, ensure_ascii=False)[:600])
     print()
-
-    if p.get("username"):
-        print(f"■ 4. profile_posts（@{p['username']}）")
-        見せる(項目を探る(client, "公開投稿", "profile_posts", {"username": p["username"], "limit": 10}), 3)
-        print()
 
     print("■ 5. replies（ツリーの続き）")
     見せる(頼む(client, "返信", f"{p['id']}/replies", {"fields": 基本}), 3)
