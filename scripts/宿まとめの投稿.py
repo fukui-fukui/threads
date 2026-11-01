@@ -25,6 +25,7 @@ from __future__ import annotations
 import json
 import os
 import random
+import re
 import string
 import sys
 from datetime import datetime, timedelta
@@ -172,18 +173,51 @@ def _お風呂(h: dict) -> str:
     return "、".join(w for w in ("大浴場", "露天風呂", "サウナ") if any(w in x for x in 設備))
 
 
+def _朝食(h: dict) -> str:
+    """朝食の場所。「レストラン」と「レストラン(バイキング)」のように重なるときは、くわしいほうだけ残す（2026-11-01 統括）。"""
+    場所 = list(dict.fromkeys(str(x).strip().replace("(", "（").replace(")", "）") for x in (h.get("朝食の場所") or []) if str(x).strip()))
+    return "・".join(x for x in 場所 if not any(y != x and y.startswith(x) for y in 場所))
+
+
+def _駐車場(h: dict, 上限: int = 40) -> str:
+    """駐車場の説明を、文の途中で切らずに短くする（2026-11-01 統括「途中で切らず、切るなら文の区切りで」）。
+    宿の登録のまま（データにある事実だけ）で、※・。の区切りごとに、上限の字数までを残す。"""
+    文 = " ".join(str(h.get("駐車場") or "").replace("\\", "¥").split())
+    if len(文) <= 上限:
+        return 文
+    出 = ""
+    for 区切り in re.split(r"(?<=。)|(?=※)", 文):
+        区切り = 区切り.strip()
+        if not 区切り:
+            continue
+        if 出 and len(出) + 1 + len(区切り) > 上限:
+            break
+        出 = f"{出} {区切り}".strip() if 出 else 区切り
+        if len(出) > 上限:
+            break
+    # 最初の区切りだけで長いときは、読点・スラッシュ・空白の区切りまで
+    if len(出) > 上限:
+        部分 = re.split(r"(?<=[、/／])|\s+", 出)
+        出 = ""
+        for x in 部分:
+            if 出 and len(出) + len(x) > 上限:
+                break
+            出 += x
+    return 出.strip(" 、/／")
+
+
 def 一軒の返信(h: dict) -> str:
     行 = ["【PR】", f"{絵文字(h)}{宿.見せる名(h)}｜{場所(h)}", f"｜最安 {h['最安']:,}円〜（{_時点(h)}）"]
     if _お風呂(h):
         行.append(f"｜お風呂：{_お風呂(h)}")
-    朝食 = "・".join(dict.fromkeys(str(x) for x in (h.get("朝食の場所") or []) if str(x).strip()))
+    朝食 = _朝食(h)
     if 朝食:
         行.append(f"｜朝食：{朝食}")
     if h.get("最寄駅"):
         行.append(f"｜最寄り駅：{h['最寄駅']}")
-    駐車 = " ".join(str(h.get("駐車場") or "").replace("\\", "¥").split())
+    駐車 = _駐車場(h)
     if 駐車:
-        行.append(f"｜駐車場：{駐車 if len(駐車) <= 40 else 駐車[:39] + '…'}")
+        行.append(f"｜駐車場：{駐車}")
     if _口コミ(h):
         行.append(f"｜口コミ：⭐{_口コミ(h)}")
     行 += ["", "空室と今の料金はこちら👇", "※料金・プラン内容は宿泊日によって変動します"]

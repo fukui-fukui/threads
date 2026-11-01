@@ -94,6 +94,13 @@ class RoundupTest(unittest.TestCase):
         self.assertNotIn("http", "\n".join(p["thread"]))
         self.assertEqual(p["scheduled_at"], "2026-10-13T15:00:00+09:00")
 
+    def test_一軒の返信の朝食と駐車場(self):
+        # 2026-11-01 統括：「レストラン・レストラン(バイキング)」の重なりと、駐車場の途中切れ
+        self.assertEqual(宿まとめ._朝食({"朝食の場所": ["レストラン", "レストラン(バイキング)"]}), "レストラン（バイキング）")
+        self.assertEqual(宿まとめ._駐車場({"駐車場": "有/1泊（チェックイン〜チェックアウト迄）1台1,500円（税込）有料※事前予約制"}),
+                         "有/1泊（チェックイン〜チェックアウト迄）1台1,500円（税込）有料")
+        self.assertNotIn("…", 宿まとめ._駐車場({"駐車場": "タワー式立体駐車場 74台　高さ2.1ｍ車幅1.8ｍまで　1泊1,500円　※先着順※"}))
+
 
 if __name__ == "__main__":
     unittest.main()
