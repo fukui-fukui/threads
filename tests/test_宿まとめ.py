@@ -46,6 +46,28 @@ class RoundupTest(unittest.TestCase):
         # 14日以内に出した宿は選ばない
         self.assertIsNone(宿まとめ.一軒を組み立てる(date(2026, 11, 2), [h], 15, {"テストホテル"}))
 
+    def test_refresh_price(self):
+        import io, json as _json, os, urllib.request
+        h = {"番号": 12543, "名": "テストホテル", "最安": 17500, "調べた日": "2026-10-26"}
+        元の環境 = {k: os.environ.pop(k, None) for k in ("RAKUTEN_APP_ID", "RAKUTEN_ACCESS_KEY")}
+        try:
+            self.assertEqual(宿まとめ.最安を取り直す(h), h)  # 鍵が無ければそのまま
+            os.environ["RAKUTEN_APP_ID"], os.environ["RAKUTEN_ACCESS_KEY"] = "x", "y"
+            返事 = {"hotels": [{"hotel": [{"hotelBasicInfo": {"hotelNo": 12543, "hotelMinCharge": 16000}}]}]}
+            元 = urllib.request.urlopen
+            urllib.request.urlopen = lambda *a, **k: io.BytesIO(_json.dumps(返事).encode())
+            try:
+                新 = 宿まとめ.最安を取り直す(h)
+            finally:
+                urllib.request.urlopen = 元
+            self.assertEqual(新["最安"], 16000)
+            self.assertNotEqual(新["調べた日"], "2026-10-26")
+        finally:
+            for k, v in 元の環境.items():
+                os.environ.pop(k, None)
+                if v is not None:
+                    os.environ[k] = v
+
     def test_recent_includes_any_post(self):
         h = {"番号": 1, "名": "テストホテル"}
         すでに = [{"text": "催しの紹介", "thread": ["近くの宿：テストホテル"], "note": "催し × 宿", "scheduled_at": "2026-10-25T15:00:00+09:00"}]
