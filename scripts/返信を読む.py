@@ -22,7 +22,7 @@ from zoneinfo import ZoneInfo
 
 API = "https://graph.threads.net/v1.0"
 # username は取らない（ログにも出さないため）
-FIELDS = "id,text,timestamp,is_reply_owned_by_me,replied_to,root_post,hide_status"
+FIELDS = "id,text,timestamp,is_reply_owned_by_me,replied_to,root_post,hide_status,permalink"
 
 
 def get(path: str, params: dict) -> dict:
@@ -66,6 +66,31 @@ def いいね(reply_id: str) -> str:
     return "?"
 
 
+def 元を書く(d: Path, post_id: str, 返信: list[dict]) -> None:
+    """返信の ID → 元の投稿（こちらの投稿の本文・URL）と返信の URL を、非公開の置き場の 返信/元.json に足す。
+    ダッシュボードの「コメント対応」で、返事の案ごとに元の投稿とコメントを開けるようにするため
+    （2026-11-01 代表「元の投稿も見えるように。投稿へのリンクも」）。返信の URL にはユーザー名が入るので、非公開の置き場にだけ書く。"""
+    try:
+        元 = get(post_id, {"fields": "id,text,permalink"})
+    except urllib.error.HTTPError:
+        元 = {}
+    p = d / "元.json"
+    try:
+        記 = json.loads(p.read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        記 = {}
+    for r in 返信:
+        if r.get("is_reply_owned_by_me"):
+            continue
+        記[r["id"]] = {
+            "元の投稿ID": post_id,
+            "元の投稿のURL": 元.get("permalink") or "",
+            "元の投稿の本文": 元.get("text") or "",
+            "返信のURL": r.get("permalink") or "",
+        }
+    p.write_text(json.dumps(記, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def 一本(post_id: str) -> bool:
     try:
         返信 = 返信を全部(post_id)
@@ -101,6 +126,7 @@ def 一本(post_id: str) -> bool:
     if 非公開:
         d = Path("返信")
         d.mkdir(exist_ok=True)
+        元を書く(d, post_id, 返信)
         日 = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
         (d / f"{日}_{post_id}.md").write_text("\n".join(行たち) + "\n", encoding="utf-8")
         print(f"本文は非公開の置き場の 返信/{日}_{post_id}.md に書きました（公開のログには出しません）")
