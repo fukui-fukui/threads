@@ -14,11 +14,42 @@ spec.loader.exec_module(宿まとめ)
 
 
 class RoundupTest(unittest.TestCase):
-    def test_alternates_days(self):
-        # 2026-10-12 代表「催し+宿と〇〇選を1日おきでいいですよ」。10/13 が宿◯選の日
-        self.assertTrue(宿.まとめの日(date(2026, 10, 13)))
-        self.assertFalse(宿.まとめの日(date(2026, 10, 14)))
-        self.assertTrue(宿.まとめの日(date(2026, 10, 15)))
+    def test_three_kinds(self):
+        # 2026-11-01 代表「1件をしっかりと紹介する投稿も」：催し × 宿 → 宿◯選 → 宿1軒 の3日で回す
+        self.assertEqual(宿.十五時の型(date(2026, 11, 2)), "一軒")
+        self.assertEqual(宿.十五時の型(date(2026, 11, 3)), "催し")
+        self.assertEqual(宿.十五時の型(date(2026, 11, 4)), "まとめ")
+        self.assertTrue(宿.まとめの日(date(2026, 11, 2)))
+        self.assertFalse(宿.まとめの日(date(2026, 11, 3)))
+        self.assertTrue(宿.まとめの日(date(2026, 11, 4)))
+
+    def test_single_post(self):
+        h = {"番号": 1, "名": "テストホテル", "エリア": "福井市", "住所": f"{宿.県}福井市中央1", "url": "https://example.com/1",
+             "最安": 5390, "調べた日": "2026-10-26", "評価": 4.25, "レビュー数": 1234, "最寄駅": "福井",
+             "駐車場": "有り 50台 無料", "朝食の場所": ["レストラン", "レストラン"],
+             "風呂": [], "館内設備": ["大浴場", "サウナ"], "部屋の備品": []}
+        元 = 宿.短縮を読む
+        宿.短縮を読む = lambda: {}
+        try:
+            投稿 = 宿まとめ.一軒を組み立てる(date(2026, 11, 2), [h], 15)
+        finally:
+            宿.短縮を読む = 元
+        self.assertIsNotNone(投稿)
+        self.assertIn("最安料金は 5,390円〜（10/26時点）", 投稿["text"])
+        self.assertNotIn("1名", 投稿["text"])
+        self.assertNotIn("http", 投稿["text"])
+        返信 = 投稿["thread"][0]
+        self.assertTrue(返信.startswith("【PR】"))
+        self.assertIn("※料金・プラン内容は宿泊日によって変動します", 返信)
+        self.assertIn("｜朝食：レストラン", 返信)
+        self.assertEqual(len(投稿["thread_links"]), 1)
+        # 14日以内に出した宿は選ばない
+        self.assertIsNone(宿まとめ.一軒を組み立てる(date(2026, 11, 2), [h], 15, {"テストホテル"}))
+
+    def test_recent_includes_any_post(self):
+        h = {"番号": 1, "名": "テストホテル"}
+        すでに = [{"text": "催しの紹介", "thread": ["近くの宿：テストホテル"], "note": "催し × 宿", "scheduled_at": "2026-10-25T15:00:00+09:00"}]
+        self.assertEqual(宿まとめ.直近に出した宿(すでに, date(2026, 11, 2), [h]), {"テストホテル"})
 
     def test_post_shape(self):
         宿たち = [
