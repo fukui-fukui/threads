@@ -1210,6 +1210,7 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
                 + "説明や ``` を付けず、@@@POST 〜 @@@END の組だけを返してください。"
             )
         text = ask(api_key, model, この回の指示)
+        前の数 = len(集まった)
         for x in 外したを読む(text):
             if x not in 外したネタ:
                 外したネタ.append(x)
@@ -1236,6 +1237,12 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
         if len(集まった) >= expected:
             return [集まった[h] for h in hours]
         print(f"::warning::{attempt} 回目まで: {expected} 本のはずが {len(集まった)} 本です。")
+        # 聞き直しても1本も増えず、作り直しを頼んでいる枠も無いときは、ネタが足りないとみてやめる。
+        # 3回目も全部の指示を送り直すので、増えない聞き直しは費用だけかかる
+        # （2026-11-01 運用部・石川：11/2 ぶんは3回呼んでも9本のまま、17時・21時が空いた）
+        if attempt >= 2 and len(集まった) == 前の数 and not any(h in 直してほしい for h in hours if h not in 集まった):
+            print("::warning::聞き直しても増えなかったので、ネタが足りないとみて聞き直しをやめます（空いた枠は予備で埋めます）。")
+            break
 
     足りない = [h for h in hours if h not in 集まった]
     if len(集まった) < max(1, (expected + 1) // 2):
@@ -1243,7 +1250,7 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
         for i in range(0, min(len(text), 1800), 300):
             print("::warning::生の出力" + str(i // 300 + 1) + ": " + text[i:i + 300].replace("\n", " ⏎ "))
         fail(
-            f"{expected} 本のうち {len(集まった)} 本しか作れませんでした（3 回試行）。"
+            f"{expected} 本のうち {len(集まった)} 本しか作れませんでした（{attempt} 回試行）。"
             f"半分に満たないので中止します。\n--- 最後の生の出力 ---\n{text[:1200]}"
         )
     print(
