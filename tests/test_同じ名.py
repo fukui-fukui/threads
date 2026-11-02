@@ -101,6 +101,12 @@ class 同じ名のテスト(unittest.TestCase):
         self.assertIn("① 🏯 にわ（金沢市）", 新)   # 3字に満たない名は照らさない
         self.assertIn("② 🍁 菊花展（白山市）", 新)
 
+    def test_びっくりの入った店名も名前とみる(self):
+        # 2026-11-02 運用部・福井：「おかわり!!ハンバーグ グリエ・ミア！」が名と見なされず、9日で2回目に出た
+        self.assertEqual(compose.名前たち({"text": "「おかわり!!ハンバーグ グリエ・ミア！」"}), {"おかわり!!ハンバーグ グリエ・ミア"})
+        self.assertEqual(compose.名前たち({"text": "「どこに行く？」"}), set())
+        self.assertEqual(compose.名前たち({"text": "「行こうか！」"}), set())
+
 
 if __name__ == "__main__":
     unittest.main()
