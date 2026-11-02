@@ -88,10 +88,13 @@ class RoundupTest(unittest.TestCase):
         self.assertIsNotNone(p)
         self.assertTrue(p["text"].startswith(f"【{宿.県名}】"))
         self.assertIn("選", p["text"].splitlines()[0])
-        self.assertEqual(len(p["thread"]), len(p["thread_links"]))
-        self.assertTrue(p["thread"][0].startswith("【PR】\n①"))
-        self.assertIn("⭐口コミ 4.2（1,234件）", p["thread"][0])
-        self.assertNotIn("http", "\n".join(p["thread"]))
+        # yu と同じ形（2026-11-02 代表）：返信は1本だけ。宿ごとの一言とリンクを並べ、最後に PR。カードは付けない
+        self.assertEqual(len(p["thread"]), 1)
+        self.assertNotIn("thread_links", p)
+        self.assertTrue(p["thread"][0].startswith("楽天トラベルのページはこちらです\n\n①"))
+        self.assertTrue(p["thread"][0].endswith("\n\nPR"))
+        self.assertIn("http", p["thread"][0])
+        self.assertLessEqual(len(p["thread"][0]), 500)
         self.assertEqual(p["scheduled_at"], "2026-10-13T15:00:00+09:00")
 
     def test_一軒の返信の朝食と駐車場(self):
