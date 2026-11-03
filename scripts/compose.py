@@ -1440,7 +1440,13 @@ def 新店の型の気づき(text: str) -> str | None:
 
 HOTEL_HOUR = 15
 
-# 【PR】の印。本文（1投稿目）には書かない。広告の表示は返信の末尾に置く。
+def 本文にPR(text: str) -> str:
+    """楽天の投稿の本文の最後に「PR」を付ける（2026-11-03 代表「本文の最後にPR」）。すでに末尾にあれば足さない。"""
+    t = text.rstrip()
+    return t if t.endswith("PR") else t + "\n\nPR"
+
+
+# 【PR】の印。本文（1投稿目）の冒頭には書かない。広告の表示は返信の末尾と、本文の最後（2026-11-03 代表）に置く。
 if "PR_MARKERS" not in dir():
     PR_MARKERS = ("【PR】", "#PR", "＃PR", "[PR]")
 if "URL_IN_TEXT" not in dir():
@@ -2743,6 +2749,13 @@ def main() -> None:
                     )
                 text = 宿の本文(hotel["raw"], 見出し)
                 thread = 宿の返信(hotel["raw"], target_date)
+
+            # 楽天の投稿（宿◯選・催し×宿・クーポン・ふるさと納税）は、本文の最後に PR を付ける。冒頭には付けない
+            # （2026-11-03 代表「本文の最後にPR」。冒頭の【PR】は 9/25 の決定どおり避ける。返信の PR もそのまま）
+            if ((stay or hotel or mugi) and hour == HOTEL_HOUR) or (kifu and hour == KIFU_HOUR):
+                text = 本文にPR(text)
+                if len(text) > 500:
+                    落とす(f"{hour}:00 の本文が PR を足すと 500 字を超えます（{len(text)} 字）。")
 
             # インスタのURLは、ネタ帳に書かれたものだけ通す（作ったURLを載せない。2026-10-01）
             インスタ = re.compile(r"https?://(?:www\.)?instagram\.com/[A-Za-z0-9._/]+")
