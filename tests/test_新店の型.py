@@ -64,3 +64,23 @@ class OpenLineTest(unittest.TestCase):
         self.assertIsNotNone(compose.オープンの頭の直し(後))
         # 1か月より前に開いた店のふつうの紹介は見ない
         self.assertIsNone(compose.オープンの頭の直し("福井市のカフェ「テスト」は2019年にオープンしました。"))
+
+
+class CongratsTest(unittest.TestCase):
+    # 2026-11-03 代表「おめでとうは、オープン日が明らかで、オープン日から前後10日以内の場合のみ」
+    def test_within_10_days(self):
+        from datetime import date
+        t = "10月31日（金）にオープンした、金沢市のコーヒーの店「テスト」。\n看板はラテです。\n\nオープンおめでとうございます。"
+        self.assertEqual(compose.おめでとうを確かめる(t, date(2026, 11, 5))[0], t)
+        新, わけ = compose.おめでとうを確かめる(t, date(2026, 11, 20))
+        self.assertIsNotNone(わけ)
+        self.assertNotIn("おめでとう", 新)
+        self.assertTrue(新.endswith("看板はラテです。"))
+        # これから開く店（10日前まで）
+        先 = "11月20日（金）10時オープン、福井市のカフェ「テスト」。\n\nオープンおめでとうございます。"
+        self.assertEqual(compose.おめでとうを確かめる(先, date(2026, 11, 12))[0], 先)
+        self.assertNotIn("おめでとう", compose.おめでとうを確かめる(先, date(2026, 11, 5))[0])
+        # オープン日が無い・あいまい
+        self.assertNotIn("おめでとう", compose.おめでとうを確かめる("12月中旬、「テスト」が移転オープンします。オープン、おめでとうございます。", date(2026, 11, 5))[0])
+        # 年をまたぐ
+        self.assertEqual(compose.オープン日("12月28日にオープンした、福井市の店「テスト」。", date(2027, 1, 3)), date(2026, 12, 28))
