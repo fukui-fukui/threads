@@ -51,3 +51,16 @@ class 新店の型のテスト(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OpenLineTest(unittest.TestCase):
+    def test_open_date_in_first_line(self):
+        # 2026-11-03 代表「新店投稿は日時と『オープン』を一行目に入れる」
+        古い = f"福井市のカフェ「テスト」。\n11月7日にオープンします。\n\n{compose.検索語_お店}"
+        self.assertIn("1行目", compose.オープンの頭の直し(古い))
+        self.assertIsNone(compose.オープンの頭の直し(f"11月7日（土）10時オープン、福井市のカフェ「テスト」。\n2行目。\n\nオープンおめでとうございます。"))
+        self.assertIsNone(compose.オープンの頭の直し(f"10月31日（金）にオープンした、金沢市のコーヒーの店「テスト」。\n\nオープンおめでとうございます。"))
+        後 = f"福井市のカフェ「テスト」。\n10月31日にオープンしました。\n\nオープンおめでとうございます。"
+        self.assertIsNotNone(compose.オープンの頭の直し(後))
+        # 1か月より前に開いた店のふつうの紹介は見ない
+        self.assertIsNone(compose.オープンの頭の直し("福井市のカフェ「テスト」は2019年にオープンしました。"))
