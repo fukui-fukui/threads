@@ -107,3 +107,15 @@ class RoundupTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StayLineTest(unittest.TestCase):
+    def test_cliche_is_replaced(self):
+        import importlib.util as u
+        s = u.spec_from_file_location("compose_for_test", ROOT / "scripts" / "compose.py")
+        c = u.module_from_spec(s)
+        s.loader.exec_module(c)
+        t = "11月14日（土）、蒲郡市で「三河湾大感謝祭」が開かれます。\n\n前の晩に近くに泊まれたら、朝から動けます。"
+        self.assertNotIn("朝から動けます", c.泊まりの決まり文句を直す(t))
+        self.assertIn("近くの宿は返信にまとめました。", c.泊まりの決まり文句を直す(t))
+        self.assertEqual(c.泊まりの決まり文句を直す("開始は朝9時です。"), "開始は朝9時です。")
