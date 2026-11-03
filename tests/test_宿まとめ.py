@@ -37,12 +37,15 @@ class RoundupTest(unittest.TestCase):
         self.assertIsNotNone(投稿)
         self.assertIn("最安料金は 5,390円〜（10/26時点）", 投稿["text"])
         self.assertNotIn("1名", 投稿["text"])
-        self.assertNotIn("http", 投稿["text"])
+        # 2026-11-03 代表：1商品（宿）の紹介は1投稿目にリンク、本文の最後に PR（冒頭には付けない）
+        self.assertIn("https://example.com/1", 投稿["text"])
+        self.assertTrue(投稿["text"].endswith("\n\nPR"))
+        self.assertFalse(投稿["text"].startswith("【PR】"))
         返信 = 投稿["thread"][0]
         self.assertTrue(返信.startswith("【PR】"))
         self.assertIn("※料金・プラン内容は宿泊日によって変動します", 返信)
         self.assertIn("｜朝食：レストラン", 返信)
-        self.assertEqual(len(投稿["thread_links"]), 1)
+        self.assertNotIn("thread_links", 投稿)
         # 14日以内に出した宿は選ばない
         self.assertIsNone(宿まとめ.一軒を組み立てる(date(2026, 11, 2), [h], 15, {"テストホテル"}))
 
@@ -87,6 +90,7 @@ class RoundupTest(unittest.TestCase):
             宿.短縮を読む = 元
         self.assertIsNotNone(p)
         self.assertTrue(p["text"].startswith(f"【{宿.県名}】"))
+        self.assertTrue(p["text"].endswith("\n\nPR"))  # 2026-11-03 代表「本文の最後にPR」
         self.assertIn("選", p["text"].splitlines()[0])
         # yu と同じ形（2026-11-02 代表）：返信は1本だけ。宿ごとの一言とリンクを並べ、最後に PR。カードは付けない
         self.assertEqual(len(p["thread"]), 1)
