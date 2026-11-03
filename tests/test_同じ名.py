@@ -1,6 +1,7 @@
 import importlib.util
 import sys
 import unittest
+from unittest import mock
 from datetime import date
 from pathlib import Path
 
@@ -42,6 +43,7 @@ class 同じ名のテスト(unittest.TestCase):
               "thread": ["金沢｜なにか展（10/19まで）\n…"]}
         self.assertNotIn("なにか展", compose.名の記録([朝], date(2026, 10, 22)))
 
+    @mock.patch.object(compose, "店を空ける日数", 14)   # 石川・ぎふあいち（region.json に書いていない地域）
     def test_先の日に手で入れた名も避ける(self):
         # 10/23 運用部・福井：先の日に手で入れた店を、その晩の作成がネタ帳から先に使った
         先 = {"id": "h", "scheduled_at": "2026-10-24T09:00:00+09:00", "text": "「越ノ龍」が新しくオープン"}
@@ -53,6 +55,8 @@ class 同じ名のテスト(unittest.TestCase):
         self.assertIn("越ノ龍", compose.名の記録([先], date(2026, 10, 16)))
         self.assertNotIn("越ノ龍", compose.名の記録([先], date(2026, 10, 9)))
         self.assertNotIn("越ノ龍", compose.名の記録([先], date(2026, 10, 24)))
+
+    @mock.patch.object(compose, "店を空ける日数", 14)   # 石川・ぎふあいち（region.json に書いていない地域）
     def test_催しは7日_お店は14日(self):
         # 2026-10-28 代表「14日にして」：お店・施設・宿は14日、催しは7日のまま
         店 = {"id": "s", "scheduled_at": "2026-10-18T12:00:00+09:00", "text": f"福井市の居酒屋「てんやわんや」がオープンしました。\n\n{compose.検索語_お店}"}
@@ -63,6 +67,7 @@ class 同じ名のテスト(unittest.TestCase):
         # 催しを催しとしてもう一度出すときだけ、8日目から出してよい
         self.assertFalse(compose.名が近い("ダイナソーフェス", 名記, True))
 
+    @mock.patch.object(compose, "店を空ける日数", 14)   # 石川・ぎふあいち（region.json に書いていない地域）
     def test_前が催しの語でも今回お店なら14日(self):
         # 2026-10-29 運用部・福井：10/20 に「福井イベント」で終わる文で出した茶寮うおとめを、10/30 にお店として出しかけた
         前 = {"id": "a", "scheduled_at": "2026-10-20T08:00:00+09:00", "text": f"越前市の「茶寮うおとめ」で甘味。\n\n{compose.検索語}"}
@@ -70,6 +75,15 @@ class 同じ名のテスト(unittest.TestCase):
         if compose.同じ名を見る:
             self.assertIsNotNone(compose.名で止める理由({"text": f"越前市のカフェ「茶寮うおとめ」がオープンしました。\n\n{compose.検索語_お店}"}, 名記))
             self.assertIsNone(compose.名で止める理由({"text": f"「茶寮うおとめ」で11月に催しが開かれます。\n\n{compose.検索語}"}, 名記))
+
+    @unittest.skipUnless(compose.地域.県名 == "福井", "福井だけ")
+    def test_福井はお店も7日(self):
+        # 2026-11-03 代表「4，7日」：福井（region.json の 店を空ける日数 = 7）はお店・施設・宿も7日
+        self.assertEqual(compose.店を空ける日数, 7)
+        店 = {"id": "s", "scheduled_at": "2026-10-20T12:00:00+09:00", "text": f"福井市の居酒屋「てんやわんや」がオープンしました。\n\n{compose.検索語_お店}"}
+        self.assertNotIn("てんやわんや", compose.名の記録([店], date(2026, 10, 28)))   # 8日あいた
+        名記 = compose.名の記録([店], date(2026, 10, 27))                              # 7日
+        self.assertTrue(compose.名が近い("てんやわんや", 名記, False))
 
     def test_問いかけは名前の重なりで止めない(self):
         # 2026-10-29 運用部・石川：問いの言葉「冬の合図」が名前と見なされて 14:00 が落ちた

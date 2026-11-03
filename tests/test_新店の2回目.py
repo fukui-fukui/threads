@@ -1,6 +1,7 @@
 import importlib.util
 import sys
 import unittest
+from unittest import mock
 from datetime import date
 from pathlib import Path
 
@@ -31,6 +32,7 @@ class SecondTimeTest(unittest.TestCase):
         self.assertIsNone(compose.名で止める理由(投稿("2026-11-03", "福井市のカフェ「テスト珈琲」は、プリンが看板です。"), 記))
         self.assertNotIn("テスト珈琲", compose.使えない名の一覧(記).split("###")[0])
 
+    @mock.patch.object(compose, "店を空ける日数", 14)   # 14日の地域（石川・ぎふあいち）。福井は7日
     def test_after_10_days_or_third(self):
         記 = compose.名の記録([投稿("2026-10-22", self.一回目)], date(2026, 11, 3))
         self.assertIsNotNone(compose.名で止める理由(self.二回目, 記))
@@ -50,6 +52,7 @@ if __name__ == "__main__":
 
 @unittest.skipUnless(compose.同じ名を見る, "同じ名を見ない地域")
 class ThirdTimeTest(unittest.TestCase):
+    @mock.patch.object(compose, "店を空ける日数", 14)   # 14日の地域（石川・ぎふあいち）。福井は7日
     def test_first_time_older_than_14_days_counts(self):
         # 1回目が15日より前でも数える（橋架：10/20 と 10/28 に出ていて、11/5 は3回目）
         一 = SecondTimeTest.一回目
