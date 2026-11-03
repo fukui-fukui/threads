@@ -119,3 +119,5 @@ class StayLineTest(unittest.TestCase):
         self.assertNotIn("朝から動けます", c.泊まりの決まり文句を直す(t))
         self.assertIn("近くの宿は返信にまとめました。", c.泊まりの決まり文句を直す(t))
         self.assertEqual(c.泊まりの決まり文句を直す("開始は朝9時です。"), "開始は朝9時です。")
+        # 石川で出ていた形（2026-11-03 おでかけ開発）
+        self.assertEqual(c.泊まりの決まり文句を直す("前の晩に加賀の温泉に泊まれたら、朝から金沢へ向かえます。"), "近くの宿は返信にまとめました。")
