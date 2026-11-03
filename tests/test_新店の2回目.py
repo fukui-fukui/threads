@@ -18,14 +18,17 @@ def 投稿(d, text):
 @unittest.skipUnless(compose.同じ名を見る, "同じ名を見ない地域")
 class SecondTimeTest(unittest.TestCase):
     # 2026-11-03 代表「（新店の）2回目は10日以内に実施に変更」
-    一回目 = "10月28日（水）にオープンした、福井市のカフェ「テスト珈琲」。\n\nオープンおめでとうございます。"
+    一回目 = "10月28日（水）にオープンした、福井市のカフェ「テスト珈琲」。\n看板は「季節のタルト」です。\n\nオープンおめでとうございます。"
     二回目 = 投稿("2026-11-03", "10月28日（水）にオープンした、福井市のカフェ「テスト珈琲」。\n看板はプリンです。\n\nオープンおめでとうございます。")
 
     def test_second_within_10_days(self):
         記 = compose.名の記録([投稿("2026-10-28", self.一回目)], date(2026, 11, 3))
         self.assertIsNone(compose.名で止める理由(self.二回目, 記))
         self.assertIn("テスト珈琲", compose.新店の2回目の一覧(記))
-        self.assertIn("1回目に書いた売り", compose.新店の2回目の一覧(記))
+        self.assertIn("1回目に書いた売り（くり返さない）：看板は「季節のタルト」です。", compose.新店の2回目の一覧(記))
+        self.assertNotIn("季節のタルト」（", compose.新店の2回目の一覧(記))   # メニュー名は店として並べない
+        # 2回目の文に「オープン」が無くても通す（11/4 石川）
+        self.assertIsNone(compose.名で止める理由(投稿("2026-11-03", "福井市のカフェ「テスト珈琲」は、プリンが看板です。"), 記))
         self.assertNotIn("テスト珈琲", compose.使えない名の一覧(記).split("###")[0])
 
     def test_after_10_days_or_third(self):
