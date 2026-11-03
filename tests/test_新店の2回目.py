@@ -25,6 +25,7 @@ class SecondTimeTest(unittest.TestCase):
         記 = compose.名の記録([投稿("2026-10-28", self.一回目)], date(2026, 11, 3))
         self.assertIsNone(compose.名で止める理由(self.二回目, 記))
         self.assertIn("テスト珈琲", compose.新店の2回目の一覧(記))
+        self.assertIn("1回目に書いた売り", compose.新店の2回目の一覧(記))
         self.assertNotIn("テスト珈琲", compose.使えない名の一覧(記).split("###")[0])
 
     def test_after_10_days_or_third(self):
