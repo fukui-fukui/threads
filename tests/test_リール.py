@@ -61,6 +61,15 @@ class リールのテスト(unittest.TestCase):
         self.assertEqual(fc.count("zoompan"), 2)  # はじめと1場面目
         self.assertNotIn("[1:v]scale=1440", fc)
 
+    def test_題を今週末に変えられる(self):
+        with tempfile.TemporaryDirectory() as d:
+            リール.組み立て({**台本, "title": "今週末の福井"}, Path("/x"), Path(d) / "o.mp4", "ig", None, Path(d),
+                         dry_run=True)
+            texts = [p.read_text(encoding="utf-8") for p in Path(d).glob("t*.txt")]
+        self.assertIn("今週末の福井", texts)
+        self.assertIn("今週末の福井 おでかけ3選 1/3", texts)
+        self.assertFalse(any("来週末" in x for x in texts))
+
 
 if __name__ == "__main__":
     unittest.main()
