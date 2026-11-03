@@ -2016,6 +2016,8 @@ def 新店の2回目の1回目(n: str, 名記: dict) -> str | None:
     過去 = (getattr(名記, "過去", None) or {}).get(n) or []
     if 対象日 is None or len(過去) != 1 or not 過去[0][2] or n not in 名記:
         return None
+    if n not in (getattr(名記, "店名", None) or {n}):   # 1回目の1行目の名前（店名）だけ。メニュー名は数えない
+        return None
     if 名記[n][0] > 対象日.isoformat():   # 先の日にも入っている（手で入れた2回目など）
         return None
     差 = _日差(過去[0][0], 対象日)
@@ -2046,6 +2048,7 @@ def 名の記録(投稿たち: list[dict], target_date) -> dict[str, tuple[str, 
     記.催し = set()
     記.過去 = {}
     記.文 = {}
+    記.店名 = set()
     for e in 投稿たち:
         at = str(e.get("scheduled_at", ""))
         d = at[:10]
@@ -2065,6 +2068,8 @@ def 名の記録(投稿たち: list[dict], target_date) -> dict[str, tuple[str, 
             if 差 > 0 and (d, 時) not in [(x[0], x[1]) for x in 記.過去.get(n, [])]:
                 記.過去.setdefault(n, []).append((d, 時, 新店))
                 記.文.setdefault(n, str(e.get("text") or ""))
+                if 新店 and n in next((l for l in str(e.get("text") or "").splitlines() if l.strip()), ""):
+                    記.店名.add(n)
         if 差 > 店を空ける日数:
             continue   # 15〜31日前は新店の回数を数えるだけ
         催し = 催しの投稿(e)
@@ -2143,8 +2148,10 @@ def 名で止める理由(e: dict, 名記: dict) -> str | None:
         return None
     for n in sorted(名前たち(e)):
         if 名が近い(n, 名記, 催しの投稿(e)):
-            if 新店の投稿(e) and 新店の2回目の1回目(n, 名記):
-                continue   # 新店の2回目（10日以内）は14日の決まりの例外（2026-11-03 代表）
+            if 新店の2回目の1回目(n, 名記):
+                # 新店の2回目（10日以内）は14日の決まりの例外（2026-11-03 代表）。2回目の文に「オープン」が無くても通す
+                # （11/4 石川：Anthologie en rêve・リストランテヨシムラの2回目が、言い回しのせいで止まった）
+                continue
             d, 時 = 名記[n]
             return f"「{n}」を {d} {時}:00 にも入れている（同じお店・施設は前後{店を空ける日数}日、催しは{同じ名を空ける日数}日あける）"
     return None
@@ -2194,7 +2201,8 @@ def 新店の2回目の一覧(名記: dict) -> str:
         一回目 = 新店の2回目の1回目(n, 名記)
         if 一回目:
             期限 = datetime.strptime(一回目, "%Y-%m-%d").date() + timedelta(days=新店の2回目の日数)
-            文 = [l.strip() for l in (getattr(名記, "文", {}) or {}).get(n, "").splitlines() if l.strip()]
+            文 = [l.strip() for l in (getattr(名記, "文", {}) or {}).get(n, "").splitlines()
+                 if l.strip() and l.strip() not in 検索語たち and "おめでとう" not in l]
             売り = " ／ ".join(文[1:3])[:120]
             出.append(f"- 「{n}」（1回目 {一回目}・2回目は {期限:%m/%d} まで）" + (f"\n  1回目に書いた売り（くり返さない）：{売り}" if 売り else ""))
     return "\n".join(出)
@@ -2884,7 +2892,11 @@ def main() -> None:
             # 2026-09-29 代表了承。前の「前の日だけ見る・先の予定は何度でも」を改めた。
             if hour != 6 and not (今週末まとめの日(target_date) and hour == WEEKEND_HOUR):
                 この名 = {"text": text, "thread": thread, "note": post.get("note")}
-                わけ = 出典で止める理由(source_urls(text, thread), 記, target_date) or 名で止める理由(この名, 名記)
+                わけ = 出典で止める理由(source_urls(text, thread), 記, target_date)
+                # ふるさと納税の枠は、返礼品の切り口の回し方で重なりを避けている。「」の言葉（「秋のお魚たち」など）の7日の決まりは当てない
+                # （2026-11-03 運用部・石川：11/4 22:00 が、11/1 21:00 の「秋のお魚たち」と重なって空いた）
+                if not わけ and not (kifu and hour == KIFU_HOUR):
+                    わけ = 名で止める理由(この名, 名記)
                 if not わけ and 同じ名を見る:
                     # 同じ日の別の枠と同じ店・催しも止める
                     重 = sorted(名前たち(この名) & set(今日の名))
