@@ -457,9 +457,11 @@ def write_learning_text(summary: dict, decision: dict, history: list[dict]) -> s
                 "## 今日決めた変更", f"{decision['lever'] or 'なし'}: {decision['instruction']}（{decision['reason']}）",
             ]
         )
-        payload = anthropic_request(
-            "/messages", {"model": model, "max_tokens": 600, "messages": [{"role": "user", "content": prompt}]}, api_key
-        )
+        body = {"model": model, "max_tokens": 600, "messages": [{"role": "user", "content": prompt}]}
+        # 考える量（effort）。空なら送らない（今までどおり）。compose.py と同じ ANTHROPIC_EFFORT
+        if (考える量 := os.environ.get("ANTHROPIC_EFFORT", "").strip()):
+            body["output_config"] = {"effort": 考える量}
+        payload = anthropic_request("/messages", body, api_key)
         try:
             sys.path.insert(0, str(Path(__file__).resolve().parent))
             import 使用量
