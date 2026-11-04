@@ -258,7 +258,9 @@ def 最安を取り直す(h: dict) -> dict:
     ヘッダ = {"accept": "application/json"}
     元 = os.environ.get("RAKUTEN_REFERER", "").strip()
     if 元:
+        # 宿を集める.mjs と同じく origin も付ける（referer だけだと HTTPError で取り直せなかった。2026-11-04 ぎふあいち）
         ヘッダ["referer"] = 元
+        ヘッダ["origin"] = "{0.scheme}://{0.netloc}".format(urllib.parse.urlsplit(元))
     try:
         req = urllib.request.Request(f"https://openapi.rakuten.co.jp/engine/api/Travel/SimpleHotelSearch/20260731?{q}", headers=ヘッダ)
         with urllib.request.urlopen(req, timeout=20) as r:
@@ -270,7 +272,9 @@ def 最安を取り直す(h: dict) -> dict:
             print(f"最安料金を取り直しました：{h['最安']:,}円 → {最安:,}円")
             return {**h, "最安": 最安, "調べた日": datetime.now(JST).date().isoformat()}
     except Exception as e:  # noqa: BLE001 取れなくてもリストの料金で出す
-        print(f"::warning::最安料金を取り直せませんでした（{type(e).__name__}）。リストの料金のまま出します")
+        # 鍵とURLは出さない。HTTP の番号だけ出す（原因を見るため）
+        番号 = getattr(e, "code", "")
+        print(f"::warning::最安料金を取り直せませんでした（{type(e).__name__} {番号}）。リストの料金のまま出します")
     return h
 
 
