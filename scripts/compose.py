@@ -1121,7 +1121,9 @@ def ask(api_key: str, model: str, prompt: str) -> str:
         # （2026-10-21 福井・10/22 ぎふあいち。10/20 に作成の決まりが増えてから出力が 14,000〜16,000 に）。
         # 上げても使った分しか払わないので、やり直しの分（入力の出し直し）が減る。流さない（stream なし）呼び出しで
         # 10分の上限にかからないよう 24000 にとどめる
-        body = {"model": model, "max_tokens": 24000, "messages": messages}
+        # 上限は ANTHROPIC_MAX_TOKENS で変えられる（空なら 24000）。Sonnet＋low でも、予備を2本あわせて作る晩は
+        # 24000 で切れて2本しか読めなかった（2026-11-04 ぎふあいち）。使った分しか払わないので、上げても費用は増えない
+        body = {"model": model, "max_tokens": int(os.environ.get("ANTHROPIC_MAX_TOKENS") or 24000), "messages": messages}
         # 考える量（effort）。Sonnet 5.5 は既定が high で、考える分だけで 24000 を使い切り本文が空になった
         # （2026-11-03 ぎふあいち）。Opus 5.5 の既定は medium。空なら送らない（今までどおり）
         if (考える量 := os.environ.get("ANTHROPIC_EFFORT", "").strip()):
