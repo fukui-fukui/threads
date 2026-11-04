@@ -974,6 +974,8 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
             "",
             *寄付の決まり(kifu),
             "",
+            *(["**直近14日のこの枠の1行目です。同じ題材（同じ品・同じ話のたね・同じ食べ方や季節の話）を14日はくり返さないこと**（2026-11-04 運用部・福井：「羽二重餅と冬の水ようかん」が5日ごとに出た）:",
+               *[f"- {x}" for x in kifu.get("直近", [])], ""] if kifu.get("直近") else []),
         ]
     if mugi and hotel_hour is not None:
         sections += [
@@ -2716,7 +2718,13 @@ def main() -> None:
     kifu = None
     if 地域.使う("ふるさと納税") and any(hour == KIFU_HOUR for hour, *_ in needed):
         品たち = ふるさと納税.読む()
-        まとめ = ふるさと納税.今日のまとめ(target_date, 品たち, いくつ=3) if 品たち else None
+        # 直近14日のふるさと納税の枠（本文と返信）に出した品は避け、題材も指示で外させる（2026-11-04 運用部・福井）
+        _始め = (target_date - timedelta(days=14)).isoformat()
+        直近の寄付 = [e for e in 全投稿 if _始め <= str(e.get("scheduled_at", ""))[:10] < target_date.isoformat()
+                     and str(e.get("scheduled_at", ""))[11:13] == f"{KIFU_HOUR:02d}"]
+        _文 = "\n".join("\n".join([str(e.get("text") or ""), *[str(t) for t in (e.get("thread") or [])]]) for e in 直近の寄付)
+        避ける品 = {ふるさと納税.見せる名(p) for p in 品たち if ふるさと納税.見せる名(p) in _文} if 品たち else set()
+        まとめ = ふるさと納税.今日のまとめ(target_date, 品たち, いくつ=3, 避ける=避ける品) if 品たち else None
         if まとめ:
             kifu = {
                 "name": まとめ["切り口"]["問い"],
@@ -2724,6 +2732,7 @@ def main() -> None:
                 "件数": len(まとめ["品"]),
                 "一覧": ふるさと納税.一覧の行(まとめ),
                 "raw": まとめ,
+                "直近": [f"{str(e.get('scheduled_at'))[:10]}：{(e.get('text') or '').splitlines()[0][:60]}" for e in sorted(直近の寄付, key=lambda x: str(x.get("scheduled_at")))],
             }
             print(f"ふるさと納税の枠: {KIFU_HOUR}:00 ｜ {kifu['name']}（{kifu['件数']} 件）")
         else:
