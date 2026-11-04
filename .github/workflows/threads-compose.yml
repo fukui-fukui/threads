@@ -40,6 +40,8 @@ jobs:
       BOARD_DOC_ID: ${{ vars.BOARD_DOC_ID }}
       NETA_DOC_ID: ${{ vars.NETA_DOC_ID }}
       ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+      # 考える量。空なら送らない（2026-11-03。ぎふあいちは Sonnet で medium）
+      ANTHROPIC_EFFORT: ${{ vars.ANTHROPIC_EFFORT }}
       ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
     steps:
       # queue の過去の版を読むので、履歴ごと取る（2026-09-29。同じ催しの繰り返しを見るため）

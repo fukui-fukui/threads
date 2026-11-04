@@ -14,6 +14,7 @@
   NETA_DOC_ID        任意。ネタ帳の Google ドキュメント ID
                      （neta/ネタ帳.md があるときは、そちらが優先される）
   ANTHROPIC_MODEL    任意。使うモデル。未指定なら利用可能なものから自動で選ぶ
+  ANTHROPIC_EFFORT   任意。考える量（low/medium/high）。Sonnet 5.5 は既定が high で出力を使い切るので medium を渡す
   DRY_RUN            任意。"true" なら生成結果を表示するだけでファイルを書き換えない
 """
 
@@ -1117,6 +1118,10 @@ def ask(api_key: str, model: str, prompt: str) -> str:
         # 上げても使った分しか払わないので、やり直しの分（入力の出し直し）が減る。流さない（stream なし）呼び出しで
         # 10分の上限にかからないよう 24000 にとどめる
         body = {"model": model, "max_tokens": 24000, "messages": messages}
+        # 考える量（effort）。Sonnet 5.5 は既定が high で、考える分だけで 24000 を使い切り本文が空になった
+        # （2026-11-03 ぎふあいち）。Opus 5.5 の既定は medium。空なら送らない（今までどおり）
+        if (考える量 := os.environ.get("ANTHROPIC_EFFORT", "").strip()):
+            body["output_config"] = {"effort": 考える量}
         if 道具:
             body["tools"] = 道具
         try:
