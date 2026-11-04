@@ -84,3 +84,16 @@ class CongratsTest(unittest.TestCase):
         self.assertNotIn("おめでとう", compose.おめでとうを確かめる("12月中旬、「テスト」が移転オープンします。オープン、おめでとうございます。", date(2026, 11, 5))[0])
         # 年をまたぐ
         self.assertEqual(compose.オープン日("12月28日にオープンした、福井市の店「テスト」。", date(2027, 1, 3)), date(2026, 12, 28))
+
+
+class OldEventTest(unittest.TestCase):
+    # 2026-11-04 代表「4ヶ月前のイベントは出さない」
+    def test_old_event(self):
+        from datetime import date
+        d = date(2026, 11, 4)
+        self.assertIsNotNone(compose.古い催し("7月3日から、満天NAGOYAで「テスト」が上映されています。", d))
+        self.assertIsNone(compose.古い催し("10月20日から、「テスト展」が開かれています。", d))
+        self.assertIsNone(compose.古い催し("9月1日から11月9日まで開かれている「テスト展」が、まもなく終わります。", d))
+        self.assertIsNotNone(compose.古い催し("9月1日から12月20日まで開かれている「テスト展」。", d))
+        self.assertIsNone(compose.古い催し("11月20日から「テスト」が始まります。", d))
+        self.assertIsNone(compose.古い催し("7月3日にオープンした、福井市の店「テスト」。", d))
