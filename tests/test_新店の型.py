@@ -97,3 +97,26 @@ class OldEventTest(unittest.TestCase):
         self.assertIsNotNone(compose.古い催し("9月1日から12月20日まで開かれている「テスト展」。", d))
         self.assertIsNone(compose.古い催し("11月20日から「テスト」が始まります。", d))
         self.assertIsNone(compose.古い催し("7月3日にオープンした、福井市の店「テスト」。", d))
+
+
+class OldShopTest(unittest.TestCase):
+    # 2026-11-04 代表「A」：オープンから30日をこえたお店は、「オープン」の言葉を使わず、ふつうのお店の紹介に
+    def test_old_shop(self):
+        from datetime import date
+        t = "10月10日（土）にオープンした、金沢市東山の着物リメイク服の店「kimonodatta.」。\n\n町家を改装した店内です。\n\n石川おでかけ"
+        新, わけ = compose.古い開店を直す(t, date(2026, 11, 20))
+        self.assertIsNotNone(わけ)
+        self.assertTrue(新.startswith("金沢市東山の着物リメイク服の店「kimonodatta.」。"))
+        self.assertNotIn("オープン", 新)
+        # 30日以内はそのまま
+        self.assertEqual(compose.古い開店を直す(t, date(2026, 11, 5))[0], t)
+        # 店名の文ごと消えるときは直せない
+        self.assertIsNone(compose.古い開店を直す("9月1日、ついにオープン。\n\nパンの店です。", date(2026, 11, 20))[0])
+
+    def test_old_shop_sentence(self):
+        from datetime import date
+        d = date(2026, 11, 5)
+        self.assertTrue(compose.古い開店を直す("大野市西山に、サウナ「サウナばか」が2026年8月8日にオープンしました。\n\n貸切です。", d)[0]
+                        .startswith("大野市西山に、サウナ「サウナばか」があります。"))
+        self.assertTrue(compose.古い開店を直す("福井のカフェ「ha:on」は、2026年8月25日にオープンしました。\n\nスイーツです。", d)[0]
+                        .startswith("福井のカフェ「ha:on」です。"))
