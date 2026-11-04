@@ -42,6 +42,8 @@ jobs:
       ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
       # 考える量。空なら送らない（2026-11-03。ぎふあいちは Sonnet で medium）
       ANTHROPIC_EFFORT: ${{ vars.ANTHROPIC_EFFORT }}
+      # 出力の上限。空なら 24000（2026-11-04。ぎふあいちは 32000）
+      ANTHROPIC_MAX_TOKENS: ${{ vars.ANTHROPIC_MAX_TOKENS }}
       ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
     steps:
       # queue の過去の版を読むので、履歴ごと取る（2026-09-29。同じ催しの繰り返しを見るため）
