@@ -51,6 +51,8 @@ def 記録(何: str, モデル: str, usage: dict, 検索: int = 0) -> None:
             "モデル": モデル,
             "入力": u.get("input_tokens") or 0,
             "出力": u.get("output_tokens") or 0,
+            "キャッシュ書き": u.get("cache_creation_input_tokens") or 0,
+            "キャッシュ読み": u.get("cache_read_input_tokens") or 0,
             "検索": 検索,
             "ドル": round(ドル(モデル, u, 検索), 5),
             "起動": 起動(),

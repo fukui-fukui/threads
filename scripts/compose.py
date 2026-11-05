@@ -1108,12 +1108,29 @@ def parse_posts(text: str) -> list[dict]:
     return posts
 
 
+# 聞き直しのたびに同じ指示（運用ボード・決まり・ネタ帳）を送り直すので、その部分をキャッシュする（2026-11-06 統括：
+# Anthropic から「キャッシュのヒット率が下がった」とメール。作成はもともと cache_control を使っていなかった）。
+# 1回目で書き込み（入力の1.25倍）、5分以内の聞き直しは読み出し（0.1倍）になる。
+共通の頭 = ""
+
+
+def 送る中身(prompt: str):
+    """共通の頭（その晩の1回目の指示）で始まる指示なら、頭をキャッシュする形にする。"""
+    if 共通の頭 and len(共通の頭) >= 4000 and prompt.startswith(共通の頭):
+        中身 = [{"type": "text", "text": 共通の頭, "cache_control": {"type": "ephemeral"}}]
+        残り = prompt[len(共通の頭):]
+        if 残り.strip():
+            中身.append({"type": "text", "text": 残り})
+        return 中身
+    return prompt
+
+
 def ask(api_key: str, model: str, prompt: str) -> str:
     # 翌日ぶんの作成では出典のページを開かない（web_fetch を渡さない）。
     # 10/15 に足したが、ぎふあいちの初回で1回 $2.74（ふだんの石川は $0.33〜0.50）になったため、
     # 2026-10-15 代表「元のやり方にして、コストをいしかわと同じにして」で外した。
     # ページを読むのは情報集め（neta-collect）だけ。道具を戻すときは 道具 に足す（pause_turn の続き・道具なしへの切り替えは残してある）
-    messages = [{"role": "user", "content": prompt}]
+    messages = [{"role": "user", "content": 送る中身(prompt)}]
     道具: list[dict] = []
     文たち: list[str] = []  # 途中で止まった回の文も、つなげて使う
     for _ in range(4):
@@ -1225,6 +1242,8 @@ def generate(api_key: str, model: str, prompt: str, hours: list[int]) -> list[di
                           for h in 残り if h in 直してほしい)
                 + "説明や ``` を付けず、@@@POST 〜 @@@END の組だけを返してください。"
             )
+        global 共通の頭
+        共通の頭 = prompt
         text = ask(api_key, model, この回の指示)
         前の数 = len(集まった)
         for x in 外したを読む(text):
