@@ -2726,7 +2726,16 @@ def main() -> None:
                      and str(e.get("scheduled_at", ""))[11:13] == f"{KIFU_HOUR:02d}"]
         _文 = "\n".join("\n".join([str(e.get("text") or ""), *[str(t) for t in (e.get("thread") or [])]]) for e in 直近の寄付)
         避ける品 = {ふるさと納税.見せる名(p) for p in 品たち if ふるさと納税.見せる名(p) in _文} if 品たち else set()
-        まとめ = ふるさと納税.今日のまとめ(target_date, 品たち, いくつ=3, 避ける=避ける品) if 品たち else None
+        # 直近14日に使った切り口（note の「切り口：◯◯」か、本文にある切り口の問い）→ 何日前
+        避ける切り口: dict[str, int] = {}
+        for e in 直近の寄付:
+            _何日前 = (target_date - datetime.strptime(str(e.get("scheduled_at"))[:10], "%Y-%m-%d").date()).days
+            _本 = "\n".join([str(e.get("note") or ""), str(e.get("text") or "")])
+            for き in ふるさと納税.切り口たち:
+                問 = str(き.get("問い") or き.get("名"))
+                if f"切り口：{問}" in _本 or (き.get("フック") and str(き["フック"])[:20] in _本):
+                    避ける切り口[問] = min(_何日前, 避ける切り口.get(問, 999))
+        まとめ = ふるさと納税.今日のまとめ(target_date, 品たち, いくつ=3, 避ける=避ける品, 避ける切り口=避ける切り口) if 品たち else None
         if まとめ:
             kifu = {
                 "name": まとめ["切り口"]["問い"],

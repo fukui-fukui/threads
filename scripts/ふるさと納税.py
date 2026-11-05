@@ -375,7 +375,8 @@ def _とじる(s: str) -> str:
 
 
 def 今日のまとめ(対象日: date, 品たち: list[dict] | None = None,
-              いくつ: int = 5, 避ける: set | frozenset = frozenset()) -> dict | None:
+              いくつ: int = 5, 避ける: set | frozenset = frozenset(),
+              避ける切り口: dict | None = None) -> dict | None:
     """その日の切り口と返礼品を返す。当てはまりが少ない切り口は飛ばす。"""
     品たち = 読む() if 品たち is None else 品たち
     if not 品たち:
@@ -412,8 +413,19 @@ def 今日のまとめ(対象日: date, 品たち: list[dict] | None = None,
     # （2026-11-04 運用部・福井：22時に同じ品・同じ話が5日ごとに出ていた）。どれも無ければ前のとおり
     始め = 番 % len(使える)
     順 = 使える[始め:] + 使える[:始め]
-    選んだ = next(((き, 合う) for き, 合う in 順
-                 if sum(見せる名(p) not in 避ける for p in 合う) >= 最低), None) if 避ける else None
+    # 直近14日に使った切り口（話のたね）も避ける。避ける切り口は {問い: 何日前}（2026-11-05 運用部・福井：石川の「能登牛」が5日で2回）。
+    # どれも直近に使っていれば、いちばん前に使った切り口にする
+    近い = 避ける切り口 or {}
+    選んだ = None
+    if 近い:
+        まだ = [(き, 合う) for き, 合う in 順 if str(き.get("問い") or き.get("名")) not in 近い]
+        選んだ = next(((き, 合う) for き, 合う in まだ if sum(見せる名(p) not in 避ける for p in 合う) >= 最低), None)
+        if 選んだ is None:
+            # 14日の中で全部使っていたら、いちばん前に使った切り口（品の重なりは並べ方で後ろへ回す）
+            選んだ = (まだ or sorted(順, key=lambda x: -近い.get(str(x[0].get("問い") or x[0].get("名")), 999)))[0]
+    elif 避ける:
+        選んだ = next(((き, 合う) for き, 合う in 順
+                     if sum(見せる名(p) not in 避ける for p in 合う) >= 最低), None)
     for _ in (0,):
         き, 合う = 選んだ or 使える[始め]
         ずらし = 日数 % len(合う)
