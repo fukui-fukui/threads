@@ -2201,7 +2201,8 @@ def 名の記録(投稿たち: list[dict], target_date) -> dict[str, tuple[str, 
         for n in 名前たち(e, 見出しも=not まとめ):
             if 差 > 0 and (d, 時) not in [(x[0], x[1]) for x in 記.過去.get(n, [])]:
                 記.過去.setdefault(n, []).append((d, 時, 新店))
-                記.文.setdefault(n, str(e.get("text") or ""))
+                # 1回目の返信も残す（2回目の売りが、1回目の返信に書いたことと同じになるのを見るため。2026-11-05 ぎふあいち）
+                記.文.setdefault(n, str(e.get("text") or "") + "\n" + "\n".join(str(t) for t in (e.get("thread") or [])))
                 if 新店 and n in next((l for l in str(e.get("text") or "").splitlines() if l.strip()), ""):
                     記.店名.add(n)
         if 差 > 店を空ける日数:
@@ -2273,6 +2274,26 @@ def 並べる投稿から外す(text: str, 名記: dict) -> tuple[str, list[tupl
     return "\n".join(頭 + [l for b in 残り for l in b] + 尾), 外した
 
 
+二回目の重なりの上限 = 0.5   # 2回目の中身（1行目・検索語・おめでとう・出典をのぞく）の3文字の並びのうち、1回目の本文・返信にもある割合
+
+
+def _三文字(s: str) -> set[str]:
+    s = re.sub(r"[^\w]|[A-Za-z_]", "", s)
+    return {s[i:i + 3] for i in range(len(s) - 2)}
+
+
+def 二回目の重なり(e: dict, 一回目: str) -> float | None:
+    """新店の2回目の中身が、1回目の本文・返信とどれだけ同じ言葉か（0〜1）。中身が短すぎれば None。
+    2026-11-05 統括・運用部・ぎふあいち：2回目が1回目と同じ売りになり、毎晩手で直していた（ヒロキチ商店 0.84・よし平 0.6）。"""
+    行 = [l.strip() for l in str(e.get("text") or "").splitlines() if l.strip()][1:]
+    行 += [l.strip() for t in (e.get("thread") or []) for l in str(t).splitlines() if l.strip()][1:]
+    中身 = "".join(l for l in 行 if l not in 検索語たち and "おめでとう" not in l and "出典元" not in l and "Threads：" not in l)
+    今 = _三文字(中身)
+    if len(今) < 8:
+        return None
+    return len(今 & _三文字(一回目)) / len(今)
+
+
 def まとめの数と返信をそろえる(text: str, thread: list[str]) -> tuple[str, list[str]]:
     """①②と並べるまとめで行を外したあと、見出しの「◯選」「◯つ」を残った行の数に直し、返信は本文に残った名前の分だけにする
     （2026-11-05 運用部・石川：今週末の石川が「3選」なのに2件で、返信の2件とも違う催しだった）。"""
@@ -2307,6 +2328,9 @@ def 名で止める理由(e: dict, 名記: dict) -> str | None:
             if 新店の2回目の1回目(n, 名記):
                 # 新店の2回目（10日以内）は14日の決まりの例外（2026-11-03 代表）。2回目の文に「オープン」が無くても通す
                 # （11/4 石川：Anthologie en rêve・リストランテヨシムラの2回目が、言い回しのせいで止まった）
+                重 = 二回目の重なり(e, (getattr(名記, "文", {}) or {}).get(n, ""))
+                if 重 is not None and 重 >= 二回目の重なりの上限:
+                    return f"「{n}」の2回目が、1回目と同じ言葉ばかり（重なり {重:.0%}。切り口を変えていない）"
                 continue
             d, 時 = 名記[n]
             return f"「{n}」を {d} {時}:00 にも入れている（同じお店・施設は前後{店を空ける日数}日、催しは{同じ名を空ける日数}日あける）"
@@ -2344,6 +2368,8 @@ def 使えない名の一覧(名記: dict) -> str:
         行 += ("\n\n### 2回目を出してよい新店（2026-11-03 代表「2回目は10日以内」。**ネタ帳に材料があれば、ほかのお店より先に選ぶ**）\n"
               "1回目と切り口を変える。**1回目と同じ売り・同じ言い回しを使わない**（2行目からは、出典にある別の事実：メニュー・店主・場所・営業時間・期間限定など。"
               "2026-11-03 開発・ぎふあいち：同じ売りの2回目が 10,079→48 に落ちた）。1行目の「日時＋オープン」の型は同じ。"
+              "**言いかえも同じ売りとみなす**（「駅直結」→「電車で着いてそのまま寄れる」、「生仕立てドーナッツ」→「ドーナッツの専門店」など）。"
+              "**出典に、1回目に書いていない事実が無いお店は、2回目を出さない**（ほかのネタにする）。1回目と言葉が大きく重なる2回目は、機械で予備に替えます（2026-11-05）。"
               "最後の「オープンおめでとうございます。」は、オープン日の前後10日以内のときだけ付ける。3回目は出さない\n" + 二回目)
     return 行
 
@@ -2358,9 +2384,9 @@ def 新店の2回目の一覧(名記: dict) -> str:
         if 一回目:
             期限 = datetime.strptime(一回目, "%Y-%m-%d").date() + timedelta(days=新店の2回目の日数)
             文 = [l.strip() for l in (getattr(名記, "文", {}) or {}).get(n, "").splitlines()
-                 if l.strip() and l.strip() not in 検索語たち and "おめでとう" not in l]
-            売り = " ／ ".join(文[1:3])[:120]
-            出.append(f"- 「{n}」（1回目 {一回目}・2回目は {期限:%m/%d} まで）" + (f"\n  1回目に書いた売り（くり返さない）：{売り}" if 売り else ""))
+                 if l.strip() and l.strip() not in 検索語たち and "おめでとう" not in l and "出典元" not in l]
+            売り = " ／ ".join(文)[:300]
+            出.append(f"- 「{n}」（1回目 {一回目}・2回目は {期限:%m/%d} まで）" + (f"\n  1回目に書いたこと（本文と返信。くり返さない）：{売り}" if 売り else ""))
     return "\n".join(出)
 
 
