@@ -120,3 +120,19 @@ class OldShopTest(unittest.TestCase):
                         .startswith("大野市西山に、サウナ「サウナばか」があります。"))
         self.assertTrue(compose.古い開店を直す("福井のカフェ「ha:on」は、2026年8月25日にオープンしました。\n\nスイーツです。", d)[0]
                         .startswith("福井のカフェ「ha:on」です。"))
+
+
+class PromptCacheTest(unittest.TestCase):
+    def test_cache_head(self):
+        # 2026-11-06 統括：聞き直しで同じ指示を送り直すので、その部分をキャッシュする
+        頭 = "決まり" * 2000
+        compose.共通の頭 = 頭
+        try:
+            中 = compose.送る中身(頭 + "\n\n足りないのは 12:00 です。")
+            self.assertEqual(中[0]["cache_control"], {"type": "ephemeral"})
+            self.assertEqual(中[0]["text"], 頭)
+            self.assertIn("12:00", 中[1]["text"])
+            self.assertEqual(len(compose.送る中身(頭)), 1)
+            self.assertEqual(compose.送る中身("別の指示"), "別の指示")
+        finally:
+            compose.共通の頭 = ""
