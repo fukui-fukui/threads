@@ -1529,12 +1529,25 @@ def 閉まる時(text: str) -> int | None:
     return 閉
 
 
+def 開く時(text: str) -> int | None:
+    """本文の営業時間の、いちばん早い開く時（時）。書いていなければ None。"""
+    m = _営業時間.search(text or "")
+    if not m:
+        return None
+    開 = [int(a) for a, _, _, _ in _時刻の幅.findall(m.group(1))]
+    return min(開) if 開 else None
+
+
 def 合わない理由(text: str, 日, 時: int) -> str | None:
     """お店の紹介を、その日・その時刻に出すと行けないとき、その理由（2026-10-27 統括・運用部 福井／石川）。
     - 出す日がそのお店の定休日
     - 昼のうちに閉まるお店（閉まるのが20時まで）を、閉まったあとの時刻に出す（21時からの夜の枠は翌日に行く人向けなので、翌日の定休日を見る）"""
     if 定休日に当たる(text, 日):
         return "定休日の曜日"
+    # 夜だけのお店（17時より後に開く）は、15時より前の枠に出さない（2026-11-05 運用部・石川：18時開店のちむ福が12時に入った）
+    開 = 開く時(text)
+    if 開 is not None and 開 >= 17 and 時 < 15:
+        return f"{開}時に開く夜のお店を {時}:00 に出す"
     閉 = 閉まる時(text)
     if 閉 is None or 閉 > 20 or 時 < 閉:
         return None
@@ -2260,6 +2273,28 @@ def 並べる投稿から外す(text: str, 名記: dict) -> tuple[str, list[tupl
     return "\n".join(頭 + [l for b in 残り for l in b] + 尾), 外した
 
 
+def まとめの数と返信をそろえる(text: str, thread: list[str]) -> tuple[str, list[str]]:
+    """①②と並べるまとめで行を外したあと、見出しの「◯選」「◯つ」を残った行の数に直し、返信は本文に残った名前の分だけにする
+    （2026-11-05 運用部・石川：今週末の石川が「3選」なのに2件で、返信の2件とも違う催しだった）。"""
+    行 = [l for l in text.splitlines() if _番号の行.match(l)]
+    n = len(行)
+    if n:
+        頭, *残り = text.split("\n", 1)
+        頭 = re.sub(r"\d+(選|つ|件)", lambda m: f"{n}{m.group(1)}", 頭, count=1)
+        text = 頭 + ("\n" + 残り[0] if 残り else "")
+    本文の名 = [m.group(1).strip() for l in 行 if (m := _行の名.match(l))]
+    出 = []
+    for t in thread or []:
+        m = _見出しの名.match(str(t).strip())
+        if not m:
+            出.append(t)   # 一覧ページへのリンクなど、見出しの無い返信はそのまま
+            continue
+        名 = _終わりのかっこ.sub("", m.group(1).strip())
+        if any(len(x) >= 2 and (x in 名 or 名 in x) for x in 本文の名):
+            出.append(t)
+    return text, 出
+
+
 def 名で止める理由(e: dict, 名記: dict) -> str | None:
     if not 同じ名を見る:
         return None
@@ -2507,6 +2542,11 @@ def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出�
             print(f"::warning::予備の新店・施設の文が型から外れているので捨てます（{直し}）：{x['text'].splitlines()[0][:40]}")
             continue
         urls = source_urls(x.get("text", ""), x.get("thread") or [])
+        _全文 = "\n".join([x.get("text", ""), *(x.get("thread") or [])])
+        if urls and all("instagram.com" in u for u in urls) and not re.search(r"営業時間|住所|定休|\d{1,2}[:：]\d{2}", _全文):
+            # 出典が Instagram だけで、営業時間・住所などの事実が無いお店の文は予備から入れない（2026-11-05 運用部・石川：SOU・杏仁豆腐TOKYO）
+            print(f"::warning::予備の文は出典が Instagram だけで中身の事実が無いので使いません：{x['text'].splitlines()[0][:40]}")
+            continue
         合う = [h for h in 空き if not 合わない理由(x.get("text", ""), target_date, h)]
         if 合う and not (urls & 今日の出典) and not 出典で止める理由(urls, 記, target_date) and not 名で止める理由(x, 名記 or {}):
             _本 = 古い開店を直す(おめでとうを確かめる(x["text"], target_date)[0], target_date)[0]
@@ -3069,6 +3109,8 @@ def main() -> None:
                     continue
                 for n, 行 in 外した行:
                     print(f"::warning::{hour}:00 のまとめから「{n}」の行を外しました（{名記[n][0]} {名記[n][1]}:00 に出したばかり）：{行[:40]}")
+                if 外した行:
+                    text, thread = まとめの数と返信をそろえる(text, thread)
             重なり = source_urls(text, thread) & set(出典の枠)
             if 重なり:
                 # 重なった枠だけを落とす。ここで fail すると、その日の10本が
