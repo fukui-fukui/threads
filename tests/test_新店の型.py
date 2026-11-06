@@ -136,3 +136,17 @@ class PromptCacheTest(unittest.TestCase):
             self.assertEqual(compose.送る中身("別の指示"), "別の指示")
         finally:
             compose.共通の頭 = ""
+
+
+class NotInSourceTest(unittest.TestCase):
+    """2026-11-06 運用部・ぎふあいち：「時間・料金は出典に載っていません」が7本。出典には書いてあった。文ごと外す"""
+
+    def test_removes_not_in_source_sentences(self):
+        self.assertEqual(compose.載っていない文を外す("鶴舞公園の文化祭です。時間・料金は出典に載っていません。\n出典元：https://example.com/a"),
+                         "鶴舞公園の文化祭です。\n出典元：https://example.com/a")
+        self.assertEqual(compose.載っていない文を外す("点灯の時間や料金は、公式のお知らせで確かめてください。"), "")
+        self.assertEqual(compose.載っていない文を外す("営業時間・定休日は出典に載っていないため、お出かけ前に確かめてください。\n場所は栄です。"), "場所は栄です。")
+
+    def test_keeps_facts(self):
+        for t in ("開館は10時〜17時、月曜休館です。", "出典元：https://example.com/a", "楽天トラベルの口コミは 4.6。"):
+            self.assertEqual(compose.載っていない文を外す(t), t)
