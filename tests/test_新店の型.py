@@ -150,3 +150,8 @@ class NotInSourceTest(unittest.TestCase):
     def test_keeps_facts(self):
         for t in ("開館は10時〜17時、月曜休館です。", "出典元：https://example.com/a", "楽天トラベルの口コミは 4.6。"):
             self.assertEqual(compose.載っていない文を外す(t), t)
+
+    def test_removes_go_check_sentences(self):
+        # 2026-11-06 運用部・石川：「場所や営業時間は、記事でご確認ください」が4本
+        self.assertEqual(compose.載っていない文を外す("一貫から頼めます。場所や営業時間は、記事でご確認ください。"), "一貫から頼めます。")
+        self.assertEqual(compose.載っていない文を外す("メニューや営業時間は、お店のInstagramでご確認ください。"), "")
