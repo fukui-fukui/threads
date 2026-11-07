@@ -37,6 +37,15 @@ METRICS = Path("insights/metrics.jsonl")
 リンクの形 = re.compile(r"https?://(?:a\.r10\.to|hb\.afl\.rakuten\.co\.jp)/[^\s）)」]+")
 
 
+def 正規化(u: str) -> str:
+    """同じリンクの書き方ちがいをそろえる。楽天のリンクは、投稿では「…/?pc=」、インサイトでは「…?pc=」で返る
+    （2026-11-07：石川・ぎふあいちの hb.afl のリンクが投稿に結びつかず、クリックが全部0になっていた）。pc（行き先）があればそれで見る。"""
+    q = urllib.parse.parse_qs(urllib.parse.urlsplit(u.strip()).query)
+    if q.get("pc"):
+        return urllib.parse.unquote(q["pc"][0]).rstrip("/")
+    return urllib.parse.unquote(u.strip()).replace("/?", "?").rstrip("/")
+
+
 def get(path: str, **params) -> dict:
     params["access_token"] = os.environ["THREADS_ACCESS_TOKEN"]
     url = f"{API}/{path}?{urllib.parse.urlencode(params)}"
@@ -115,7 +124,7 @@ def main() -> None:
             continue
         q = json.loads(l)
         文 = q["text"] + "\n" + "\n".join(q.get("thread") or []) + "\n" + "\n".join(u for u in (q.get("thread_links") or []) if u)
-        リンク = sorted(set(リンクの形.findall(文)))
+        リンク = sorted({正規化(u) for u in リンクの形.findall(文)})
         if not リンク:
             continue
         日 = q["scheduled_at"][:10]
@@ -129,7 +138,7 @@ def main() -> None:
     # その日のクリックを、そのリンクを使った一番新しい投稿に数える
     for 日, 回 in クリック.items():
         for u, c in 回.items():
-            候補 = [p for p in 投稿 if u in p["リンク"] and p["日"] <= 日]
+            候補 = [p for p in 投稿 if 正規化(u) in p["リンク"] and p["日"] <= 日]
             if 候補:
                 候補[-1]["クリック"] += c
 
