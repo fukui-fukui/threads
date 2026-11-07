@@ -32,6 +32,35 @@ class SeasonalWeeklyTest(unittest.TestCase):
         # 年をまたぐ期間
         self.assertTrue(compose.季節ものの投稿({"text": "「テストイルミネーション」は12月1日から1月12日まで。"}, date(2026, 12, 5)))
 
+    def test_twice_a_week(self):
+        # 同日の変更「週に2回くらい」：3日あければ出してよい
+        記 = compose.名の記録([投稿("2026-11-05", 一回目)], date(2026, 11, 8))
+        self.assertIsNone(compose.名で止める理由(投稿("2026-11-08", 二回目), 記))
+
+    def test_not_seasonal(self):
+        # 2026-11-07 開発・ぎふあいち
+        日 = date(2026, 11, 9)
+        self.assertFalse(compose.季節ものの投稿({"text": "多治見市の「多治見市モザイクタイルミュージアム」で企画展が12月27日まで。"}, 日))
+        self.assertFalse(compose.季節ものの投稿({"text": "10月31日（土）と11月1日（日）、「2026いぶきやま紅葉祭」が開かれます。"}, 日))
+        self.assertFalse(compose.季節ものの投稿({"text": "名古屋の「オアシス21 水の宇宙船」は、毎晩ライトアップされます。"}, 日))
+        self.assertFalse(compose.季節ものの投稿({"text": "11月14日（土）、「テスト紅葉ウォーク」が開かれます。"}, 日))
+        self.assertTrue(compose.季節ものの投稿({"text": "「香嵐渓もみじまつり」は11月30日まで。"}, 日))
+
+    def test_names(self):
+        e = {"text": "「Aichi Now」によると、豊田市の「香嵐渓もみじまつり」は11月30日まで。", "note": "「同じ問いかけは14日くり返さない」"}
+        self.assertEqual(compose.季節の名(e), {"香嵐渓もみじまつり"})
+        e = {"text": "蒲郡市の「ラグーナテンボス」で「神秘のシャイニングアーチ」が2月まで点灯しています。\n12月1日から。"}
+        self.assertEqual(compose.季節の名(e), {"ラグーナテンボス", "神秘のシャイニングアーチ"})
+        記 = compose.名の記録([投稿("2026-11-01", e["text"])], date(2026, 11, 8))
+        self.assertEqual(compose.季節の週1の一覧(記).count("\n- "), 0)   # 同じ投稿の名前は1行
+
+    def test_same_event_other_name_is_one_line(self):
+        a = 投稿("2026-10-18", "12月15日まで、中能登町の「mii cafe」で「mii cafe 紅葉アフタヌーンティー」が出ています。")
+        b = 投稿("2026-10-26", "12月15日まで、中能登町のカフェで「紅葉アフタヌーンティー」が出ています。9月15日から。")
+        一覧 = compose.季節の週1の一覧(compose.名の記録([a, b], date(2026, 11, 8)))
+        self.assertEqual(一覧.count("（前回"), 1)
+        self.assertIn("2026-10-26", 一覧)
+
     def test_weekly_allowed_after_7_days(self):
         記 = compose.名の記録([投稿("2026-11-01", 一回目)], date(2026, 11, 8))
         self.assertIsNone(compose.名で止める理由(投稿("2026-11-08", 二回目), 記))
@@ -45,8 +74,8 @@ class SeasonalWeeklyTest(unittest.TestCase):
         self.assertEqual(compose.季節の週1の一覧(記), "")
 
     def test_within_7_days_is_stopped(self):
-        記 = compose.名の記録([投稿("2026-11-03", 一回目)], date(2026, 11, 8))
-        self.assertIn("週1", compose.名で止める理由(投稿("2026-11-08", 二回目), 記))
+        記 = compose.名の記録([投稿("2026-11-06", 一回目)], date(2026, 11, 8))
+        self.assertIn("週2回", compose.名で止める理由(投稿("2026-11-08", 二回目), 記))
         self.assertEqual(compose.季節の週1の一覧(記), "")
 
     def test_same_words_are_stopped(self):
