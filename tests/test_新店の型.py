@@ -76,10 +76,13 @@ class CongratsTest(unittest.TestCase):
         self.assertIsNotNone(わけ)
         self.assertNotIn("おめでとう", 新)
         self.assertTrue(新.endswith("看板はラテです。"))
-        # これから開く店（10日前まで）
+        # これから開く店には付けない（2026-11-07 代表「1、B」＝開店日から）。当日はよい
         先 = "11月20日（金）10時オープン、福井市のカフェ「テスト」。\n\nオープンおめでとうございます。"
-        self.assertEqual(compose.おめでとうを確かめる(先, date(2026, 11, 12))[0], 先)
+        新, わけ = compose.おめでとうを確かめる(先, date(2026, 11, 12))
+        self.assertNotIn("おめでとう", 新)
+        self.assertIn("開店前", わけ)
         self.assertNotIn("おめでとう", compose.おめでとうを確かめる(先, date(2026, 11, 5))[0])
+        self.assertEqual(compose.おめでとうを確かめる(先, date(2026, 11, 20))[0], 先)
         # オープン日が無い・あいまい
         self.assertNotIn("おめでとう", compose.おめでとうを確かめる("12月中旬、「テスト」が移転オープンします。オープン、おめでとうございます。", date(2026, 11, 5))[0])
         # 年をまたぐ
