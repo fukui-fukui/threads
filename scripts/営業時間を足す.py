@@ -26,6 +26,7 @@ _店らしい = re.compile(r"店|カフェ|バー|食堂|レストラン|ベー�
                      r"スイーツ|ケーキ|ソフトクリーム|ジェラート|コーヒー|珈琲|オープン|開店|リニューアル")
 _催し = re.compile(r"開催|開かれ|まつり|祭り|フェス|マルシェ|展|ライトアップ|イルミ|募集|講座|体験会")
 _まとめ = re.compile(r"\d+選|まとめ|一覧|特集|ランキング|名店")   # 何軒も並べた記事の行は、どの店の時間か決められないので見ない
+_宿 = re.compile(r"宿|ホテル|旅館|民宿|温泉の宿")   # 宿は営業時間ではなくチェックインの時間なので見ない
 _URL = re.compile(r"https?://[^\s）)」］\]<>]+")
 
 
@@ -93,10 +94,17 @@ def main() -> None:
         for i in 塊["行"]:
             l = lines[i]
             本文 = l.split("（→")[0]
-            名 = (_名.findall(本文) or [None])[0]
-            if not 名 or 名 in 済み or _時間あり.search(本文) or "営業時間:" in l:
+            if _時間あり.search(本文) or "営業時間:" in l or _催し.search(本文) or _まとめ.search(本文):
                 continue
-            if not _店らしい.search(本文) or _催し.search(本文) or _まとめ.search(本文):
+            # 店の名前は、店らしい言葉がすぐ前後にある「」だけ（「カフェ「X」」「「X」がオープン」）。品物や言葉の「」をとらない
+            名 = None
+            for m in _名.finditer(本文):
+                近く = 本文[max(0, m.start() - 12): m.start()] + 本文[m.end(): m.end() + 12]   # 名前そのものは見ない（「にしんの寿司」の寿司）
+                if (_店らしい.search(近く) or _店らしい.search(m.group(1)) and re.search(r"^[がはでに、（(]|オープン|開店", 本文[m.end(): m.end() + 6])) \
+                        and not _宿.search(本文) and not re.search(r"コーナー|リニューアル|メニュー|限定", m.group(1)):
+                    名 = m.group(1)
+                    break
+            if not 名 or 名 in 済み:
                 continue
             if 開いた数 >= a.max:
                 break
