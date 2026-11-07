@@ -88,6 +88,13 @@ jobs:
           set -o pipefail
           node scripts/neta-collect.mjs | tee -a "$GITHUB_STEP_SUMMARY"
 
+      # お店の行で営業時間が無いものに、出典のページの営業時間・定休日を足す（AI を使わない。2026-11-07 運用部・石川：
+      # 出典に営業時間があるのに投稿に書かない店が続いた。作成はネタ帳の行だけを見るため）。失敗しても止めない
+      - name: お店の行に営業時間を足す
+        if: ${{ !inputs.dry_run }}
+        continue-on-error: true
+        run: python3 scripts/営業時間を足す.py --max 30
+
       # 追記が0件でも、「調べてほしいもの」欄から解決ぶんを消しただけの変更がありうる。
       # 変更の有無はステップの中で git diff で見ているので、ここでは絞らない。
       - name: コミットする
@@ -102,6 +109,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "${TARGET}"
+          [ -e neta/営業時間の確認.json ] && git add neta/営業時間の確認.json
           git commit -m "chore(neta): $(TZ=Asia/Tokyo date +%F) のぶんを追記"
           # 予約画面からの記録と衝突しうるので、rebase してから push する
           for attempt in 1 2 3 4; do
