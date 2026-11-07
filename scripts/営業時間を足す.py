@@ -82,7 +82,7 @@ def _抜き出す(文: str, 名: str) -> str | None:
         時刻 = re.compile(r"\d{1,2}[:：]\d{2}|\d{1,2}時|L\.?O")
         飛ばした = 0
         for l in 文[m.end():].split("\n"):
-            l = l.strip().lstrip("、,：:　 ").strip()
+            l = l.strip().lstrip("、,：:　 】」』）)").strip()   # 頭の「】」などを外す（2026-11-07 ぎふあいち：CHITAKA）
             if not l:
                 continue
             if 札 == "営業時間" and "定休" in l and 時刻.search(l.split("定休")[0]):
