@@ -44,21 +44,66 @@ def ページの文(url: str) -> str:
 
 
 def 抜き出す(文: str, 名: str) -> str | None:
-    """名前の載っているページの「営業時間」「定休日」のあとの文。名前の近くを先に見る。"""
+    """名前そのまま → 「（」や空白の前の短い名前、の順に探す（「HUM＆Go（ハムアンドゴー） 石川県立図書館カフェ」→「HUM＆Go」）。"""
+    for n in dict.fromkeys([名, re.split(r"[（(\s]", 名)[0]]):
+        if len(re.sub(r"\s", "", n)) >= 3:
+            v = _抜き出す(文, n)
+            if v:
+                return v
+    return None
+
+
+def _抜き出す(文: str, 名: str) -> str | None:
+    """名前の載っているページの「営業時間」「定休日」のあとの文。名前のすぐ後ろ（店の紹介の欄）にあるものだけ。
+    2026-11-07 運用部・石川：
+    - 「8番らーめん 入江店」に、関連記事の欄に名前が出ていただけの別の店（みのる陶器）の時間が入った
+      → 「…」「»」のある行（関連記事の見出し）の名前は数えない。名前の前200字〜後ろ1500字の中の欄だけ見る
+    - HUM＆Go で「平日 9:00～19:00」だけ写り、次の行の「土日祝 9:00～18:00」が抜けた → 時間の続きの行もつなげる"""
     型 = r"\s*".join(re.escape(c) for c in re.sub(r"\s+", "", 名))
-    位置 = [m.start() for m in re.finditer(型, 文)]
+    位置 = []
+    for m in re.finditer(型, 文):
+        行 = 文[文.rfind("\n", 0, m.start()) + 1: (文.find("\n", m.end()) + 1 or len(文))]
+        if "…" in 行 or "»" in 行 or "..." in 行:
+            continue
+        位置.append(m.start())
     if not 位置:
         return None
     出 = {}
     for 札 in ("営業時間", "定休日"):
-        候補 = [m for m in re.finditer(rf"{札}\s*[:：]?\s*(?:は)?\s*([^\n]{{2,70}})", 文)]
+        候補 = []
+        for m in re.finditer(rf"{札}\s*[:：]?\s*(?:は)?", 文):
+            近さ = [m.start() - p for p in 位置 if -200 <= m.start() - p <= 1500]
+            if 近さ:
+                候補.append((min(abs(x) for x in 近さ), m))
         if not 候補:
             continue
-        m = min(候補, key=lambda m: min(abs(m.start() - p) for p in 位置))
-        v = m.group(1).strip().rstrip("。").strip()
+        m = min(候補, key=lambda x: x[0])[1]
+        行たち = []
+        時刻 = re.compile(r"\d{1,2}[:：]\d{2}|\d{1,2}時|L\.?O")
+        飛ばした = 0
+        for l in 文[m.end():].split("\n"):
+            l = l.strip().lstrip("、,：:　 ").strip()
+            if not l:
+                continue
+            if 札 == "営業時間" and "定休" in l and 時刻.search(l.split("定休")[0]):
+                l = l.split("定休")[0].strip(" /／・、")   # 「10:00〜19:00 定休日 / 水曜日」の前だけ
+            if 札 == "営業時間":
+                # 営業時間の行は、時刻のある行だけ。頭の時刻の無い行（「変更のお知らせ」など）は2行まで飛ばす
+                if not 時刻.search(l) or re.search(r"オープン|開店|定休|休業|お知らせ", l):
+                    if 行たち or 飛ばした >= 2:
+                        break
+                    飛ばした += 1
+                    continue
+            行たち.append(l)
+            if 札 == "定休日" or len(行たち) >= 3 or len("／".join(行たち)) > 90:
+                break
+        v = " ／ ".join(行たち).rstrip("。").strip()
+        if 札 == "定休日" and re.search(r"\d{4}[./]\d{1,2}[./]\d{1,2}.*\d{4}[./]\d{1,2}", v):
+            continue   # 日付の並び（休みの日の暦）は写さない
         if 札 == "営業時間" and not re.search(r"\d", v):
             continue
-        出[札] = v[:70]
+        if v:
+            出[札] = v[:110]
     if "営業時間" not in 出:
         return None
     return "／".join(f"{k}: {v}" for k, v in 出.items())
