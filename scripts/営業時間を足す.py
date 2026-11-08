@@ -1,4 +1,4 @@
-"""ネタ帳のお店の行に、出典のページにある営業時間・定休日を足す（AI を使わない）。
+"""ネタ帳のお店の行に、出典のページにある営業時間・定休日を足す。催しの行には会場・日時・料金を足す（AI を使わない）。
 
 2026-11-07 運用部・石川：出典に営業時間があるのに投稿に書かない店が3本（日常茶飯・Cucuri・焼肉たなか）。
 翌日ぶんの作成はネタ帳の行だけを見て書くので、行に無い営業時間は投稿にも入らない。
@@ -97,7 +97,7 @@ def _抜き出す(文: str, 名: str) -> str | None:
             行たち.append(l)
             if 札 == "定休日" or len(行たち) >= 3 or len("／".join(行たち)) > 90:
                 break
-        v = " ／ ".join(行たち).rstrip("。").strip()
+        v = " ／ ".join(行たち).rstrip("。").strip().replace("［", "（").replace("］", "）")
         # 記事の地の文（「営業時間は9:00〜22:00で定休日はなく、40席を…」）から拾ったときの、文の続きを落とす（2026-11-07 ぎふあいち）
         if 札 == "営業時間":
             v = re.sub(r"(で|、|，|,)$", "", v.split("。")[0]).strip()
@@ -114,6 +114,65 @@ def _抜き出す(文: str, 名: str) -> str | None:
     if "営業時間" not in 出:
         return None
     return "／".join(f"{k}: {v}" for k, v in 出.items())
+
+
+# 催しの行には、出典のページの「会場」「日時」「料金」の欄を足す（2026-11-08 運用部・石川：サーカスエコロジカルの会場・開演・料金が
+# 出典にあるのに投稿に無かった）。欄の名前が行の頭にあるもの（表や「会場：…」の形）だけを見る。地の文の「チケットは好評発売中」などはとらない
+_催しの欄 = {
+    "会場": (r"会場名|会場|開催場所|開催地|場所", None),
+    "日時": (r"開催日時|日時|開催時間|時間|開演", re.compile(r"\d{1,2}[:：]\d{2}|\d{1,2}時")),
+    "料金": (r"チケット料金|観覧料金|入館料金|入場料金|参加料金|料金|入場料|参加費|観覧料|入館料", re.compile(r"円|無料")),
+}
+
+
+_欄の頭 = re.compile(r"^[・\s]*(?:会場|開催場所|開催地|場所|開催日時|日時|開催時間|時間|開演|チケット|料金|入場料|参加費|観覧料|入館料|問合せ|問い合わせ|主催|対象|定員|申込|申し込み|内容|所在地|休館日|休日)")
+
+
+def 催しの欄(文: str, 名: str) -> str | None:
+    for n in dict.fromkeys([名, re.split(r"[（(\s]", 名)[0]]):
+        if len(re.sub(r"\s", "", n)) < 3:
+            continue
+        型 = r"\s*".join(re.escape(c) for c in re.sub(r"\s+", "", n))
+        位置 = []
+        for m in re.finditer(型, 文):
+            行 = 文[文.rfind("\n", 0, m.start()) + 1: (文.find("\n", m.end()) + 1 or len(文))]
+            if "…" not in 行 and "»" not in 行:
+                位置.append(m.start())
+        if not 位置:
+            continue
+        出 = {}
+        for 札, (語, 要る) in _催しの欄.items():
+            候補 = []
+            # 欄の名前は、行の頭にあって、そのあとが「：」か行の終わりのものだけ（「会場名」の「名」、「料金」の「金」を拾わない）
+            for m in re.finditer(rf"(?m)^[ \t・]*(?:{語})(?:[ \t]*[:：][ \t]*|[ \t]*$|[ \t]+(?=\S))", 文):
+                近さ = [m.start() - p for p in 位置 if -300 <= m.start() - p <= 3000]
+                if 近さ:
+                    候補.append((min(abs(x) for x in 近さ), m))
+            for _, m in sorted(候補, key=lambda x: x[0]):
+                行たち = []
+                for l in 文[m.end():].split("\n"):
+                    l = l.strip()
+                    if not l:
+                        continue
+                    if not 行たち and (len(l) < 2 or re.match(r"[・は]|について|内容|所在地", l) or _欄の頭.match(l)):
+                        break   # 欄の中身ではない（見出しの続き・別の欄）
+                    if 行たち and (len(行たち) >= 2 or l.startswith(("※", "《", "【注")) or _欄の頭.match(l)
+                                   or re.search(r"[:：]\s*$|問合せ|問い合わせ|主催|アクセス|駐車|所在地|休日|休館|所要時間|持ち物|公式サイト|同時開催|開催エリア", l)):
+                        break
+                    行たち.append(l)
+                    if 札 == "会場":
+                        break
+                v = " ／ ".join(行たち).split("。")[0].strip()
+                v = re.sub(r"\s*(?:／\s*)?(?:地図を見る|公式ホームページ|公式サイト|詳しくはこちら|MAP|持ち物|同時開催.*|開催エリア.*)\s*$", "", v).strip()
+                v = v.replace("［", "（").replace("］", "）")   # 行の［…］の形がこわれないように
+                if re.fullmatch(r"名称|会場|場所|名|内容", v):
+                    continue
+                if v and (要る is None or 要る.search(v)) and len(v) <= 120:
+                    出[札] = v
+                    break
+        if 出:
+            return "／".join(f"{k}: {v}" for k, v in 出.items())
+    return None
 
 
 def 区切り(lines: list[str]):
@@ -146,7 +205,32 @@ def main() -> None:
         for i in 塊["行"]:
             l = lines[i]
             本文 = l.split("（→")[0]
-            if _時間あり.search(本文) or "営業時間:" in l or _催し.search(本文) or _まとめ.search(本文):
+            if "営業時間:" in l or "会場:" in l or "日時:" in l or _まとめ.search(本文):
+                continue
+            if _催し.search(本文):
+                # 催しの行：時刻か料金が行に無いものだけ。名前は「」の最初のもの
+                if re.search(r"\d{1,2}[:：]\d{2}", 本文) and re.search(r"円|無料", 本文):
+                    continue
+                名 = (_名.findall(本文) or [None])[0]
+                if not 名 or ("催し:" + 名) in 済み or 開いた数 >= a.max:
+                    continue
+                urls = [u for u in _URL.findall(l) if "instagram.com" not in u] + [u for u in 塊["出典"] if "instagram.com" not in u]
+                見つけた = None
+                for u in dict.fromkeys(urls):
+                    if u not in 開いた:
+                        開いた[u] = ページの文(u)
+                        開いた数 += 1
+                    v = 催しの欄(開いた[u], 名)
+                    if v:
+                        見つけた = (v, u)
+                        break
+                済み["催し:" + 名] = 見つけた[1] if 見つけた else ""
+                if 見つけた:
+                    lines[i] = l.rstrip() + f" ［{見つけた[0]}（{見つけた[1]}）］"
+                    足した += 1
+                    print(f"足した（催し）：「{名}」 {見つけた[0]}")
+                continue
+            if _時間あり.search(本文):
                 continue
             # 店の名前は、店らしい言葉がすぐ前後にある「」だけ（「カフェ「X」」「「X」がオープン」）。品物や言葉の「」をとらない
             名 = None
