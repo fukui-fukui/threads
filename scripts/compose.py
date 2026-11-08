@@ -638,6 +638,7 @@ def build_prompt(board: str, neta: str, articles: str, works: str, recent: str, 
         "    返信が付いたのは「1つだけ挙げるなら」＋はっきりした場面＋地元の人のおすすめを聞く形だけ。紅葉・ドライブ・温泉の話題でも、この形に寄せる",
         "  ・**いちばん返信が付くのは、暮らしの中の合図・習慣を聞く形**（地元の人なら誰でも自分の答えを持っているもの）。選択肢は無くてもよい",
         "    （2026-11-01 運用部・福井の週の集計：「『冬が来たな』と感じる瞬間を1つ」返信9＝タイヤ交換・霜・ブリ起こし・スコップ／「電車で出かけるなら、どの線」返信11／「体が温まるもの」返信3）",
+        "  ・**とくに反応がよいのは「土地の言葉」「冬の支度」「家の中の定番」の題材**（2026-11-08 運用部・福井の週の集計：11/6「福井の言葉が通じなかったこと」が返信35・いいね19で過去いちばん、返信どうしの会話も起きた。11/2「雪の前の支度」返信6。答えを自由に出せる問いほど伸びる）。同じ問いを14日あける決まりの中で、この3つの切り口を多めに使う",
         "  × **観光地・催しの名前を並べて選ばせる問いは作らない。** 返信0件が3日続いた（10/28「紅葉を1か所だけ」・10/29「駅で1時間空いたら、どこをすすめる」・10/30「秋の行事に出かけるなら、どれ」）。石川の振り返りでも「観光向けの選択肢は外れて見える」",
         "    題材が紅葉・行事・出かける先でも、暮らしの側から聞く（例：「紅葉を見ると思い出す、子どものころの場所」「この時期、家でまず出すもの」「雪の前に、毎年かならずやること」）",
         "",
@@ -2740,6 +2741,14 @@ def 予備にする(posts: list[dict], target_date, 記: dict, 今日の出典: 
 問いの時 = 14
 
 
+def 店の事実がある(text: str) -> bool:
+    """営業時間（時刻）・定休日（曜日）・住所（番地）など、お店の中身の事実が文にあるか。
+    「営業時間や定休日は、お店のInstagramで確かめて」のような、確かめを促す文の言葉は数えない
+    （2026-11-08 運用部・石川：杏仁豆腐TOKYO が、この文の「営業時間」で Instagram だけの予備の確かめを通った）。"""
+    文 = "\n".join(l for l in re.split(r"(?<=[。\n])", text or "") if not re.search(r"確かめ|ご確認|確認して|でご覧|Instagramで", l))
+    return bool(re.search(r"\d{1,2}[:：]\d{2}|\d{1,2}時[〜～\-－から]|定休日?[はは：:\s]*[月火水木金土日不毎第年]|[町丁目]\d|\d+[-－]\d+", 文))
+
+
 def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出典: set[str], existing_ids: set[str], 名記: dict | None = None) -> list[str]:
     """空いた枠を予備で埋める。15時（PR）は埋めない。使ったものは予備から消す。"""
     予備 = 予備を読む()
@@ -2770,7 +2779,7 @@ def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出�
             continue
         urls = source_urls(x.get("text", ""), x.get("thread") or [])
         _全文 = "\n".join([x.get("text", ""), *(x.get("thread") or [])])
-        if urls and all("instagram.com" in u for u in urls) and not re.search(r"営業時間|住所|定休|\d{1,2}[:：]\d{2}", _全文):
+        if urls and all("instagram.com" in u for u in urls) and not 店の事実がある(_全文):
             # 出典が Instagram だけで、営業時間・住所などの事実が無いお店の文は予備から入れない（2026-11-05 運用部・石川：SOU・杏仁豆腐TOKYO）
             print(f"::warning::予備の文は出典が Instagram だけで中身の事実が無いので使いません：{x['text'].splitlines()[0][:40]}")
             continue
@@ -3298,7 +3307,7 @@ def main() -> None:
 
             # 出典が Instagram だけで、営業時間・住所などの事実が無いお店の文は本枠にも入れない（予備で埋める。2026-11-06 運用部・石川：joujou・KAYA Cafe）
             _urls = source_urls(text, thread)
-            if _urls and all("instagram.com" in u for u in _urls) and not re.search(r"営業時間|住所|定休|\d{1,2}[:：]\d{2}", "\n".join([text, *thread])):
+            if _urls and all("instagram.com" in u for u in _urls) and not 店の事実がある("\n".join([text, *thread])):
                 落とす(f"{hour}:00 は出典が Instagram だけで、営業時間・住所などの事実がありません（2026-11-06 運用部・石川）。")
 
             if (古 := 古い催し(text, target_date)) and not 季節の期間中(text, target_date):
