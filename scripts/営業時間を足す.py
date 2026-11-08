@@ -128,6 +128,29 @@ _催しの欄 = {
 _欄の頭 = re.compile(r"^[・\s]*(?:会場|開催場所|開催地|場所|開催日時|日時|開催時間|時間|開演|チケット|料金|入場料|参加費|観覧料|入館料|問合せ|問い合わせ|主催|対象|定員|申込|申し込み|内容|所在地|休館日|休日)")
 
 
+def _月日(t: str) -> set[tuple[int, int]]:
+    出 = set()
+    for m in re.finditer(r"(\d{1,2})月(\d{1,2})日|(?<![\d/])(\d{1,2})/(\d{1,2})(?![\d/])", t or ""):
+        月, 日 = (m.group(1), m.group(2)) if m.group(1) else (m.group(3), m.group(4))
+        if 1 <= int(月) <= 12 and 1 <= int(日) <= 31:
+            出.add((int(月), int(日)))
+    return 出
+
+
+def 日付が合う(行: str, 値: str) -> bool:
+    """欄の日時に日付があり、行の日付（期間ならその間）と一つも重ならなければ、別の日の催しとみる
+    （2026-11-08 ぎふあいち：東山動植物園秋まつりに、期間の中の1つの催しの「①10/18 ②11/15」が入った）。"""
+    行の, 値の = _月日(行), _月日(値)
+    if not 行の or not 値の:
+        return True
+    if 値の & 行の:
+        return True
+    # 期間の行（2日以上）は、欄の日時に始まりか終わりの日があるときだけ同じ催しとみる（期間の中の別の小さな催しの日時をとらない）
+    if len(行の) >= 2:
+        return bool(値の & {min(行の), max(行の)})
+    return False
+
+
 def 催しの欄(文: str, 名: str) -> str | None:
     for n in dict.fromkeys([名, re.split(r"[（(\s]", 名)[0]]):
         if len(re.sub(r"\s", "", n)) < 3:
@@ -139,6 +162,9 @@ def 催しの欄(文: str, 名: str) -> str | None:
             if "…" not in 行 and "»" not in 行:
                 位置.append(m.start())
         if not 位置:
+            continue
+        # 名前がページの頭（8000字まで）に無いのは、別の催しのページか一覧（2026-11-08 ぎふあいち：茶臼山高原まつりに別サイトの夜の催しの時間）
+        if min(位置) > 8000:
             continue
         出 = {}
         for 札, (語, 要る) in _催しの欄.items():
@@ -157,7 +183,7 @@ def 催しの欄(文: str, 名: str) -> str | None:
                     if not 行たち and (len(l) < 2 or re.match(r"[・は]|について|内容|所在地", l) or _欄の頭.match(l)):
                         break   # 欄の中身ではない（見出しの続き・別の欄）
                     if 行たち and (len(行たち) >= 2 or l.startswith(("※", "《", "【注")) or _欄の頭.match(l)
-                                   or re.search(r"[:：]\s*$|問合せ|問い合わせ|主催|アクセス|駐車|所在地|休日|休館|所要時間|持ち物|公式サイト|同時開催|開催エリア", l)):
+                                   or re.search(r"[:：]\s*$|問合せ|問い合わせ|主催|アクセス|駐車|所在地|休日|休館|所要時間|持ち物|公式サイト|同時開催|開催エリア|No\.|団体名|出演|一覧", l)):
                         break
                     行たち.append(l)
                     if 札 == "会場":
@@ -221,6 +247,8 @@ def main() -> None:
                         開いた[u] = ページの文(u)
                         開いた数 += 1
                     v = 催しの欄(開いた[u], 名)
+                    if v and not 日付が合う(本文, (re.search(r"日時: (.*?)(?=／(?:会場|料金): |$)", v) or [None, ""])[1]):
+                        v = re.sub(r"／?日時: .*?(?=／(?:会場|料金): |$)", "", v).strip("／") or None
                     if v:
                         見つけた = (v, u)
                         break
