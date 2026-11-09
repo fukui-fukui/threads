@@ -34,6 +34,8 @@ SKIP = {
     # （2026-10-23 写し直しで、ぎふあいちに福井の市町・宿のページと掲載申し込みのページが混ざった）
     "docs/area", "docs/stay", "docs/spot", "docs/weekend", "docs/reel", "docs/ig",
     "docs/submit", "docs/tokushoho", "docs/contact",
+    # 有料案件（PR枠）は県ごとの申し込みなので写さない（2026-11-09 開発・ぎふあいち：福井のほめ達の PR 枠が、ぎふあいちのサイトに約2分出た）
+    "neta/PR枠.json", "docs/pr",
     "scripts/_アーカイブ", "scripts/地域の写し.py",
     # 予算の見張りは福井のリポジトリでまとめて行う（石川の分も足す）
     "予算.json", "scripts/予算.mjs", ".github/workflows/budget-check.yml",
