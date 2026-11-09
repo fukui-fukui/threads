@@ -12,15 +12,23 @@
 台本.json（文字は出典で確かめた事実だけ）:
   {
     "date": "10/24(土)・25(日)",
+    "title": "来週末の福井",   ← 省略すると「来週末の福井」。週の途中に出すときは「今週末の福井」
     "scenes": [
       {"clip": "1.mp4", "name": "福井そば博2026", "date": "10/24(土)・25(日)",
-       "place": "福井駅前 ハピリン", "point": "そばの食べ比べ9ブース", "start": 1.5},
-      ... 3つ（start は使い始めの秒。省略すると頭から）
+       "place": "福井駅前 ハピリン", "point": "そばの食べ比べ9ブース", "start": 1.5,
+       "source": "福井市の公式サイト"},
+      ... 3つ（start は使い始めの秒。省略すると頭から。source は左下に出す出典の札。省略すると出さない）
     ]
   }
   clip は台本.json からの相対パスでもよい。静止画（.png・.jpg）なら、ゆっくり寄る5秒の動画にする。
 
 BGM は公開リポジトリに入れない（代表の手元・Google ドライブ AI会社/BGM から持ってくる）。
+
+テロップの動き（2026-11-07 代表「おでかけ動画だけでなくクライアント用、モーショングラフィックスの動画制作もするので参考になるものは入れて」）:
+  - 名前と題は 0 → 1.15 → 1.0 に弾んで出る（約8コマ、場面の頭から3コマ遅らせる）。白い文字に黒い縁
+  - 出典の札は左から滑り込む
+  考え方は Vincentwei1021/mg-styles-15（MIT License, Copyright (c) 2026 Vincentwei1021）の
+  prompts/18-hanazi.md と、lemomo-ai/lemo-opuscar の styles/caption-news/STYLE.md を参考にした。コードは借りていない。
 """
 from __future__ import annotations
 
@@ -39,12 +47,30 @@ INTRO_SEC = 2.5
 OUTRO_SEC = 2.5
 ORANGE = "0xE8873A"
 YELLOW = "0xFFD54F"
+TITLE = "来週末の福井"
 NOTE_IMAGE = "※画像はイメージです"
 NOTE_OFFICIAL = "日時・内容は公式の情報をご確認ください"
 HANDLES = {
     "threads": ["@fukui._.fukui"],
     "ig": ["@fukui._fukui", "（プロフィールのリンクから）"],
 }
+
+
+POP_DELAY = 3 / FPS   # 場面の頭から少し遅らせて出す
+POP_UP = 4 / FPS      # 0 → 1.15
+POP_DOWN = 4 / FPS    # 1.15 → 1.0
+
+
+def 弾む(size: int) -> str:
+    """fontsize の式：size の 0 → 1.15 → 1.0 に弾む。"""
+    a, b, c = POP_DELAY, POP_DELAY + POP_UP, POP_DELAY + POP_UP + POP_DOWN
+    return (f"'{size}*if(lt(t,{a:.4f}),0.01,if(lt(t,{b:.4f}),max(0.01,1.15*(t-{a:.4f})/{POP_UP:.4f}),"
+            f"if(lt(t,{c:.4f}),1.15-0.15*(t-{b:.4f})/{POP_DOWN:.4f},1)))'")
+
+
+def 中心(y: int, size: int) -> str:
+    """弾む文字は大きさが変わるので、行の中心を固定する。"""
+    return f"{y + size // 2}-th/2"
 
 
 class 文字:
@@ -54,8 +80,8 @@ class 文字:
         self.tmp = tmp
         self.n = 0
 
-    def __call__(self, text: str, size: int, y: str, color: str = "white", x: str = "(w-tw)/2",
-                 box: str | None = None, shadow: bool = True) -> str:
+    def __call__(self, text: str, size: int | str, y: str, color: str = "white", x: str = "(w-tw)/2",
+                 box: str | None = None, shadow: bool = True, border: bool = False) -> str:
         self.n += 1
         f = self.tmp / f"t{self.n}.txt"
         f.write_text(text, encoding="utf-8")
@@ -63,6 +89,8 @@ class 文字:
                 f"x={x}", f"y={y}"]
         if box:
             opts += ["box=1", f"boxcolor={box}", "boxborderw=12"]
+        if border:
+            opts += ["borderw=3", "bordercolor=black@0.8"]
         if shadow:
             opts += ["shadowcolor=black@0.6", "shadowx=2", "shadowy=2"]
         return "drawtext=" + ":".join(opts)
@@ -98,6 +126,7 @@ def 組み立て(台本: dict, base: Path, out: Path, kind: str, bgm: Path | Non
     t = 文字(tmp)
     scenes = 台本["scenes"]
     n = len(scenes)
+    title = 台本.get("title", TITLE)
     inputs: list[str] = []
     chains: list[str] = []
 
@@ -115,8 +144,8 @@ def 組み立て(台本: dict, base: Path, out: Path, kind: str, bgm: Path | Non
         f"{元(scenes, 0)}{正規化()},trim=0:{INTRO_SEC},setpts=PTS-STARTPTS,gblur=sigma=18,"
         "drawbox=x=0:y=0:w=iw:h=ih:color=black@0.35:t=fill,"
         + ",".join([
-            t("来週末の福井", 64, "430"),
-            t(f"おでかけ{n}選", 104, "520", box=f"{ORANGE}@0.95"),
+            t(title, 64, "430"),
+            t(f"おでかけ{n}選", 弾む(104), 中心(520, 104), box=f"{ORANGE}@0.95"),
             t(台本["date"], 52, "690", color=YELLOW),
             t(NOTE_IMAGE, 24, "h-th-30", x="w-tw-24"),
         ])
@@ -125,16 +154,23 @@ def 組み立て(台本: dict, base: Path, out: Path, kind: str, bgm: Path | Non
 
     # 各場面：上に帯、帯の中に見出し・名前・日にち・場所・見どころ、右下に注記
     for i, s in enumerate(scenes):
+        name_size = 大きさ(s["name"], 56)
+        source = []
+        if s.get("source"):
+            # 出典の札：0.4 秒から 0.2 秒で左から滑り込む
+            source = [t(f"出典：{s['source']}", 22, "h-th-30", x="'-tw+min(1,max(0,(t-0.4)/0.2))*(24+tw)'",
+                        box="black@0.55", shadow=False)]
         chains.append(
             f"{元(scenes, i)}{正規化()},trim=0:{SCENE_SEC},setpts=PTS-STARTPTS,"
             "drawbox=x=0:y=40:w=iw:h=360:color=black@0.45:t=fill,"
             + ",".join([
-                t(f"来週末の福井 おでかけ{n}選 {i + 1}/{n}", 28, "62", box=f"{ORANGE}@1", shadow=False),
-                t(s["name"], 大きさ(s["name"], 56), "130"),
+                t(f"{title} おでかけ{n}選 {i + 1}/{n}", 28, "62", box=f"{ORANGE}@1", shadow=False),
+                t(s["name"], 弾む(name_size), 中心(130, name_size), border=True),
                 t(s["date"], 大きさ(s["date"], 40), "212", color=YELLOW),
                 t(s["place"], 大きさ(s["place"], 34), "275"),
                 t(s["point"], 大きさ(s["point"], 34), "330"),
                 t(NOTE_IMAGE, 24, "h-th-30", x="w-tw-24"),
+                *source,
             ])
             + f"[s{i}]"
         )

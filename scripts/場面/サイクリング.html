@@ -1,0 +1,102 @@
+<!doctype html>
+<meta charset="utf-8">
+<!-- 鯖街道サイクリングの場面：秋の昼、川沿いの平らな道を、親子が自転車で走っていく後ろ姿。顔・文字は描かない -->
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="c" width="720" height="1280"></canvas>
+<script src="共通.js"></script>
+<script>
+const VY = 690;  // 地平線
+
+function 自転車の人(x, y, s, t, k, helmet, coat) {
+  // 後ろから見た自転車と人（顔は見えない）
+  const pedal = Math.sin(t * 7 + k);
+  const sway = 3 * s * Math.sin(t * 7 + k);
+  g.save(); g.translate(x + sway * 0.3, y);
+  // うしろの車輪（後ろからは細長く見える）
+  g.fillStyle = '#222';
+  g.beginPath(); g.ellipse(0, -30 * s, 7 * s, 30 * s, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = 'rgba(0,0,0,0.25)';
+  g.beginPath(); g.ellipse(0, 0, 26 * s, 6 * s, 0, 0, Math.PI * 2); g.fill();
+  // 足（ペダルをこぐ）
+  g.strokeStyle = '#2f3b4f'; g.lineWidth = 9 * s; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(-8 * s, -82 * s); g.lineTo(-13 * s, (-46 + 10 * pedal) * s); g.stroke();
+  g.beginPath(); g.moveTo(8 * s, -82 * s); g.lineTo(13 * s, (-46 - 10 * pedal) * s); g.stroke();
+  // サドルと体
+  g.fillStyle = '#111'; g.fillRect(-10 * s, -86 * s, 20 * s, 6 * s);
+  g.fillStyle = coat;
+  g.beginPath(); g.ellipse(sway * 0.2, -118 * s, 20 * s, 34 * s, 0, 0, Math.PI * 2); g.fill();
+  // 腕（ハンドルへ）
+  g.strokeStyle = coat; g.lineWidth = 8 * s;
+  g.beginPath(); g.moveTo(-16 * s, -132 * s); g.lineTo(-26 * s, -104 * s); g.stroke();
+  g.beginPath(); g.moveTo(16 * s, -132 * s); g.lineTo(26 * s, -104 * s); g.stroke();
+  // 髪とヘルメット
+  g.fillStyle = '#2b211c';
+  g.beginPath(); g.arc(sway * 0.2, -158 * s, 13 * s, 0, Math.PI * 2); g.fill();
+  g.fillStyle = helmet;
+  g.beginPath(); g.ellipse(sway * 0.2, -166 * s, 16 * s, 11 * s, 0, Math.PI, Math.PI * 2); g.fill();
+  g.fillRect(sway * 0.2 - 16 * s, -167 * s, 32 * s, 4 * s);
+  g.restore();
+}
+
+function 木(x, y, s, color) {
+  g.fillStyle = '#5a3d26'; g.fillRect(x - 4 * s, y - 40 * s, 8 * s, 40 * s);
+  g.fillStyle = color;
+  g.beginPath(); g.arc(x, y - 60 * s, 30 * s, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.arc(x - 18 * s, y - 46 * s, 20 * s, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.arc(x + 18 * s, y - 46 * s, 20 * s, 0, Math.PI * 2); g.fill();
+}
+
+window.renderAt = (t) => {
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = 縦グラデ(0, VY, [[0, '#4f9fdc'], [1, '#cfe7f5']]);
+  g.fillRect(0, 0, W, VY + 2);
+  g.fillStyle = 'rgba(255,255,255,0.9)';
+  [[80, 470, 1], [430, 520, 0.7], [600, 445, 0.9]].forEach(([x, y, s], i) => {
+    const dx = t * (5 + i * 2);
+    [[0, 0, 34], [32, -10, 30], [64, 0, 32], [32, 8, 30]].forEach(([ox, oy, rr]) => {
+      g.beginPath(); g.arc(x + dx + ox * s, y + oy * s, rr * s, 0, Math.PI * 2); g.fill();
+    });
+  });
+  山(21, VY - 10, 110, '#a7b0a8');
+  山(25, VY, 70, '#c9733d');
+  // 田んぼ（刈り取りのあと）
+  g.fillStyle = '#c9a85c';
+  g.fillRect(0, VY, W, H - VY);
+  g.strokeStyle = 'rgba(140,105,45,0.45)'; g.lineWidth = 2;
+  for (let i = 0; i < 26; i++) {  // 地平線へ集まる株の列
+    const xb = -600 + i * 80;
+    g.beginPath(); g.moveTo(W / 2 + (xb - W / 2) * 0.02, VY); g.lineTo(xb, H); g.stroke();
+  }
+  // 川（左）
+  g.fillStyle = '#5b9ec9';
+  g.beginPath(); g.moveTo(200, VY); g.lineTo(250, VY); g.lineTo(60, H); g.lineTo(-260, H); g.closePath(); g.fill();
+  const r = 乱数(17);
+  for (let i = 0; i < 30; i++) {  // 水面のきらめき
+    const v = r(), y = VY + v * v * (H - VY), w = 4 + v * 26;
+    const xl = 200 + (-260 - 200) * ((y - VY) / (H - VY)), xr = 250 + (60 - 250) * ((y - VY) / (H - VY));
+    const x = xl + r() * (xr - xl);
+    g.fillStyle = `rgba(255,255,255,${0.5 * ゆらぎ(t, i)})`;
+    g.fillRect(x, y, w, 2 + v * 2);
+  }
+  // 土手の草
+  g.fillStyle = '#7f9a4a';
+  g.beginPath(); g.moveTo(250, VY); g.lineTo(290, VY); g.lineTo(200, H); g.lineTo(60, H); g.closePath(); g.fill();
+  // 道
+  g.fillStyle = '#9b958a';
+  g.beginPath(); g.moveTo(300, VY); g.lineTo(340, VY); g.lineTo(560, H); g.lineTo(200, H); g.closePath(); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,0.8)'; g.lineWidth = 3;
+  g.setLineDash([30, 26]); g.lineDashOffset = t * 60;
+  g.beginPath(); g.moveTo(320, VY); g.lineTo(380, H); g.stroke();
+  g.setLineDash([]);
+  // 道ぞいの木
+  [[400, 760, 0.6, '#d9622b'], [470, 850, 0.9, '#e8a03a'], [580, 980, 1.4, '#c94f2b'], [690, 1160, 2, '#e08a33']].forEach(([x, y, s, c]) => 木(x, y, s, c));
+  // 親子（遠ざかっていく）
+  const p = t / 5;
+  const yA = 1150 - 90 * p, sA = 1.25 - 0.18 * p;
+  const yC = 1095 - 80 * p, sC = 0.95 - 0.14 * p;
+  自転車の人(330 + 10 * p, yA, sA, t, 0, '#e8873a', '#3d5a80');
+  自転車の人(420 + 6 * p, yC, sC, t, 1.3, '#4fb0c6', '#c0504d');
+  紅葉(t, 8, 31, [380, W, 600, H]);
+};
+renderAt(0);
+</script>

@@ -61,6 +61,30 @@ class リールのテスト(unittest.TestCase):
         self.assertEqual(fc.count("zoompan"), 2)  # はじめと1場面目
         self.assertNotIn("[1:v]scale=1440", fc)
 
+    def test_題を今週末に変えられる(self):
+        with tempfile.TemporaryDirectory() as d:
+            リール.組み立て({**台本, "title": "今週末の福井"}, Path("/x"), Path(d) / "o.mp4", "ig", None, Path(d),
+                         dry_run=True)
+            texts = [p.read_text(encoding="utf-8") for p in Path(d).glob("t*.txt")]
+        self.assertIn("今週末の福井", texts)
+        self.assertIn("今週末の福井 おでかけ3選 1/3", texts)
+        self.assertFalse(any("来週末" in x for x in texts))
+
+    def test_名前と題は弾んで出る(self):
+        cmd, _ = self.作る("ig")
+        fc = cmd[cmd.index("-filter_complex") + 1]
+        self.assertEqual(fc.count("1.15*(t-"), 4)  # 題＋3場面の名前
+        self.assertEqual(fc.count("borderw=3"), 3)
+
+    def test_出典の札は書いたときだけ出す(self):
+        _, t = self.作る("ig")
+        self.assertFalse(any(x.startswith("出典：") for x in t))
+        台本4 = {**台本, "scenes": [{**台本["scenes"][0], "source": "敦賀市の公式サイト"}, *台本["scenes"][1:]]}
+        with tempfile.TemporaryDirectory() as d:
+            リール.組み立て(台本4, Path("/x"), Path(d) / "o.mp4", "ig", None, Path(d), dry_run=True)
+            texts = [p.read_text(encoding="utf-8") for p in Path(d).glob("t*.txt")]
+        self.assertIn("出典：敦賀市の公式サイト", texts)
+
 
 if __name__ == "__main__":
     unittest.main()
