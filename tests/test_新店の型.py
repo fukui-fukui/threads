@@ -135,7 +135,10 @@ class PromptCacheTest(unittest.TestCase):
             self.assertEqual(中[0]["cache_control"], {"type": "ephemeral"})
             self.assertEqual(中[0]["text"], 頭)
             self.assertIn("12:00", 中[1]["text"])
-            self.assertEqual(len(compose.送る中身(頭)), 1)
+            # 1回目も塊を2つにして、聞き直しと同じ形にする（2026-11-09：塊1つだと聞き直しでキャッシュが読まれなかった）
+            一回目 = compose.送る中身(頭)
+            self.assertEqual(len(一回目), 2)
+            self.assertEqual(一回目[0], 中[0])
             self.assertEqual(compose.送る中身("別の指示"), "別の指示")
         finally:
             compose.共通の頭 = ""
