@@ -142,3 +142,16 @@ class NightShopTest(unittest.TestCase):
         self.assertIsNotNone(compose.合わない理由(t, date(2026, 11, 6), 12))
         self.assertIsNone(compose.合わない理由(t, date(2026, 11, 6), 17))
         self.assertIsNone(compose.合わない理由("営業時間は11:00〜16:00です。", date(2026, 11, 6), 12))
+
+
+class SpareDedupeTest(unittest.TestCase):
+    """2026-11-09 運用部・ぎふあいち：同じ施設の予備が何本もたまった"""
+
+    def test_same_facility_not_added_twice(self):
+        from datetime import date
+        p = lambda t: {"text": t, "thread": ["出典元：https://example.com/" + str(abs(hash(t)) % 1000)], "until": "常設"}
+        出 = compose.予備にする([p("下呂市の「下呂温泉合掌村」は合掌造りの村です。"), p("下呂市の「下呂温泉合掌村」は合掌造りの家が並ぶ村です。")],
+                            date(2026, 11, 10), {}, set(), 既にある名=set())
+        self.assertEqual(len(出), 1)
+        出 = compose.予備にする([p("名古屋の「でんきの科学館」は入館無料です。")], date(2026, 11, 10), {}, set(), 既にある名={"でんきの科学館"})
+        self.assertEqual(出, [])

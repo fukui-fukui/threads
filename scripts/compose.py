@@ -2706,14 +2706,25 @@ def 予備の決まり(数: int, target_date) -> list[str]:
         "- 形はふつうの紹介枠と同じ。THREAD に一言と「出典元：URL」",
         f"- **UNTIL: の行に、いつまで使えるかを書く。** 会期の最終日（YYYY-MM-DD）か「常設」。{target_date.isoformat()} から30日以上先であること",
         "- 今日の10本や直近の投稿と同じ出来事は選ばない",
+        *([f"- **次の施設・催しはもう予備にあるので選ばない**（同じものは機械で外します）：{'、'.join(sorted(_既に)[:30])}"] if (_既に := 予備にある名()) else []),
         "",
         "@@@POST", "HOUR: 0", "UNTIL: 常設", "NOTE: 予備／使ったネタ", "TEXT:", "（本文）", "THREAD:", "（一言と出典元：URL）", "@@@END",
         "",
     ]
 
 
-def 予備にする(posts: list[dict], target_date, 記: dict, 今日の出典: set[str]) -> list[dict]:
+def 予備にある名(予備: list[dict] | None = None) -> set[str]:
+    名 = set()
+    for x in (予備 if 予備 is not None else 予備を読む()):
+        名 |= 名前たち(x)
+    return 名
+
+
+def 予備にする(posts: list[dict], target_date, 記: dict, 今日の出典: set[str], 既にある名: set[str] | None = None) -> list[dict]:
     出 = []
+    # すでに予備にある施設・同じ回で作った施設と同じものは足さない
+    # （2026-11-09 運用部・ぎふあいち：予備が でんきの科学館×2・下呂温泉合掌村×3 だけになり、14日の決まりでどれも使えなかった）
+    見た名 = set(既にある名 if 既にある名 is not None else 予備にある名())
     for p in posts:
         text = (p.get("text") or "").strip()
         thread = [t.strip() for t in p.get("thread") or [] if t.strip()]
@@ -2731,6 +2742,11 @@ def 予備にする(posts: list[dict], target_date, 記: dict, 今日の出典: 
                 continue
         if urls & 今日の出典 or 出典で止める理由(urls, 記, target_date):
             continue
+        名 = 名前たち({"text": text, "thread": thread})
+        if 名 & 見た名:
+            print(f"::notice::予備に同じものがあるので足しません：{sorted(名 & 見た名)[0]}")
+            continue
+        見た名 |= 名
         if not 検索語あり(text):
             text = text.rstrip() + "\n\n" + 検索語
         出.append({"text": text, "thread": thread, "note": ("予備から／" + str(p.get("note") or ""))[:120],
