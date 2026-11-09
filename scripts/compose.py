@@ -2827,6 +2827,27 @@ def 確かめる言葉(text: str, thread: list[str]) -> str | None:
     return "・".join(当たり) or None
 
 
+def PR枠の止める語(text: str, thread: list[str], 日) -> str | None:
+    """掲載中の有料案件（neta/PR枠.json）の 止める語・名前 が本文・連投にあれば返す。
+    2026-10-20 代表：ふつうの投稿の側では、掲載中の有料案件の催しを重ねて出さない。"""
+    path = Path(__file__).resolve().parent.parent / "neta" / "PR枠.json"
+    try:
+        枠 = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    全文 = "\n".join([text, *thread])
+    d = 日.isoformat() if hasattr(日, "isoformat") else str(日)
+    for x in 枠 if isinstance(枠, list) else []:
+        掲載 = x.get("掲載") or ["", ""]
+        始め, 終わり = (list(掲載) + ["", ""])[:2]
+        if (始め and d < 始め) or (終わり and d > 終わり):
+            continue
+        for w in [*(x.get("止める語") or []), x.get("名前") or ""]:
+            if w and w in 全文:
+                return w
+    return None
+
+
 def 落とす(わけ: str):
     raise 枠を落とす(わけ)
 
@@ -3383,6 +3404,9 @@ def main() -> None:
                 if 季節ものの投稿({"text": text, "thread": thread}, target_date):
                     今日の季節.append(hour)
 
+            止め = PR枠の止める語(text, thread, target_date)
+            if 止め:
+                落とす(f"{hour}:00 に掲載中の PR 枠の催し（{止め}）が入っています。有料案件の催しは、ふつうの投稿で重ねて出しません。")
             item = {
                 "id": new_id(hour, existing_ids),
                 "text": text,
