@@ -620,7 +620,7 @@ async function claudeに聞く(prompt) {
   // 積み、同じ会話を送り直す（最大3回）。これをしないと本文が空のまま返ってくる。
   const messages = [{ role: 'user', content: prompt }];
   let data = null;
-  let 検索した = 0, 入力 = 0, 出力t = 0;
+  let 検索した = 0, 入力 = 0, 出力t = 0, 書き = 0, 読み = 0;
   for (let 回 = 0; 回 < 4; 回++) {
     // fetch は返事の頭が5分来ないと切れる（undici の headersTimeout）。web_fetch で何ページも読む日は
     // 5分を超えて「HeadersTimeoutError」で止まった（2026-10-19 福井 run 39170318771）。node:https で15分まで待つ
@@ -635,10 +635,13 @@ async function claudeに聞く(prompt) {
         // 候補が多い日は 8000 では返しの JSON の途中で切れた（2026-10-08 石川版、候補130件）
         max_tokens: 16000,
         stream: true,
+        // 続きの呼び出し（pause_turn）では、読んだページを含む前の中身をまるごと送り直す。
+        // いちばん後ろの中身までをキャッシュし、続きではキャッシュから読む（2026-11-07 代表「費用抑える施策を実施」）
+        cache_control: { type: 'ephemeral' },
         // web_fetch は出典のページを開いて読むため。検索だけだと一覧の見出ししか見えず、
         // 新店の営業時間・催しの日付が行に入らなかった（2026-10-15 運用部・石川担当）
         // 読んだページは続きの呼び出しのたびに入力に積み重なる。10回×8000で1回の入力が80万〜130万トークンに
-        // ふくらみ、10/19 に API の残高が尽きた。6回×4000に絞る
+        // ふくらみ、10/19 に API の残高が尽きた。6回×4000に絞る（石川は 2026-11-07 代表「費用抑える施策」で 4回。neta/設定.json の 読む回数）
         tools: [
           { type: 'web_search_20260209', name: 'web_search', max_uses: 設定.検索回数 ?? 8 },
           { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 設定.読む回数 ?? 6, max_content_tokens: 4000 }
@@ -648,7 +651,8 @@ async function claudeに聞く(prompt) {
     } catch (e) {
       // 途中で切れても、届いた分（入力は最初に分かる）は料金がかかっているので記録に残す（2026-10-19 代表「おすすめの設定で」）
       const u = e.途中?.usage ?? {};
-      使用量を記録する(設定.モデル ?? 'claude-sonnet-5-5', 入力 + (u.input_tokens ?? 0), 出力t + (u.output_tokens ?? 0), 検索した);
+      使用量を記録する(設定.モデル ?? 'claude-sonnet-5-5', 入力 + (u.input_tokens ?? 0), 出力t + (u.output_tokens ?? 0), 検索した,
+        書き + (u.cache_creation_input_tokens ?? 0), 読み + (u.cache_read_input_tokens ?? 0));
       throw e;
     }
 
@@ -661,6 +665,8 @@ async function claudeに聞く(prompt) {
     検索した += u.server_tool_use?.web_search_requests ?? 0;
     入力 += u.input_tokens ?? 0;
     出力t += u.output_tokens ?? 0;
+    書き += u.cache_creation_input_tokens ?? 0;
+    読み += u.cache_read_input_tokens ?? 0;
     if (data.stop_reason === 'tool_use') {
       // こちらに無い道具を呼ぼうとして止まることがある（2026-10-19 石川：本文が空のまま stop_reason=tool_use）。
       // 「使えない」と返して、ここまでの結果で JSON を書くよう頼む
@@ -683,10 +689,10 @@ async function claudeに聞く(prompt) {
   // 使った量を毎回残す（続き呼び出しぶんも合算）。金額は非公開の置き場の state/usage.jsonl にだけ書き、
   // 公開の Actions のログには出さない（2026-10-15 代表・統括「使用量の記録は非公開に移した」）
   console.log(
-    `使った分: 入力 ${入力} tok ／ 出力 ${出力t} tok ／ Web検索 ${検索した} 回` +
+    `使った分: 入力 ${入力} tok ／ キャッシュ書き ${書き} tok ／ キャッシュ読み ${読み} tok ／ 出力 ${出力t} tok ／ Web検索 ${検索した} 回` +
       `（上限 ${設定.検索回数 ?? 8}）`
   );
-  使用量を記録する(設定.モデル ?? 'claude-sonnet-5-5', 入力, 出力t, 検索した);
+  使用量を記録する(設定.モデル ?? 'claude-sonnet-5-5', 入力, 出力t, 検索した, 書き, 読み);
   if (data?.stop_reason === 'max_tokens') {
     console.log('::warning::max_tokens で切れました。設定.検索回数 を減らすか max_tokens を上げてください');
   }
@@ -697,16 +703,17 @@ async function claudeに聞く(prompt) {
 }
 
 // AI を呼んだ量と概算の金額を state/usage.jsonl に1行残す（予算の見張り。scripts/使用量.py と同じ形）
-function 使用量を記録する(モデル, 入力, 出力, 検索) {
+function 使用量を記録する(モデル, 入力, 出力, 検索, 書き = 0, 読み = 0) {
   try {
     const 単価 = [['fable', 10, 50], ['mythos', 10, 50], ['opus-5-5', 4, 20], ['opus', 5, 25], ['sonnet-4', 3, 15], ['sonnet', 2, 10], ['haiku-4', 1, 5], ['haiku', 0.1, 0.5]];
     const [, 入, 出] = 単価.find(([名]) => String(モデル).includes(名)) ?? ['', 5, 25];
-    const ドル = Math.round(((入力 / 1e6) * 入 + (出力 / 1e6) * 出 + 検索 * 0.01) * 1e5) / 1e5;
+    // キャッシュは書き 1.25 倍・読み 0.1 倍（input_tokens にはキャッシュの分は入らない）
+    const ドル = Math.round((((入力 + 書き * 1.25 + 読み * 0.1) / 1e6) * 入 + (出力 / 1e6) * 出 + 検索 * 0.01) * 1e5) / 1e5;
     const 時刻 = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 19) + '+09:00';
     mkdirSync('state', { recursive: true });
     // 定期（cron-job.org・schedule）か手動・追加か（2026-10-18 代表「定期実行分と…分けて計れませんか？」。scripts/使用量.py と同じ）
     const 起動 = ['repository_dispatch', 'schedule'].includes(process.env.GITHUB_EVENT_NAME) ? '定期' : '手動';
-    appendFileSync('state/usage.jsonl', JSON.stringify({ 時刻, 何: '情報集め', モデル, 入力, 出力, 検索, ドル, 起動 }) + '\n');
+    appendFileSync('state/usage.jsonl', JSON.stringify({ 時刻, 何: '情報集め', モデル, 入力, 出力, 検索, キャッシュ書き: 書き, キャッシュ読み: 読み, ドル, 起動 }) + '\n');
   } catch (e) {
     console.log(`::warning::使用量を記録できませんでした（${e.message}）`);
   }

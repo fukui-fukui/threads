@@ -1131,8 +1131,9 @@ def 送る中身(prompt: str):
     if 共通の頭 and len(共通の頭) >= 4000 and prompt.startswith(共通の頭):
         中身 = [{"type": "text", "text": 共通の頭, "cache_control": {"type": "ephemeral"}}]
         残り = prompt[len(共通の頭):]
-        if 残り.strip():
-            中身.append({"type": "text", "text": 残り})
+        # 1回目（残りが空）も2つ目の塊を付けて、聞き直しと同じ形にそろえる。塊が1つだけだと区切りが1トークン変わり、
+        # 聞き直しでキャッシュが読み出されず、毎回書き込み（入力の1.25倍）になっていた（2026-11-09：福井で読み出し 0）
+        中身.append({"type": "text", "text": 残り if 残り.strip() else "\n\n（指示は以上です）"})
         return 中身
     return prompt
 
