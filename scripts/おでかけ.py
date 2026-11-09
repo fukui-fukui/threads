@@ -1256,6 +1256,34 @@ def pr_live(x: dict, today: date) -> bool:
         return False
 
 
+def pr_cards(today: date) -> list[dict]:
+    """一覧の先頭に固定する PR のカード（2026-11-09 代表「通常枠と同じ見せ方でPRを最上部に固定表示して」）。
+    ふつうの items と同じ形にして、pr・until（掲載の最終日）・href（掲載記事）を足す。
+    掲載が終わったものは入れない。サイトの JS も until を見て外す（作り直しが遅れても出ないように）。"""
+    out = []
+    for x in load_pr():
+        try:
+            a, b = (date.fromisoformat(d) for d in x["掲載"])
+        except (KeyError, ValueError):
+            continue
+        if b < today:
+            continue
+        href = f"./pr/{x['番号']}/"
+        img = f"{SITE}/pr/{x['番号']}/{x['チラシ']}" if x.get("チラシ") else None
+        本文 = [t for t in x.get("本文") or x.get("内容") or [] if t != "【PR】"]
+        out.append({
+            "text": f"「{x['名前']}」" + (本文[0] if 本文 else ""),
+            "title": x["名前"],
+            "note": 本文[0] if 本文 else "",
+            "kind": "催し", "area": x.get("市町", ""), "region": 地域.地区(x.get("市町", "")),
+            "start": x["日"], "end": x["日"], "from": a.isoformat(), "until": b.isoformat(),
+            "source": f"{SITE}/pr/{x['番号']}/", "href": href, "pr": True, "written": a.isoformat(),
+            "og": {"image": img, "title": x.get("見出し") or x["名前"], "site": f"{SITE_NAME}（PR）",
+                   "description": f"{_pr_when(x)}・{x.get('会場', '')}"},
+        })
+    return out
+
+
 def _pr_when(x: dict) -> str:
     d = date.fromisoformat(x["日"])
     return f"{d.month}月{d.day}日（{x.get('曜', '')}）{x.get('時間', '')}"
@@ -1300,9 +1328,9 @@ def render_pr(x: dict, today: date) -> str:
 def pr_top(today: date) -> str:
     """トップの一覧の上に出す PR の枠（掲載中のものだけ）。"""
     from html import escape as h
+    # 2026-11-09 から一覧の先頭のカード（data.json の pr）で出すので、ここは空にする
+    return ""
     xs = [x for x in load_pr() if pr_live(x, today)]
-    if not xs:
-        return ""
     cards = "".join(f'<a class="prtop" href="./pr/{h(x["番号"])}/"><span class="prtag">PR</span>'
                     f'<b>{h(x["名前"])}</b><span>{h(_pr_when(x))}・{h(x.get("会場", ""))}</span></a>' for x in xs)
     style = ("<style>.prtop{display:block;margin:0 0 12px;padding:12px 16px;border:1.5px solid var(--main);border-radius:14px;"
@@ -1810,6 +1838,8 @@ def main(argv: list[str] | None = None) -> int:
     undated = sum(1 for i in items if not i["start"])
     print(f"{len(items)} 件（{'・'.join(f'{k}{v}' for k, v in counts.items())}、日付なし {undated}）")
 
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    data["pr"] = pr_cards(_dt.now(_tz(_td(hours=9))).date())
     if not args.check:
         OUT.parent.mkdir(parents=True, exist_ok=True)
         OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
