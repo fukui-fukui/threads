@@ -5,7 +5,7 @@
    リンクURLを表示せず、カードで見せる」
 参考にした形（代表が共有した別アカウントの投稿）：
   1本目 … 見出しのあと、1軒1行で「①🏨宿名（県・市町）」
-  返信  … 1軒に1本。「【PR】／①🏨宿名／📍県・市町／⭐口コミ 4.4（123件）／詳しくはこちら👇」
+  返信  … 1軒に1本。「①🏨宿名／📍県・市町／⭐口コミ 4.4（123件）／詳しくはこちら👇／PR」（PR は最後。2026-11-09 代表）
           リンクは URL の文字にせず、返信のリンクカード（link_attachment）で見せる
 
 - 2026-10-12 代表「催し+宿と〇〇選を1日おきでいいですよ」：15:00 で「催し × 宿」と1日おきに出す
@@ -104,12 +104,13 @@ def まとめの返信(まとめ: dict) -> list[str]:
 
 
 def 返信(i: int, h: dict) -> str:
-    行 = ["【PR】", f"{宿.丸数字[i]}{絵文字(h)}{宿.見せる名(h)}", f"📍{場所(h)}"]
+    # PR は最後の1行に（2026-11-09 代表「PRを先頭につけない。投稿文の最後につける。全てに共通の仕様で」）
+    行 = [f"{宿.丸数字[i]}{絵文字(h)}{宿.見せる名(h)}", f"📍{場所(h)}"]
     評価, 件 = h.get("評価"), h.get("レビュー数")
     if isinstance(評価, (int, float)) and 評価 > 0 and isinstance(件, int) and 件 > 0:
         行.append(f"⭐口コミ {評価:.1f}（{件:,}件）")
     行.append("詳しくはこちら👇")
-    return "\n".join(行)
+    return "\n".join(行 + ["", "PR"])
 
 
 def 直近に出した宿(すでに: list[dict], 日, 宿たち: list[dict], 日数: int = 14) -> set[str]:  # 宿も14日あける（2026-10-28 代表「14日にして」）
@@ -228,7 +229,8 @@ def _駐車場(h: dict, 上限: int = 40) -> str:
 
 
 def 一軒の返信(h: dict) -> str:
-    行 = ["【PR】", f"{絵文字(h)}{宿.見せる名(h)}｜{場所(h)}", f"｜最安 {h['最安']:,}円〜（{_時点(h)}）"]
+    # PR は最後の1行に（2026-11-09 代表「PRを先頭につけない。投稿文の最後につける」）
+    行 = [f"{絵文字(h)}{宿.見せる名(h)}｜{場所(h)}", f"｜最安 {h['最安']:,}円〜（{_時点(h)}）"]
     if _お風呂(h):
         行.append(f"｜お風呂：{_お風呂(h)}")
     朝食 = _朝食(h)
@@ -241,7 +243,7 @@ def 一軒の返信(h: dict) -> str:
         行.append(f"｜駐車場：{駐車}")
     if _口コミ(h):
         行.append(f"｜口コミ：⭐{_口コミ(h)}")
-    行 += ["", "※料金・プラン内容は宿泊日によって変動します"]
+    行 += ["", "※料金・プラン内容は宿泊日によって変動します", "", "PR"]
     return "\n".join(行)
 
 
@@ -258,7 +260,9 @@ def 最安を取り直す(h: dict) -> dict:
     ヘッダ = {"accept": "application/json"}
     元 = os.environ.get("RAKUTEN_REFERER", "").strip()
     if 元:
+        # 宿を集める.mjs と同じく origin も付ける（referer だけだと HTTPError で取り直せなかった。2026-11-04 ぎふあいち）
         ヘッダ["referer"] = 元
+        ヘッダ["origin"] = "{0.scheme}://{0.netloc}".format(urllib.parse.urlsplit(元))
     try:
         req = urllib.request.Request(f"https://openapi.rakuten.co.jp/engine/api/Travel/SimpleHotelSearch/20260731?{q}", headers=ヘッダ)
         with urllib.request.urlopen(req, timeout=20) as r:
@@ -270,7 +274,9 @@ def 最安を取り直す(h: dict) -> dict:
             print(f"最安料金を取り直しました：{h['最安']:,}円 → {最安:,}円")
             return {**h, "最安": 最安, "調べた日": datetime.now(JST).date().isoformat()}
     except Exception as e:  # noqa: BLE001 取れなくてもリストの料金で出す
-        print(f"::warning::最安料金を取り直せませんでした（{type(e).__name__}）。リストの料金のまま出します")
+        # 鍵とURLは出さない。HTTP の番号だけ出す（原因を見るため）
+        番号 = getattr(e, "code", "")
+        print(f"::warning::最安料金を取り直せませんでした（{type(e).__name__} {番号}）。リストの料金のまま出します")
     return h
 
 

@@ -30,7 +30,7 @@ class 同じ名のテスト(unittest.TestCase):
                       compose.名前たち({"thread": ["金沢｜金沢城公園・玉泉院丸庭園ライトアップ\n和楽器の音…"]}))
 
     def test_7日以内の見出しの名で止める(self):
-        前 = {"id": "a", "scheduled_at": "2026-10-19T21:00:00+09:00", "text": "夜のライトアップ",
+        前 = {"id": "a", "scheduled_at": "2026-10-20T21:00:00+09:00", "text": "夜のライトアップ",
               "thread": ["金沢｜金沢城公園・玉泉院丸庭園ライトアップ\n…"]}
         名記 = compose.名の記録([前], date(2026, 10, 22))
         後 = {"text": "庭を見たあと…", "thread": ["金沢｜金沢城公園・玉泉院丸庭園ライトアップ\n最終入園は20:45"]}
@@ -121,3 +121,37 @@ class サイトへの返信のテスト(unittest.TestCase):
         self.assertIn("utm_campaign=month&utm_content=p-2", 月)
         self.assertIsNone(compose.サイトへの返信(6, date(2026, 10, 27), "p-3"))
         self.assertIsNone(compose.サイトへの返信(12, date(2026, 10, 23), "p-4"))
+
+
+class WeekendCountTest(unittest.TestCase):
+    def test_count_and_thread(self):
+        # 2026-11-05 運用部・石川：今週末の石川が「3選」なのに2件で、返信とも違う催しだった
+        text = "【石川】今週末の石川 3選\n\n① 🏯 近江町マーケット（金沢市・11/7）\n② ✈️ 手話ステージ（小松市・11/8）\n\n石川イベント"
+        thread = ["金沢｜近江町マーケット（11/7）\n説明", "白山｜白山鳥越 新そばまつり（11/7-8）\n説明", "今週末の石川のイベントを、土日に分けてまとめています\nhttps://example.com"]
+        新, 返 = compose.まとめの数と返信をそろえる(text, thread)
+        self.assertTrue(新.startswith("【石川】今週末の石川 2選"))
+        self.assertEqual(len(返), 2)
+        self.assertTrue(返[0].startswith("金沢｜近江町"))
+        self.assertTrue(返[1].startswith("今週末"))
+
+
+class NightShopTest(unittest.TestCase):
+    def test_night_shop(self):
+        from datetime import date
+        t = "金沢市の中華「ちむ福」。\n営業時間は18:00〜22:30です。"
+        self.assertIsNotNone(compose.合わない理由(t, date(2026, 11, 6), 12))
+        self.assertIsNone(compose.合わない理由(t, date(2026, 11, 6), 17))
+        self.assertIsNone(compose.合わない理由("営業時間は11:00〜16:00です。", date(2026, 11, 6), 12))
+
+
+class SpareDedupeTest(unittest.TestCase):
+    """2026-11-09 運用部・ぎふあいち：同じ施設の予備が何本もたまった"""
+
+    def test_same_facility_not_added_twice(self):
+        from datetime import date
+        p = lambda t: {"text": t, "thread": ["出典元：https://example.com/" + str(abs(hash(t)) % 1000)], "until": "常設"}
+        出 = compose.予備にする([p("下呂市の「下呂温泉合掌村」は合掌造りの村です。"), p("下呂市の「下呂温泉合掌村」は合掌造りの家が並ぶ村です。")],
+                            date(2026, 11, 10), {}, set(), 既にある名=set())
+        self.assertEqual(len(出), 1)
+        出 = compose.予備にする([p("名古屋の「でんきの科学館」は入館無料です。")], date(2026, 11, 10), {}, set(), 既にある名={"でんきの科学館"})
+        self.assertEqual(出, [])

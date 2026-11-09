@@ -42,7 +42,9 @@ class RoundupTest(unittest.TestCase):
         self.assertTrue(投稿["text"].endswith("\n\nPR"))
         self.assertFalse(投稿["text"].startswith("【PR】"))
         返信 = 投稿["thread"][0]
-        self.assertTrue(返信.startswith("【PR】"))
+        # PR は最後の1行（2026-11-09 代表「PRを先頭につけない。投稿文の最後につける」）
+        self.assertFalse(返信.startswith("【PR】"))
+        self.assertEqual(返信.splitlines()[-1], "PR")
         self.assertIn("※料金・プラン内容は宿泊日によって変動します", 返信)
         self.assertIn("｜朝食：レストラン", 返信)
         self.assertNotIn("thread_links", 投稿)

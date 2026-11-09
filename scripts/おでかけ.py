@@ -686,6 +686,10 @@ article p {{ margin: 4px 0; font-size: .92rem; }}
 a {{ color: var(--main); }}
 .lead {{ background: var(--surface); border-radius: 14px; padding: 12px 16px; }}
 nav.months {{ margin-top: 36px; font-size: .9rem; }}
+.prlabel {{ display: inline-block; font-size: .78rem; font-weight: 700; border: 1px solid currentColor; border-radius: 4px; padding: 0 8px; margin: 0; }}
+dl.prdl {{ display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 16px 0; }}
+dl.prdl dt {{ color: var(--muted); }}
+dl.prdl dd {{ margin: 0; }}
 aside.prbox {{ margin-top: 32px; padding: 12px 16px; border: 1.5px dashed var(--main); border-radius: 14px; background: var(--surface); font-size: .9rem; }}
 aside.prbox p {{ margin: 4px 0 0; }}
 footer {{ color: var(--muted); font-size: .78rem; text-align: center; padding: 0 16px 32px; }}
@@ -1228,6 +1232,129 @@ PRIVACY_FORM = ("フォームでいただいたお名前・メールアドレス
                 "運営者だけが見られる場所に保存し、用件が済んで1年たったものは消します。")
 
 
+# ---- PR 枠（有料案件の掲載。2026-10-20 代表の決まり。2026-11-09 1件目） ----
+# 代表が承認した申し込みだけを neta/PR枠.json に書く（公式・チラシにある事実だけ。連絡先は書かない）。
+# 掲載の期間（最長30日）のあいだ、トップの一覧の上に「PR」の枠を出し、/pr/<申込番号>/ に記事を出す。表示には必ず「PR」と付ける。
+PR_FILE = ROOT / "neta" / "PR枠.json"
+PR_DIR = ROOT / "docs" / "pr"
+PR_MARK = ("<!--pr:start-->", "<!--pr:end-->")
+
+
+def load_pr() -> list[dict]:
+    try:
+        return json.loads(PR_FILE.read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        return []
+
+
+def pr_live(x: dict, today: date) -> bool:
+    """掲載の期間中で、催しの日が過ぎていないもの。"""
+    try:
+        a, b = (date.fromisoformat(d) for d in x["掲載"])
+        return a <= today <= b and date.fromisoformat(x["日"]) >= today
+    except (KeyError, ValueError):
+        return False
+
+
+def pr_cards(today: date) -> list[dict]:
+    """一覧の先頭に固定する PR のカード（2026-11-09 代表「通常枠と同じ見せ方でPRを最上部に固定表示して」）。
+    ふつうの items と同じ形にして、pr・until（掲載の最終日）・href（掲載記事）を足す。
+    掲載が終わったものは入れない。サイトの JS も until を見て外す（作り直しが遅れても出ないように）。"""
+    out = []
+    for x in load_pr():
+        try:
+            a, b = (date.fromisoformat(d) for d in x["掲載"])
+        except (KeyError, ValueError):
+            continue
+        if b < today:
+            continue
+        href = f"./pr/{x['番号']}/"
+        img = f"{SITE}/pr/{x['番号']}/{x['チラシ']}" if x.get("チラシ") else None
+        本文 = [t for t in x.get("本文") or x.get("内容") or [] if t != "【PR】"]
+        out.append({
+            "text": f"「{x['名前']}」" + (本文[0] if 本文 else ""),
+            "title": x["名前"],
+            "note": 本文[0] if 本文 else "",
+            "kind": "催し", "area": x.get("市町", ""), "region": 地域.地区(x.get("市町", "")),
+            "start": x["日"], "end": x["日"], "from": a.isoformat(), "until": b.isoformat(),
+            "source": f"{SITE}/pr/{x['番号']}/", "href": href, "pr": True, "written": a.isoformat(),
+            "og": {"image": img, "title": x.get("見出し") or x["名前"], "site": f"{SITE_NAME}（PR）",
+                   "description": f"{_pr_when(x)}・{x.get('会場', '')}"},
+        })
+    return out
+
+
+def _pr_when(x: dict) -> str:
+    d = date.fromisoformat(x["日"])
+    return f"{d.month}月{d.day}日（{x.get('曜', '')}）{x.get('時間', '')}"
+
+
+def render_pr(x: dict, today: date) -> str:
+    from html import escape as h
+    url = f"{SITE}/pr/{x['番号']}/"
+    title = f"PR｜{x['名前']}（{date.fromisoformat(x['日']).month}/{date.fromisoformat(x['日']).day}・{x.get('市町', '')}）｜{SITE_NAME}"
+    desc = f"PR：{_pr_when(x)}、{x.get('会場', '')}で「{x['名前']}」。主催：{x.get('主催', '')}。"
+    rows = [("日時", _pr_when(x)), ("会場", x.get("会場", "")), ("住所", x.get("住所", "")),
+            ("参加費", "<br>".join(h(v) for v in x.get("料金", []))), ("定員", x.get("定員", "")),
+            ("申し込み", x.get("申し込み", "")), ("主催", x.get("主催", ""))]
+    dl = "".join(f"<dt>{h(k)}</dt><dd>{v if k == '参加費' else h(v)}</dd>" for k, v in rows if v)
+    ld = json.dumps({"@context": "https://schema.org", "@type": "Event", "name": x["名前"],
+                     "startDate": x["日"], "location": {"@type": "Place", "name": x.get("会場", ""),
+                                                        "address": x.get("住所", "")},
+                     "organizer": {"@type": "Organization", "name": x.get("主催", "")}, "url": x.get("url", "")},
+                    ensure_ascii=False)
+    if x.get("本文"):
+        # 代表が OK を出した原稿をそのまま載せる（2026-11-09）。URL はリンクにする
+        def _行(t: str) -> str:
+            m = re.search(r"https?://\S+", t)
+            if not m:
+                return h(t)
+            u = m.group(0)
+            return h(t[:m.start()]) + f'<a href="{h(u)}" rel="noopener sponsored">{h(u)}</a>' + h(t[m.end():])
+        img = (f'<p><img src="{h(x["チラシ"])}" alt="{h(x["名前"])}のチラシ" style="max-width:100%;height:auto"></p>'
+               if x.get("チラシ") else "")
+        main = (f'<p class="prlabel">PR</p><h1>{h(x.get("見出し") or x["名前"])}</h1>'
+                + "".join(f"<p>{_行(t)}</p>" for t in x["本文"] if t != "【PR】") + img)
+        return _shell(title, desc, url, ld, main, "../../")
+    main = (f'<p class="prlabel">PR</p><h1>{h(x["名前"])}</h1>'
+            + "".join(f"<p>{h(t)}</p>" for t in x.get("内容", []))
+            + f'<dl class="prdl">{dl}</dl>'
+            + f'<p><a href="{h(x.get("url", ""))}" rel="noopener sponsored">公式の案内・お申し込みはこちら</a></p>'
+            + f'<p class="muted">最新の情報・申し込みの状況は、公式の案内でご確認ください。</p>')
+    return _shell(title, desc, url, ld, main, "../../")
+
+
+def pr_top(today: date) -> str:
+    """トップの一覧の上に出す PR の枠（掲載中のものだけ）。"""
+    from html import escape as h
+    # 2026-11-09 から一覧の先頭のカード（data.json の pr）で出すので、ここは空にする
+    return ""
+    xs = [x for x in load_pr() if pr_live(x, today)]
+    cards = "".join(f'<a class="prtop" href="./pr/{h(x["番号"])}/"><span class="prtag">PR</span>'
+                    f'<b>{h(x["名前"])}</b><span>{h(_pr_when(x))}・{h(x.get("会場", ""))}</span></a>' for x in xs)
+    style = ("<style>.prtop{display:block;margin:0 0 12px;padding:12px 16px;border:1.5px solid var(--main);border-radius:14px;"
+             "background:var(--surface);color:inherit;text-decoration:none}.prtop b{display:block;margin:2px 0}"
+             ".prtop span{font-size:.86rem}.prtag{display:inline-block;font-size:.72rem;font-weight:700;border:1px solid currentColor;"
+             "border-radius:4px;padding:0 6px;margin-right:6px}</style>")
+    return style + cards
+
+
+def write_pr(today: date) -> list[str]:
+    """掲載中・掲載が終わった PR の記事を書く（終わった記事も残す。トップの枠からは外れる）。"""
+    出 = []
+    for x in load_pr():
+        try:
+            if date.fromisoformat(x["掲載"][0]) > today:
+                continue
+        except (KeyError, ValueError):
+            continue
+        d = PR_DIR / x["番号"]
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "index.html").write_text(render_pr(x, today), encoding="utf-8")
+        出.append(x["番号"])
+    return 出
+
+
 def _uses(name: str) -> bool:
     return bool(地域.地域.get("使う", {}).get(name, False))
 
@@ -1649,7 +1776,14 @@ def write_static(data: dict, today: date) -> None:
     if _uses("掲載申し込み"):
         SUBMIT_DIR.mkdir(parents=True, exist_ok=True)
         (SUBMIT_DIR / "index.html").write_text(render_submit(today), encoding="utf-8")
+    prs = write_pr(today)
     html_text = INDEX.read_text(encoding="utf-8")
+    # PR 枠：目印が無ければ、一覧の見出しの前に入れる
+    if PR_MARK[0] not in html_text and '<div class="ttl" id="ttl">' in html_text:
+        html_text = html_text.replace('<div class="ttl" id="ttl">', PR_MARK[0] + PR_MARK[1] + '\n  <div class="ttl" id="ttl">', 1)
+    pa, pb = html_text.find(PR_MARK[0]), html_text.find(PR_MARK[1])
+    if pa >= 0 and pb >= 0:
+        html_text = html_text[:pa] + PR_MARK[0] + pr_top(today) + html_text[pb:]
     a, b = html_text.find(MARK_START), html_text.find(MARK_END)
     if a < 0 or b < 0:
         print("::warning::index.html に prerender の目印がありません。静的な中身は書きません。")
@@ -1670,6 +1804,7 @@ def write_static(data: dict, today: date) -> None:
             *[(f"{SITE}/area/{quote(a)}/", lastmod, "daily") for a in areas],
             *([(f"{SITE}/stay/", today.isoformat(), "weekly")] if HOTELS else []),
             *[(f"{SITE}/stay/{quote(c)}/", today.isoformat(), "weekly") for c in stays],
+            *[(f"{SITE}/pr/{n}/", today.isoformat(), "weekly") for n in prs],
             (f"{SITE}/about/", "2026-10-04", "monthly")]
     urls += [(f"{SITE}/month/{k}/", lastmod, "daily") for k in months]
     SITEMAP.write_text(
@@ -1702,6 +1837,8 @@ def main(argv: list[str] | None = None) -> int:
     undated = sum(1 for i in items if not i["start"])
     print(f"{len(items)} 件（{'・'.join(f'{k}{v}' for k, v in counts.items())}、日付なし {undated}）")
 
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    data["pr"] = pr_cards(_dt.now(_tz(_td(hours=9))).date())
     if not args.check:
         OUT.parent.mkdir(parents=True, exist_ok=True)
         OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
