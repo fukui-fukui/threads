@@ -887,8 +887,8 @@ footer a { color: var(--main); font-weight: 700; }
     const prs = PR_TABS.includes(state.tab) ? prItems.filter((it) => pd(it.from) <= today && pd(it.until) >= today) : [];
     if (prs.length) {
       const pul = el("ul", "grid");
-      prs.forEach((it) => pul.append(card(it)));
-      out.append(el("p", "pr-note", "PR：主催者からのお申し込みによる掲載です"), pul);
+      if (state.tab !== "all") prs.forEach((it) => pul.append(card(it)));
+      if (state.tab !== "all") out.append(pul);
     }
     const endedToggle = () => {
       if (!endedCount) return;
@@ -908,6 +908,13 @@ footer a { color: var(--main); font-weight: 700; }
       out.append(p); endedToggle(); return;
     }
     let cur = null, ul = null;
+    if (state.tab === "all" && prs.length) {
+      // 2026-11-09 代表「ぜんぶページの話題・おすすめの一番最初にも固定して」
+      cur = "話題・おすすめ";
+      const h = el("h2", "group"); h.append(icon("i-cal"), cur); out.append(h);
+      ul = el("ul", "grid"); out.append(ul);
+      prs.forEach((it) => ul.append(card(it)));
+    }
     for (const it of list) {
       const g = groupOf(it);
       if (g !== cur || !ul) {
