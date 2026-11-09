@@ -1317,7 +1317,6 @@ def render_pr(x: dict, today: date) -> str:
                 + "".join(f"<p>{_行(t)}</p>" for t in x["本文"] if t != "【PR】") + img)
         return _shell(title, desc, url, ld, main, "../../")
     main = (f'<p class="prlabel">PR</p><h1>{h(x["名前"])}</h1>'
-            f'<p class="muted">この記事は、主催者からのお申し込みによる PR 枠の掲載です。内容は主催者の公式の案内にもとづいています。</p>'
             + "".join(f"<p>{h(t)}</p>" for t in x.get("内容", []))
             + f'<dl class="prdl">{dl}</dl>'
             + f'<p><a href="{h(x.get("url", ""))}" rel="noopener sponsored">公式の案内・お申し込みはこちら</a></p>'
