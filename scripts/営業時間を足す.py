@@ -7,7 +7,7 @@
 「営業時間」「定休日」のすぐあとの文を、そのまま行の後ろに「［営業時間: …／定休日: …（出典のページ）］」として足す。
 ページの文を写すだけで、作らない。見つからなければ何もしない（同じ店は二度開かない）。
 
-  python scripts/営業時間を足す.py [--dry-run] [--max 25]
+  python scripts/営業時間を足す.py [--dry-run] [--max N（無ければ neta/設定.json の「営業時間を足すページ数」、それも無ければ 30）]
 """
 from __future__ import annotations
 
@@ -221,8 +221,14 @@ def 区切り(lines: list[str]):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--max", type=int, default=25)
+    ap.add_argument("--max", type=int, default=None)
     a = ap.parse_args()
+    if a.max is None:
+        # neta/設定.json の「営業時間を足すページ数」で変えられる（2026-11-09 開発・ぎふあいち。AI は使わないので費用は増えない）
+        try:
+            a.max = int(json.loads((ネタ帳.parent / "設定.json").read_text(encoding="utf-8")).get("営業時間を足すページ数", 30))
+        except (OSError, ValueError, TypeError):
+            a.max = 30
     lines = ネタ帳.read_text(encoding="utf-8").split("\n")
     済み = json.loads(記録.read_text(encoding="utf-8")) if 記録.exists() else {}
     開いた: dict[str, str] = {}

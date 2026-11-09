@@ -93,7 +93,7 @@ jobs:
       - name: お店の行に営業時間を足す
         if: ${{ !inputs.dry_run }}
         continue-on-error: true
-        run: python3 scripts/営業時間を足す.py --max 30
+        run: python3 scripts/営業時間を足す.py
 
       # 追記が0件でも、「調べてほしいもの」欄から解決ぶんを消しただけの変更がありうる。
       # 変更の有無はステップの中で git diff で見ているので、ここでは絞らない。

@@ -1,7 +1,7 @@
 name: アクセスの数字を読む
 
 # 2026-10-13 代表「読めるようにして」。Google アナリティクス（おでかけ福井・石川・エキマエ）と
-# Search Console・Cloudflare Web Analytics の数字を読み、要点を insights/アクセス/最新.md に残す。毎日 7:40 JST（8:27 の定例で状況ダッシュボードに入れるため、10/16 に 9:10 から早めた）と、手で起動したとき。
+# Search Console・Cloudflare Web Analytics の数字を読み、要点を insights/アクセス/最新.md に残す。毎日 7:40 JST（翌朝 4:30 の定例で状況ダッシュボードに入れる。2026-11-09 に定例を 4:30 へ）と、手で起動したとき。
 # 鍵は Secrets の GA_SA_KEY（読むだけのサービスアカウント）と CF_API_TOKEN・CF_ACCOUNT_ID。無いものは読まない。
 on:
   # 外部の cron（cron-job.org）から叩く入口。GitHub の schedule は2時間ほど遅れる（10/17 は 7:40 の予定が 9:44）
