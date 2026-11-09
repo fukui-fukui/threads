@@ -1275,6 +1275,19 @@ def render_pr(x: dict, today: date) -> str:
                                                         "address": x.get("住所", "")},
                      "organizer": {"@type": "Organization", "name": x.get("主催", "")}, "url": x.get("url", "")},
                     ensure_ascii=False)
+    if x.get("本文"):
+        # 代表が OK を出した原稿をそのまま載せる（2026-11-09）。URL はリンクにする
+        def _行(t: str) -> str:
+            m = re.search(r"https?://\S+", t)
+            if not m:
+                return h(t)
+            u = m.group(0)
+            return h(t[:m.start()]) + f'<a href="{h(u)}" rel="noopener sponsored">{h(u)}</a>' + h(t[m.end():])
+        img = (f'<p><img src="{h(x["チラシ"])}" alt="{h(x["名前"])}のチラシ" style="max-width:100%;height:auto"></p>'
+               if x.get("チラシ") else "")
+        main = (f'<p class="prlabel">PR</p><h1>{h(x.get("見出し") or x["名前"])}</h1>'
+                + "".join(f"<p>{_行(t)}</p>" for t in x["本文"] if t != "【PR】") + img)
+        return _shell(title, desc, url, ld, main, "../../")
     main = (f'<p class="prlabel">PR</p><h1>{h(x["名前"])}</h1>'
             f'<p class="muted">この記事は、主催者からのお申し込みによる PR 枠の掲載です。内容は主催者の公式の案内にもとづいています。</p>'
             + "".join(f"<p>{h(t)}</p>" for t in x.get("内容", []))
