@@ -1,0 +1,134 @@
+<!doctype html>
+<meta charset="utf-8">
+<!-- 新そばまつりの場面：秋の昼、テントの並ぶ会場と、手前のざるそば・天ぷら。文字・看板・顔は描かない -->
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="c" width="720" height="1280"></canvas>
+<script src="共通.js"></script>
+<script>
+function テント(x, y, w) {
+  const h = w * 0.55;
+  g.fillStyle = '#f4f1ea';
+  g.beginPath(); g.moveTo(x, y); g.lineTo(x + w / 2, y - h * 0.45); g.lineTo(x + w, y); g.closePath(); g.fill();
+  g.fillStyle = '#e2ddd2';
+  g.fillRect(x, y, w, h * 0.12);
+  g.fillStyle = '#5b4a3a';
+  g.fillRect(x + w * 0.06, y + h * 0.12, w * 0.88, h * 0.5);
+  g.fillStyle = '#cfc8ba';
+  g.fillRect(x, y, w * 0.04, h * 0.62); g.fillRect(x + w * 0.96, y, w * 0.04, h * 0.62);
+}
+
+function 後ろ姿(x, y, s, hair, coat, t, k) {
+  const bob = 2 * Math.sin(t * 3 + k);
+  g.fillStyle = coat;
+  g.beginPath(); g.ellipse(x, y + 34 * s + bob, 17 * s, 30 * s, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = hair;
+  g.beginPath(); g.arc(x, y + bob, 12 * s, 0, Math.PI * 2); g.fill();
+}
+
+function めん(r, cx, cy, rx, ry) {
+  // ざるに盛った、細く長いそばの山（ゆるく波うつ線を下から重ねる）
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+  for (let i = 0; i < 420; i++) {
+    const layer = i / 420;                       // あとの線ほど山の上
+    const a = r() * Math.PI * 2, d = Math.sqrt(r()) * (1 - layer * 0.55);
+    const x = cx + Math.cos(a) * rx * d * 0.75;
+    const y = cy + Math.sin(a) * ry * d * 0.6 - layer * 55;
+    const len = 90 + r() * 90, ang = (r() - 0.5) * 0.9, ph = r() * 6;
+    const shade = 105 + Math.floor(layer * 55 + r() * 22);
+    g.strokeStyle = `rgb(${shade},${shade - 8},${shade - 22})`;
+    g.lineWidth = 2.8;
+    g.beginPath();
+    for (let k = 0; k <= 12; k++) {
+      const u = k / 12 - 0.5;
+      const px = x + Math.cos(ang) * len * u;
+      const py = y + Math.sin(ang) * len * u * 0.35 + 5 * Math.sin(u * 9 + ph);
+      k ? g.lineTo(px, py) : g.moveTo(px, py);
+    }
+    g.stroke();
+  }
+}
+
+function 天ぷら(x, y, len, rot, r) {
+  g.save(); g.translate(x, y); g.rotate(rot);
+  g.fillStyle = '#d9822b';  // えびのしっぽ
+  g.beginPath(); g.moveTo(len / 2, 0); g.lineTo(len / 2 + 26, -14); g.lineTo(len / 2 + 22, 14); g.closePath(); g.fill();
+  g.fillStyle = '#e9b44c';
+  g.beginPath();
+  for (let i = 0; i <= 24; i++) {  // でこぼこの衣
+    const a = (i / 24) * Math.PI * 2;
+    const bump = 1 + 0.12 * Math.sin(i * 2.7) + 0.06 * r();
+    g.lineTo(Math.cos(a) * len / 2 * bump, Math.sin(a) * 17 * bump);
+  }
+  g.closePath(); g.fill();
+  g.fillStyle = 'rgba(255,240,190,0.5)';
+  g.beginPath(); g.ellipse(-len * 0.1, -6, len * 0.28, 5, 0, 0, Math.PI * 2); g.fill();
+  g.restore();
+}
+
+window.renderAt = (t) => {
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.save();
+  寄る(t, 5, 0.05, W / 2, 1000);
+  g.fillStyle = 縦グラデ(0, 760, [[0, '#6fb3e6'], [1, '#d8ecf6']]);
+  g.fillRect(-50, -50, W + 100, 900);
+  // 雲
+  g.fillStyle = 'rgba(255,255,255,0.85)';
+  [[120, 470, 1], [520, 430, 0.8]].forEach(([x, y, s], i) => {
+    const dx = (t * 6 + i * 40);
+    [[0, 0, 40], [38, -12, 34], [76, 0, 38], [38, 10, 36]].forEach(([ox, oy, rr]) => {
+      g.beginPath(); g.arc(x + dx + ox * s, y + oy * s, rr * s, 0, Math.PI * 2); g.fill();
+    });
+  });
+  山(3, 650, 120, '#b9a38a');
+  山(7, 700, 90, '#c76b3a');
+  山(11, 740, 60, '#9a5a2e');
+  g.fillStyle = '#8a9a5b';
+  g.fillRect(-50, 740, W + 100, 200);
+  // テントと並ぶ人（後ろ姿）
+  [[-10, 760, 170], [180, 770, 160], [360, 760, 170], [550, 770, 160]].forEach(([x, y, w]) => テント(x, y, w));
+  const hair = ['#2b2420', '#3b2f2a', '#4a3b30', '#1f1b18'];
+  const coats = ['#3d5a80', '#9c6644', '#6b705c', '#b5838d', '#4a4e69'];
+  [[90, 812], [140, 820], [270, 815], [430, 818], [480, 810], [620, 816]].forEach(([x, y], i) =>
+    後ろ姿(x, y, 0.9, hair[i % 4], coats[i % 5], t, i));
+  // テーブル
+  g.fillStyle = 縦グラデ(900, H, [[0, '#a8743f'], [1, '#7a4f27']]);
+  g.fillRect(-50, 900, W + 100, 500);
+  g.strokeStyle = 'rgba(70,40,15,0.25)'; g.lineWidth = 2;
+  for (let y = 930; y < H + 40; y += 46) { g.beginPath(); g.moveTo(-50, y); g.bezierCurveTo(200, y + 8, 500, y - 8, W + 50, y + 4); g.stroke(); }
+  // ざる
+  const r = 乱数(42);
+  g.fillStyle = 'rgba(40,20,5,0.35)';
+  g.beginPath(); g.ellipse(300, 1078, 250, 92, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#3a2a1c';
+  g.beginPath(); g.ellipse(300, 1060, 245, 98, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#c9a66b';
+  g.beginPath(); g.ellipse(300, 1052, 228, 86, 0, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = 'rgba(120,90,45,0.5)'; g.lineWidth = 1.5;
+  for (let i = -220; i <= 220; i += 9) { g.beginPath(); g.moveTo(300 + i, 1052 - 86 * Math.sqrt(Math.max(0, 1 - (i / 228) ** 2))); g.lineTo(300 + i, 1052 + 86 * Math.sqrt(Math.max(0, 1 - (i / 228) ** 2))); g.stroke(); }
+  めん(r, 300, 1040, 200, 70);
+  // そばちょこ（つゆ）
+  g.fillStyle = 'rgba(40,20,5,0.3)';
+  g.beginPath(); g.ellipse(110, 1212, 62, 20, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#2f4a6b';
+  g.beginPath(); g.moveTo(52, 1140); g.lineTo(62, 1205); g.quadraticCurveTo(110, 1222, 158, 1205); g.lineTo(168, 1140); g.closePath(); g.fill();
+  g.fillStyle = '#e9e4da';
+  g.beginPath(); g.ellipse(110, 1140, 58, 16, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#4a2a14';
+  g.beginPath(); g.ellipse(110, 1142, 50, 12, 0, 0, Math.PI * 2); g.fill();
+  // 天ぷらの皿
+  g.fillStyle = 'rgba(40,20,5,0.3)';
+  g.beginPath(); g.ellipse(560, 1188, 150, 52, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#f3efe6';
+  g.beginPath(); g.ellipse(560, 1176, 148, 54, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#e4ddcf';
+  g.beginPath(); g.ellipse(560, 1176, 112, 38, 0, 0, Math.PI * 2); g.fill();
+  天ぷら(530, 1170, 120, -0.25, r);
+  天ぷら(585, 1186, 112, -0.12, r);
+  g.fillStyle = '#5f8f3e';  // 山菜
+  g.beginPath(); g.ellipse(630, 1158, 30, 14, 0.4, 0, Math.PI * 2); g.fill();
+  g.restore();
+  紅葉(t, 12, 9, [0, W, 380, 920]);
+};
+renderAt(0);
+</script>

@@ -1,0 +1,88 @@
+<!doctype html>
+<meta charset="utf-8">
+<!-- 竹灯りの場面：夜の広場に、細工をした大小の竹筒。穴からもれるあかりがゆらぐ。提灯・人・文字は描かない -->
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="c" width="720" height="1280"></canvas>
+<script src="共通.js"></script>
+<script>
+// 竹筒：x は足もと中央、base は地面の高さ、w は太さ、h は高さ、z は奥行き（0 奥〜1 手前）、k はゆらぎの番号
+const 竹 = [
+  [130, 860, 46, 190, 0.2, 1], [250, 850, 40, 150, 0.1, 2], [470, 852, 44, 210, 0.15, 3], [600, 862, 40, 160, 0.25, 4],
+  [70, 1010, 70, 300, 0.6, 5], [330, 990, 62, 230, 0.5, 6], [560, 1015, 74, 340, 0.65, 7],
+  [200, 1190, 96, 420, 1, 8], [450, 1210, 104, 470, 1, 9],
+];
+
+function 穴(x, top, w, h, k, t, r) {
+  // 細工の穴：花の形と、点の列
+  const glow = 0.75 + 0.35 * ゆらぎ(t, k);
+  g.save();
+  g.shadowColor = `rgba(255,170,60,${0.9 * glow})`;
+  g.shadowBlur = w * 0.35;
+  g.fillStyle = `rgba(255,${190 + Math.floor(40 * glow)},110,${Math.min(1, glow)})`;
+  const rows = Math.floor(h / (w * 0.42));
+  for (let i = 1; i < rows; i++) {
+    const y = top + i * w * 0.42;
+    if (i % 3 === 1) {  // 花
+      for (let p = 0; p < 6; p++) {
+        const a = (p / 6) * Math.PI * 2;
+        g.beginPath(); g.ellipse(x + Math.cos(a) * w * 0.13, y + Math.sin(a) * w * 0.13, w * 0.07, w * 0.07, 0, 0, Math.PI * 2); g.fill();
+      }
+    } else {  // 点の列
+      for (let p = -1; p <= 1; p++) {
+        g.beginPath(); g.arc(x + p * w * 0.22, y, w * 0.05, 0, Math.PI * 2); g.fill();
+      }
+    }
+  }
+  g.restore();
+}
+
+function 竹筒(x, base, w, h, z, k, t, r) {
+  const top = base - h;
+  // 地面にうつる光の模様
+  const glow = 0.7 + 0.3 * ゆらぎ(t, k + 10);
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * Math.PI * 2;
+    const d = w * (1.2 + (i % 3) * 0.5);
+    g.fillStyle = `rgba(255,170,70,${0.35 * glow * (1 - (i % 3) * 0.25)})`;
+    g.beginPath(); g.ellipse(x + Math.cos(a) * d, base + Math.sin(a) * d * 0.28, w * 0.07, w * 0.03, 0, 0, Math.PI * 2); g.fill();
+  }
+  const pool = g.createRadialGradient(x, base, 2, x, base, w * 2.2);
+  pool.addColorStop(0, `rgba(255,160,60,${0.35 * glow})`); pool.addColorStop(1, 'rgba(255,160,60,0)');
+  g.fillStyle = pool; g.beginPath(); g.ellipse(x, base, w * 2.2, w * 0.7, 0, 0, Math.PI * 2); g.fill();
+  // 筒（暗い緑から黄土色）
+  const body = g.createLinearGradient(x - w / 2, 0, x + w / 2, 0);
+  body.addColorStop(0, '#2c3a1c'); body.addColorStop(0.45, '#6f7a3a'); body.addColorStop(0.7, '#56602c'); body.addColorStop(1, '#1d2612');
+  g.fillStyle = body;
+  g.fillRect(x - w / 2, top, w, h);
+  // ふし
+  g.fillStyle = 'rgba(20,28,10,0.6)';
+  for (let y = top + h * 0.33; y < base; y += h * 0.33) g.fillRect(x - w / 2, y, w, Math.max(2, w * 0.05));
+  // ななめに切った口（中のあかり）
+  g.fillStyle = `rgba(255,190,100,${0.8 * glow})`;
+  g.beginPath(); g.ellipse(x, top, w / 2, w * 0.18, -0.25, 0, Math.PI * 2); g.fill();
+  穴(x, top, w, h, k, t, r);
+}
+
+window.renderAt = (t) => {
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = 縦グラデ(0, 820, [[0, '#070b1c'], [0.7, '#141a35'], [1, '#2a2440']]);
+  g.fillRect(0, 0, W, H);
+  // 奥の温泉街のぼけた灯り
+  const r = 乱数(5);
+  for (let i = 0; i < 26; i++) {
+    const x = r() * W, y = 600 + r() * 200, rr = 10 + r() * 26;
+    const a = 0.12 + 0.12 * ゆらぎ(t * 0.4, i);
+    const b = g.createRadialGradient(x, y, 0, x, y, rr);
+    b.addColorStop(0, `rgba(255,200,120,${a})`); b.addColorStop(1, 'rgba(255,200,120,0)');
+    g.fillStyle = b; g.beginPath(); g.arc(x, y, rr, 0, Math.PI * 2); g.fill();
+  }
+  // 広場の地面
+  g.fillStyle = 縦グラデ(790, H, [[0, '#1c1a24'], [1, '#2e2722']]);
+  g.fillRect(0, 790, W, H - 790);
+  g.save();
+  g.translate(-14 * t, 0);  // ゆっくり横へ
+  竹.forEach(([x, base, w, h, z, k]) => 竹筒(x + 30, base, w, h, z, k, t, r));
+  g.restore();
+};
+renderAt(0);
+</script>
