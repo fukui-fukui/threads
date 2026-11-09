@@ -1617,18 +1617,24 @@ def 新店の直し(text: str) -> str | None:
 
 _曜 = "月火水木金土日"
 _定休 = re.compile(r"定休日?[はは：:\s]*([^。\n]{0,30})")
+_前の定休 = re.compile(r"((?:[月火水木金土日][曜]?[日]?[・、と]?){1,7})(?:が|は)?定休")
 
 
 def 定休日に当たる(text: str, 日) -> bool:
     """本文の定休日に、投稿する日の曜日が入っているか（「毎週水曜」「水・木曜」など。不定休・祝日だけは見ない）。"""
-    m = _定休.search(text or "")
-    if not m:
-        return False
     曜 = _曜[日.weekday()]
-    return bool(re.search(rf"{曜}(?:曜|・|、|$)", m.group(1)))
+    m = _定休.search(text or "")
+    if m and re.search(rf"{曜}(?:曜|・|、|$)", m.group(1)):
+        return True
+    # 「月・水・金曜が定休日」「日曜定休」のように、曜日が前に来る書き方（2026-11-09 運用部・石川：くぼちゃんパン）
+    for 前 in _前の定休.findall(text or ""):
+        if re.search(rf"{曜}(?:曜|・|、|$)", 前):
+            return True
+    return False
 
 
-_営業時間 = re.compile(r"営業時間[はは：:\s]*([^。\n]{0,60})")
+# 「営業は18:00〜26:00」の書き方も拾う（2026-11-09 運用部・石川：匠 sho が8時、くぼちゃんパン（16時まで）が19時の予備に入った）
+_営業時間 = re.compile(r"営業(?:時間)?[はは：:\s]*([^。\n]{0,60})")
 _時刻の幅 = re.compile(r"(\d{1,2})[:：](\d{2})\s*[〜~～\-－ー]\s*(\d{1,2})[:：](\d{2})")
 
 
@@ -1653,6 +1659,11 @@ def 開く時(text: str) -> int | None:
         return None
     開 = [int(a) for a, _, _, _ in _時刻の幅.findall(m.group(1))]
     return min(開) if 開 else None
+
+
+def _本文と返信(p: dict) -> str:
+    """営業時間・定休日は返信（thread）に書くことが多いので、本文と返信の両方を見る（2026-11-09 運用部・石川）。"""
+    return "\n".join([str(p.get("text") or ""), *[str(t) for t in p.get("thread") or []]])
 
 
 def 合わない理由(text: str, 日, 時: int) -> str | None:
@@ -1681,12 +1692,12 @@ def 定休日と時刻で並べ直す(posts: list[dict], 日, 動かせない: s
         p = by.get(h)
         if p is None or h in 動かせない:
             continue
-        わけ = 合わない理由(p.get("text") or "", 日, h)
+        わけ = 合わない理由(_本文と返信(p), 日, h)
         if not わけ:
             continue
         相手 = next((h2 for h2 in sorted(by) if h2 != h and h2 not in 動かせない
-                    and not 合わない理由(p.get("text") or "", 日, h2)
-                    and not 合わない理由(by[h2].get("text") or "", 日, h)), None)
+                    and not 合わない理由(_本文と返信(p), 日, h2)
+                    and not 合わない理由(_本文と返信(by[h2]), 日, h)), None)
         一行 = (p.get("text") or "").splitlines()[0][:40]
         if 相手 is not None and わけ != "定休日の曜日":
             by[h], by[相手] = by[相手], p
@@ -2799,7 +2810,7 @@ def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出�
             # 出典が Instagram だけで、営業時間・住所などの事実が無いお店の文は予備から入れない（2026-11-05 運用部・石川：SOU・杏仁豆腐TOKYO）
             print(f"::warning::予備の文は出典が Instagram だけで中身の事実が無いので使いません：{x['text'].splitlines()[0][:40]}")
             continue
-        合う = [h for h in 空き if not 合わない理由(x.get("text", ""), target_date, h)]
+        合う = [h for h in 空き if not 合わない理由(_本文と返信(x), target_date, h)]
         if 合う and not (urls & 今日の出典) and not 出典で止める理由(urls, 記, target_date) and not 名で止める理由(x, 名記 or {}):
             _本 = 古い開店を直す(おめでとうを確かめる(x["text"], target_date)[0], target_date)[0]
             if _本 is None:
