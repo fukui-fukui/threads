@@ -510,6 +510,8 @@ if (外した.length) {
   const 今回 = (Array.isArray(取れた['外した']) ? 取れた['外した'] : [])
     .filter((x) => x && typeof x === 'object' && String(x.何 ?? '').trim())
     .map((x) => ({ 何: String(x.何).trim(), 理由: String(x.理由 ?? '').trim(), url: String(x.url ?? '').trim() }))
+    // URL の無いもの・「検索で探す分」のような、まとめての見落としの書き置きは休ませない（休ませると新しい検索ごと止まる）
+    .filter((x) => /^https?:\/\//.test(x.url) && !/^検索で/.test(x.何))
     // 代表のメモから来たものと、開催まで7日以内のものは休ませない
     .filter((x) => !メモ.some((m) => 整える(x.何).includes(m) || m.includes(整える(x.何))))
     .filter((x) => !七日以内(`${x.何} ${x.理由}`))
