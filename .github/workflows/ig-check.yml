@@ -49,10 +49,12 @@ jobs:
               print("鍵の期限: 読めません")
           # 毎朝のお店の新着読み（business_discovery）が使えるか。巡回先の1つ目で試す
           import pathlib
+          # 巡回先のアカウントを全部試す（2026-11-10 代表「福井のリストに入れて」@haruko_fukui）
           try:
-              先 = json.loads(pathlib.Path("neta/巡回先.json").read_text(encoding="utf-8")).get("インスタ", [])[0]["ユーザー名"]
+              先たち = [x["ユーザー名"] for x in json.loads(pathlib.Path("neta/巡回先.json").read_text(encoding="utf-8")).get("インスタ", [])]
           except Exception:
-              先 = "instagram"
-          bd = get(uid, fields=f"business_discovery.username({先}){{username,media.limit(1){{timestamp}}}}")
-          print(f"お店の新着読み（{先}）:", "読めた" if "error" not in bd else f"読めない（{bd['error']}）")
+              先たち = ["instagram"]
+          for 先 in 先たち:
+              bd = get(uid, fields=f"business_discovery.username({先}){{username,media.limit(1){{timestamp}}}}")
+              print(f"お店の新着読み（{先}）:", "読めた" if "error" not in bd else f"読めない（{bd['error']}）")
           PY
