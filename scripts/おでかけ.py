@@ -1388,7 +1388,7 @@ def _form_script(kind: str) -> str:
     const lab = x.id && f.querySelector(`label[for="${{x.id}}"]`) || x.closest("label");
     if (!lab) return "入力";
     const c = lab.cloneNode(true); c.querySelectorAll("small,.req,input").forEach((n) => n.remove());
-    return c.textContent.trim().replace(/\s+/g, " ");
+    return c.textContent.trim().replace(/\\s+/g, " ");
   }};
   // 必須の印：欄の名前の横に赤い「*」、フォームの上に「* は必須です」（2026-10-20 代表）
   for (const x of fields) if (x.required) {{
@@ -1408,13 +1408,13 @@ def _form_script(kind: str) -> str:
       const file = x.files && x.files[0];
       if (!file) return "";
       if (file.size > 5 * 1024 * 1024) return `${{n}}は 5MB までです（いまは ${{(file.size / 1048576).toFixed(1)}}MB）`;
-      if (!/\.(jpe?g|png|webp|pdf)$/i.test(file.name)) return `${{n}}は JPEG・PNG・WebP・PDF のどれかにしてください`;
+      if (!/\\.(jpe?g|png|webp|pdf)$/i.test(file.name)) return `${{n}}は JPEG・PNG・WebP・PDF のどれかにしてください`;
       return "";
     }}
     if (x.required && !v) return x.tagName === "SELECT" ? `${{n}}を選んでください` : `${{n}}を入れてください`;
     if (!v) return "";
-    if (x.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]{{2,}}$/.test(v)) return `${{n}}の形が正しくありません（例：name@example.com）`;
-    if (x.type === "url" && !/^https?:\/\/\S+$/.test(v)) return `${{n}}は https:// から始まる URL を入れてください`;
+    if (x.type === "email" && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{{2,}}$/.test(v)) return `${{n}}の形が正しくありません（例：name@example.com）`;
+    if (x.type === "url" && !/^https?:\\/\\/\\S+$/.test(v)) return `${{n}}は https:// から始まる URL を入れてください`;
     if (x.maxLength > 0 && v.length > x.maxLength) return `${{n}}は ${{x.maxLength}} 字までです`;
     return "";
   }};
