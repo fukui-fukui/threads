@@ -54,25 +54,50 @@ def 読む_queue() -> list[dict]:
     return [json.loads(l) for l in QUEUE.read_text(encoding="utf-8").splitlines() if l.strip()]
 
 
+def もう出ている(item: dict, uid: str) -> dict | None:
+    """直近の投稿に同じキャプションがあれば、その投稿を返す（公開の返事がエラーでも、実は出ていたときに二重に出さない。
+    2026-11-10：3選リールが「-1 Fatal」で4回続けて失敗した）。"""
+    try:
+        最近 = 呼ぶ("GET", f"{uid}/media", fields="id,caption,permalink,timestamp", limit="10").get("data", [])
+    except RuntimeError:
+        return None
+    頭 = (item.get("caption") or "").strip()[:80]
+    for m in 最近:
+        if 頭 and (m.get("caption") or "").strip()[:80] == 頭:
+            return {"media_id": m["id"], "permalink": m.get("permalink"), "posted_at": m.get("timestamp")}
+    return None
+
+
 def 出す(item: dict, uid: str) -> dict:
     if item.get("image_url"):
         # 画像1枚の投稿（2026-10-17 代表「Instagram の固定投稿を自動で出して」）
         c = 呼ぶ("POST", f"{uid}/media", image_url=item["image_url"], caption=item.get("caption", ""))
     else:
-        c = 呼ぶ("POST", f"{uid}/media", media_type="REELS", video_url=item["video_url"],
-                caption=item.get("caption", ""), share_to_feed="true")
+        try:
+            c = 呼ぶ("POST", f"{uid}/media", media_type="REELS", video_url=item["video_url"],
+                    caption=item.get("caption", ""), share_to_feed="true")
+        except RuntimeError as e:
+            raise RuntimeError(f"入れ物を作るところで失敗: {e}") from None
     cid = c["id"]
+    print(f"入れ物を作りました（{item['id']}）。処理を待ちます")
     # 処理を待つ（最大10分。動画は時間がかかる）
     for _ in range(60):
-        st = 呼ぶ("GET", cid, fields="status_code,status").get("status_code")
+        try:
+            状態 = 呼ぶ("GET", cid, fields="status_code,status")
+        except RuntimeError as e:
+            raise RuntimeError(f"処理の待ちで失敗: {e}") from None
+        st = 状態.get("status_code")
         if st == "FINISHED":
             break
         if st in ("ERROR", "EXPIRED"):
-            raise RuntimeError(f"動画の処理に失敗しました（{st}）")
+            raise RuntimeError(f"動画の処理に失敗しました（{st}・{str(状態.get('status', ''))[:200]}）")
         time.sleep(10)
     else:
         raise RuntimeError("動画の処理が10分で終わりませんでした")
-    mid = 呼ぶ("POST", f"{uid}/media_publish", creation_id=cid)["id"]
+    try:
+        mid = 呼ぶ("POST", f"{uid}/media_publish", creation_id=cid)["id"]
+    except RuntimeError as e:
+        raise RuntimeError(f"公開で失敗: {e}") from None
     link = 呼ぶ("GET", mid, fields="permalink").get("permalink")
     return {"media_id": mid, "permalink": link, "posted_at": datetime.now(timezone.utc).isoformat()}
 
@@ -105,6 +130,11 @@ def main() -> None:
             print(f"[dry-run] 出しません {item['id']} {item.get('video_url') or item.get('image_url')}")
             continue
         try:
+            既に = もう出ている(item, uid)
+            if 既に:
+                posted["posted"][item["id"]] = 既に
+                print(f"Instagram にもう出ていました（記録だけ残します）: {item['id']} {既に.get('permalink')}")
+                continue
             posted["posted"][item["id"]] = 出す(item, uid)
             print(f"Instagram に出しました: {item['id']} {posted['posted'][item['id']]['permalink']}")
         except RuntimeError as e:
