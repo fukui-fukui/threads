@@ -267,10 +267,11 @@ def main() -> None:
             if _時間あり.search(本文):
                 continue
             # 店の名前は、店らしい言葉がすぐ前後にある「」だけ（「カフェ「X」」「「X」がオープン」）。品物や言葉の「」をとらない
+            # 「沖縄そば 山原（やんばる）」を紹介、のように名前に店らしい言葉が入るものも拾う（2026-11-09 運用部・石川）
             名 = None
             for m in _名.finditer(本文):
                 近く = 本文[max(0, m.start() - 12): m.start()] + 本文[m.end(): m.end() + 12]   # 名前そのものは見ない（「にしんの寿司」の寿司）
-                if (_店らしい.search(近く) or _店らしい.search(m.group(1)) and re.search(r"^[がはでに、（(]|オープン|開店", 本文[m.end(): m.end() + 6])) \
+                if (_店らしい.search(近く) or _店らしい.search(m.group(1)) and re.search(r"^[がはでに、（(]|^を紹介|オープン|開店", 本文[m.end(): m.end() + 6])) \
                         and not _宿.search(本文) and not re.search(r"コーナー|リニューアル|メニュー|限定", m.group(1)):
                     名 = m.group(1)
                     break
