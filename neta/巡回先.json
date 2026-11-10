@@ -323,6 +323,10 @@
     {
       "ユーザー名": "fukui_midorizaurus",
       "名前": "Instagram @fukui_midorizaurus"
+    },
+    {
+      "ユーザー名": "haruko_fukui",
+      "名前": "Instagram @haruko_fukui"
     }
   ],
   "_インスタの注": "2026-10-10 代表が指定した福井の情報アカウント。Graph API の business_discovery で新しい投稿を読む（Secrets の IG_USER_ID・IG_ACCESS_TOKEN が要る。無ければ読まない）。区分は「インスタ（入口）」で、事実は公式で取り直す。"
