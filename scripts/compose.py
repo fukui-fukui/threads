@@ -1624,9 +1624,10 @@ _前の定休 = re.compile(r"((?:[月火水木金土日][曜]?[日]?[・、と]?
 def 定休日に当たる(text: str, 日) -> bool:
     """本文の定休日に、投稿する日の曜日が入っているか（「毎週水曜」「水・木曜」など。不定休・祝日だけは見ない）。"""
     曜 = _曜[日.weekday()]
-    m = _定休.search(text or "")
-    if m and re.search(rf"{曜}(?:曜|・|、|$)", m.group(1)):
-        return True
+    # 「定休日は出典でご確認ください」が先にあっても、あとの「定休日: 月曜」を見る（2026-11-11）
+    for m in _定休.finditer(text or ""):
+        if re.search(rf"{曜}(?:曜|・|、|$)", m.group(1)):
+            return True
     # 「月・水・金曜が定休日」「日曜定休」のように、曜日が前に来る書き方（2026-11-09 運用部・石川：くぼちゃんパン）
     for 前 in _前の定休.findall(text or ""):
         if re.search(rf"{曜}(?:曜|・|、|$)", 前):
@@ -1635,36 +1636,68 @@ def 定休日に当たる(text: str, 日) -> bool:
 
 
 # 「営業は18:00〜26:00」の書き方も拾う（2026-11-09 運用部・石川：匠 sho が8時、くぼちゃんパン（16時まで）が19時の予備に入った）
-_営業時間 = re.compile(r"営業(?:時間)?[はは：:\s]*([^。\n]{0,60})")
+# 「開館は9:00〜17:00」「昼は11:30〜14:00」も拾う（2026-11-11 運用部・石川：ATAKA TERRACE・やまねこ亭）。
+# 時刻の書いていない「9月14日に開店」などは数えず、時刻のある文をぜんぶ見る（昼と夜の二部営業も）
+_営業時間 = re.compile(r"(?:営業|開館|開店|開園|昼|ランチ|夜|ディナー)(?:時間)?[はは：:\s]*([^。\n]{0,60})")
 _時刻の幅 = re.compile(r"(\d{1,2})[:：](\d{2})\s*[〜~～\-－ー]\s*(\d{1,2})[:：](\d{2})")
+# 「夜の営業は金・土・日曜だけ」（2026-11-11 運用部・石川：やまねこ亭が木曜の夜に入った）
+_夜の曜日 = re.compile(r"夜(?:の営業)?は([月火水木金土日曜・、と]+?)(?:曜日?)?(?:だけ|のみ)")
+
+
+def _時刻の幅たち(text: str) -> list[tuple[int, int]]:
+    """営業時間の文の (開く時, 閉まる時) をぜんぶ。閉まる時は0時をまたぐと 24 以上。"""
+    幅 = []
+    for m in _営業時間.finditer(text or ""):
+        for a, _, b, bm in _時刻の幅.findall(m.group(1)):
+            開, 終 = int(a), int(b) + (1 if int(bm) else 0)
+            if 終 <= 開:
+                終 += 24
+            幅.append((開, 終))
+    return 幅
 
 
 def 閉まる時(text: str) -> int | None:
     """本文の営業時間の、いちばん遅い閉まる時（時。0時をまたぐときは 24 以上）。書いていなければ None。"""
-    m = _営業時間.search(text or "")
-    if not m:
-        return None
-    閉 = None
-    for a, _, b, bm in _時刻の幅.findall(m.group(1)):
-        開, 終 = int(a), int(b) + (1 if int(bm) else 0)
-        if 終 <= 開:
-            終 += 24
-        閉 = max(閉 or 0, 終)
-    return 閉
+    幅 = _時刻の幅たち(text)
+    return max(終 for _, 終 in 幅) if 幅 else None
 
 
 def 開く時(text: str) -> int | None:
     """本文の営業時間の、いちばん早い開く時（時）。書いていなければ None。"""
-    m = _営業時間.search(text or "")
-    if not m:
-        return None
-    開 = [int(a) for a, _, _, _ in _時刻の幅.findall(m.group(1))]
-    return min(開) if 開 else None
+    幅 = _時刻の幅たち(text)
+    return min(開 for 開, _ in 幅) if 幅 else None
+
+
+def 夜の営業が無い(text: str, 日) -> bool:
+    """「夜の営業は金・土・日曜だけ」と書いてあって、その日が入っていないとき。"""
+    m = _夜の曜日.search(text or "")
+    return bool(m) and _曜[日.weekday()] not in m.group(1)
+
+
+def ネタ帳の営業時間(urls: set[str]) -> str:
+    """出典の URL が同じネタ帳の行に、営業時間を足す.py が足した「［営業時間: …／定休日: …］」があれば、その中身。
+    文に営業時間を書かなかった投稿・前に作った予備でも、定休日・時刻を見られるようにする（2026-11-11 運用部・石川：鶏笑）。"""
+    if not urls or not NETA_PATH.exists():
+        return ""
+    素 = {u.split("?")[0].rstrip("/") for u in urls}
+    出 = []
+    for 行 in NETA_PATH.read_text(encoding="utf-8").splitlines():
+        if "［営業時間:" not in 行 and "［定休日:" not in 行:
+            continue
+        if any(u and u in 行 for u in 素):
+            出 += re.findall(r"［((?:営業時間|定休日):[^］]*)］", 行)
+    return "\n".join(出)
 
 
 def _本文と返信(p: dict) -> str:
-    """営業時間・定休日は返信（thread）に書くことが多いので、本文と返信の両方を見る（2026-11-09 運用部・石川）。"""
-    return "\n".join([str(p.get("text") or ""), *[str(t) for t in p.get("thread") or []]])
+    """営業時間・定休日は返信（thread）に書くことが多いので、本文と返信の両方を見る（2026-11-09 運用部・石川）。
+    ネタ帳の同じ出典の行に足した営業時間・定休日も足す（2026-11-11 運用部・石川）。"""
+    本文 = "\n".join([str(p.get("text") or ""), *[str(t) for t in p.get("thread") or []]])
+    try:
+        足し = ネタ帳の営業時間(source_urls(str(p.get("text") or ""), p.get("thread") or []))
+    except Exception:
+        足し = ""
+    return 本文 + ("\n" + 足し if 足し else "")
 
 
 def 合わない理由(text: str, 日, 時: int) -> str | None:
@@ -1677,6 +1710,8 @@ def 合わない理由(text: str, 日, 時: int) -> str | None:
     開 = 開く時(text)
     if 開 is not None and 開 >= 17 and 時 < 15:
         return f"{開}時に開く夜のお店を {時}:00 に出す"
+    if 17 <= 時 < 21 and 夜の営業が無い(text, 日):
+        return "夜の営業が無い曜日"
     閉 = 閉まる時(text)
     if 閉 is None or 閉 > 20 or 時 < 閉:
         return None
@@ -2810,6 +2845,10 @@ def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出�
         if urls and all("instagram.com" in u for u in urls) and not 店の事実がある(_全文):
             # 出典が Instagram だけで、営業時間・住所などの事実が無いお店の文は予備から入れない（2026-11-05 運用部・石川：SOU・杏仁豆腐TOKYO）
             print(f"::warning::予備の文は出典が Instagram だけで中身の事実が無いので使いません：{x['text'].splitlines()[0][:40]}")
+            continue
+        if re.search(r"営業時間[^。\n]{0,12}(?:出典で|ご確認|確かめ|材料に無)", _全文) and ネタ帳の営業時間(urls):
+            # 予備を作ったあとでネタ帳に営業時間が足されたのに、文が「出典でご確認ください」のまま（2026-11-11 運用部・石川：鶏笑）
+            print(f"::warning::予備の文は営業時間を書いていないが、ネタ帳には足されているので捨てます（作り直しに回す）：{x['text'].splitlines()[0][:40]}")
             continue
         合う = [h for h in 空き if not 合わない理由(_本文と返信(x), target_date, h)]
         if 合う and not (urls & 今日の出典) and not 出典で止める理由(urls, 記, target_date) and not 名で止める理由(x, 名記 or {}):
