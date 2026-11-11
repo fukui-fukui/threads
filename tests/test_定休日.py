@@ -31,6 +31,23 @@ class 定休日のテスト(unittest.TestCase):
         self.assertEqual(r[17], 催し)
         self.assertNotIn(19, r)           # 定休日は外す（予備で埋める）
 
+    def test_開館と夜の曜日(self):
+        """「開館は」「昼は」の時刻、「夜の営業は金・土・日曜だけ」も見る（2026-11-11 運用部・石川：ATAKA TERRACE・やまねこ亭）。"""
+        館 = "小松市の「ATAKA TERRACE」。\n開館は9:00〜17:00、水曜休みです。"
+        self.assertEqual(compose.閉まる時(館), 17)
+        self.assertIn("17時に閉まる", compose.合わない理由(館, date(2026, 11, 12), 18))
+        カレー = "金沢の「やまねこ亭」。\n昼は11:30〜14:00（ラストオーダー）。夜の営業は金・土・日曜だけで、月・火曜が定休です。"
+        self.assertEqual(compose.合わない理由(カレー, date(2026, 11, 12), 18), "夜の営業が無い曜日")
+        self.assertIsNone(compose.合わない理由(カレー, date(2026, 11, 12), 10))
+        # 時刻の無い「開店」の文が先にあっても、あとの営業時間を見る
+        店 = "9月14日に開店。営業は11:00〜15:00と16:00〜20:00です。"
+        self.assertEqual((compose.開く時(店), compose.閉まる時(店)), (11, 20))
+
+    def test_定休日の文が二つ(self):
+        """「定休日は出典でご確認ください」のあとに「定休日: 月曜」があるときも見る（2026-11-11 運用部・石川：鶏笑）。"""
+        t = "営業時間・定休日は出典でご確認ください。\n営業時間: 11:00-15:00／定休日: 月曜（https://example.com/）"
+        self.assertTrue(compose.定休日に当たる(t, date(2026, 11, 16)))
+
 
 if __name__ == "__main__":
     unittest.main()
