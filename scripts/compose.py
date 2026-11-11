@@ -1571,10 +1571,24 @@ _逆の言葉 = [
 ]
 
 
-def 材料の行たち(名たち: set[str], neta: str) -> list[str]:
-    """投稿の店・催しの名前が入っているネタ帳の行（3字以上の名前だけで探す）。"""
+def 材料の行たち(名たち: set[str], neta: str, urls: set[str] | None = None) -> tuple[list[str], bool]:
+    """投稿の材料のネタ帳の行と、それが1つの催し・店の行と言えるか。
+    まず出典の URL（? より前）が入っている行（#402 の ネタ帳の営業時間() と同じ探し方）。無いときだけ、3字以上の名前で探す。
+    名前で探したときは、1行だけ（または全部同じ出典 URL）のときだけ「1つ」とみる（会場名・「クリスマスマーケット」などで
+    別の催しの行がまざり、その料金・時間を書かないように。2026-11-11 おでかけ開発のレビュー）。"""
+    # 「- https://…」だけの行（日付の段の出典の並び）は、催し・店の行ではないので見ない
+    行たち = [l for l in (neta or "").splitlines() if l.startswith("- ") and not re.match(r"- https?://\S+\s*$", l)]
+    素 = {u.split("?")[0].rstrip("/") for u in (urls or set()) if u}
+    if 素:
+        出 = [l for l in 行たち if any(u in l for u in 素)]
+        if 出:
+            return 出, True
     名 = [n for n in 名たち if len(re.sub(r"\s", "", n)) >= 3]
-    return [l for l in (neta or "").splitlines() if l.startswith("- ") and any(n in l for n in 名)]
+    出 = [l for l in 行たち if any(n in l for n in 名)]
+    if len(出) <= 1:
+        return 出, bool(出)
+    出典 = [frozenset(u.split("?")[0].rstrip("/") for u in re.findall(r"https?://[^\s）)］]+", l)) for l in 出]
+    return 出, bool(出典[0]) and all(x == 出典[0] for x in 出典)
 
 
 def 材料と逆の言葉(文: str, 材料: list[str]) -> str | None:
@@ -1586,8 +1600,9 @@ def 材料と逆の言葉(文: str, 材料: list[str]) -> str | None:
         for 書いた名, 書いた, 逆名, 逆 in ((甲名, 甲, 乙名, 乙), (乙名, 乙, 甲名, 甲)):
             if 書いた.search(文) and 逆.search(元) and not 書いた.search(元):
                 return f"「{書いた.search(文).group(0)}」と書いているが、ネタ帳の行は「{逆.search(元).group(0)}」（{逆名}）"
-    # 料金：本文が「無料」なのに、材料には無料が無く金額だけ（金額の照らしはしない。運用部が出典から足した金額・ふるさと納税の金額で外れるため）
-    if re.search(r"無料", 文) and not re.search(r"無料", 元) and re.search(r"\d[\d,]*円", 元):
+    # 料金：本文が入場などを「無料」と書くのに、材料には無料が無く金額だけ（金額の照らしはしない。運用部が出典から足した金額・ふるさと納税の金額で外れるため）
+    # 「駐車場無料」「入場無料（展示は800円）」で止めないよう、入場・参加・観覧・入館・入園・料金の「無料」だけを見る（2026-11-11 おでかけ開発のレビュー）
+    if re.search(r"(?:入場|参加|観覧|入館|入園|料金)(?:料)?(?:は|が|：|:)?\s*無料", 文) and not re.search(r"無料", 元) and re.search(r"\d[\d,]*円", 元):
         return "「無料」と書いているが、ネタ帳の行には金額だけで「無料」が無い"
     return None
 
@@ -1623,7 +1638,7 @@ def _本文にある欄(札: str, 値: str, text: str) -> bool:
     return re.sub(r"\s", "", 値)[:4] in re.sub(r"\s", "", text)
 
 
-def 事実の無い返信を直す(thread: list[str], text: str, 材料: list[str]) -> tuple[list[str], str | None]:
+def 事実の無い返信を直す(thread: list[str], text: str, 材料: list[str], 一つ: bool = True) -> tuple[list[str], str | None]:
     """返信の1件目の真ん中に事実が無ければ、①ネタ帳の行の［営業時間・会場・日時・料金］で本文に無いものに差しかえる、
     ②それも無く、真ん中がネタ帳の「（→ ……）」の見立ての写しなら、その行を外す（作り直さない＝費用0円）。
     11/12 ぎふあいちの「〜に出かけられる日です」は、どれも見立ての写しだった。"""
@@ -1637,14 +1652,15 @@ def 事実の無い返信を直す(thread: list[str], text: str, 材料: list[st
     if not 真ん中.strip() or _返信の事実.search(真ん中):
         return thread, None
     欄 = []
-    for l in 材料:
+    # ［…］の差しこみは、材料が1つの催し・店の行と言えるときだけ（別の催しの料金・時間を書かない）
+    for l in (材料 if 一つ else []):
         for v in _材料の欄.findall(l):
             札 = re.match(r"(営業時間|定休日|会場|日時|料金)", v).group(1)
             v = re.sub(r"[（(]https?://[^）)]*[）)]\s*$", "", v).strip()
             v = re.sub(r"^(営業時間|定休日|会場|日時|料金)[:：]\s*", "", v)
-            一つ = f"{札}：{v}"
-            if v and not _本文にある欄(札, v, text) and 一つ not in 欄:
-                欄.append(一つ)
+            欄の文 = f"{札}：{v}"
+            if v and not _本文にある欄(札, v, text) and 欄の文 not in 欄:
+                欄.append(欄の文)
     if 欄:
         return ["\n".join([*行[:範囲[0]], *欄, *行[範囲[1]:]]), *thread[1:]], "ネタ帳の行の［…］の事実に差しかえました"
     見立て = [m for l in 材料 for m in re.findall(r"（→\s*([^）]+)）", l)]
@@ -3497,11 +3513,12 @@ def main() -> None:
                 落とす(f"{hour}:00 は{古}です。始まってから{古い催しの日数}日をこえた催しは出しません（2026-11-04 代表）。")
 
             # 申込・未就学児・料金の言葉をネタ帳の行と照らす。逆なら予備で埋める（2026-11-11 統括）
-            _材料 = 材料の行たち(名前たち({"text": text, "thread": thread}), neta)
-            if (_逆 := 材料と逆の言葉("\n".join([text, *thread]), _材料)):
+            _材料, _一つ = 材料の行たち(名前たち({"text": text, "thread": thread}), neta, source_urls(text, thread))
+            # 照らしは、材料が1つの催し・店の行と言えるときだけ（別の催しの行がまざると、逆でないものを止めるため）
+            if _一つ and (_逆 := 材料と逆の言葉("\n".join([text, *thread]), _材料)):
                 落とす(f"{hour}:00 は{_逆}（2026-11-11 統括：出典と正反対の申込・対象・料金を出さない）。")
             # 返信の真ん中が事実の無い1行（「〜に出かけられる日です」）なら、ネタ帳の行の［…］の事実に差しかえる（2026-11-11 統括）
-            thread, _差した = 事実の無い返信を直す(thread, text, _材料)
+            thread, _差した = 事実の無い返信を直す(thread, text, _材料, _一つ)
             if _差した:
                 print(f"::notice::{hour}:00 の返信に出典の事実が無く、{_差した}")
 

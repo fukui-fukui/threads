@@ -29,7 +29,21 @@ class 逆の言葉(unittest.TestCase):
 
     def test_材料の行は名前で探す(self):
         neta = "### 11/10\n" + 材料[0] + "\n- ほかの行「別の催し」\n"
-        self.assertEqual(compose.材料の行たち({"ミュージックフェスティバル"}, neta), 材料)
+        self.assertEqual(compose.材料の行たち({"ミュージックフェスティバル"}, neta), (材料, True))
+
+    def test_出典のURLで先に探す(self):
+        neta = "- 「クリスマスマーケット」A市 ［料金: 500円（https://a.example/x）］\n- 「クリスマスマーケット」B市 ［料金: 無料（https://b.example/y）］\n"
+        行, 一つ = compose.材料の行たち({"クリスマスマーケット"}, neta, {"https://b.example/y?utm=1"})
+        self.assertEqual((len(行), 一つ), (1, True))
+        self.assertIn("B市", 行[0])
+
+    def test_名前で2つの催しがまざれば1つとみない(self):
+        neta = "- 「クリスマスマーケット」A市 ［料金: 500円（https://a.example/x）］\n- 「クリスマスマーケット」B市 ［料金: 無料（https://b.example/y）］\n"
+        行, 一つ = compose.材料の行たち({"クリスマスマーケット"}, neta)
+        self.assertEqual((len(行), 一つ), (2, False))
+
+    def test_駐車場無料では止めない(self):
+        self.assertIsNone(compose.材料と逆の言葉("駐車場無料です", ["- 「◯◯展」 ［料金: 一般 800円（https://example.jp/b）］"]))
 
 
 class 事実の無い返信(unittest.TestCase):
@@ -44,6 +58,11 @@ class 事実の無い返信(unittest.TestCase):
         直, わけ = compose.事実の無い返信を直す(th, "11月29日（日）、大垣市で音楽祭が開かれるそうです。", 材料)
         self.assertIn("差しかえ", わけ)
         self.assertEqual(直[0].split("\n")[1], "料金：無料 ※要申込（未就学児入場可）")
+
+    def test_1つと言えなければ差しこまない(self):
+        th = ["大垣｜水嶺湖音楽祭2026（11/29）\n西濃の音楽村で、音楽祭が続きます。\n出典元：https://example.jp/a"]
+        直, わけ = compose.事実の無い返信を直す(th, "11月29日（日）、大垣市で音楽祭が開かれるそうです。", 材料, False)
+        self.assertNotIn("料金", 直[0])
 
     def test_事実があればそのまま(self):
         th = ["津島｜Roots⁺（11/15）\n10時〜16時、入場無料。駐車場は1台500円です。\n出典元：https://example.jp/c"]
