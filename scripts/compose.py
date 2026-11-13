@@ -3208,7 +3208,9 @@ def main() -> None:
             _本 = "\n".join([str(e.get("note") or ""), str(e.get("text") or "")])
             for き in ふるさと納税.切り口たち:
                 問 = str(き.get("問い") or き.get("名"))
-                if f"切り口：{問}" in _本 or (き.get("フック") and str(き["フック"])[:20] in _本):
+                # note の書き方は AI によって「切り口：◯◯」「切り口は◯◯です」とゆれる（2026-11-13 運用部・石川：
+                # 「切り口は石川の雌のカニです」を読めず、翌日も同じ切り口になった）。機械で付ける「切り口：」も見る
+                if re.search(rf"切り口\s*(?:[：:]|は)\s*{re.escape(問)}", _本) or (き.get("フック") and str(き["フック"])[:20] in _本):
                     避ける切り口[問] = min(_何日前, 避ける切り口.get(問, 999))
         まとめ = ふるさと納税.今日のまとめ(target_date, 品たち, いくつ=3, 避ける=避ける品, 避ける切り口=避ける切り口) if 品たち else None
         if まとめ:
@@ -3431,6 +3433,9 @@ def main() -> None:
                 出典の行 = next((t for t in thread[:1] if SOURCE_URL.search(t)), "")
                 text = 寄付の本文(kifu["raw"], text)
                 thread = 寄付の返信(kifu["raw"])
+                # 次の日からの「切り口を14日あける」が読めるよう、note の頭に切り口を機械で付ける（AI の書き方にたよらない）
+                if f"切り口：{kifu['name']}" not in str(post.get("note") or ""):
+                    post["note"] = (f"切り口：{kifu['name']}／" + str(post.get("note") or ""))[:120]
                 if 出典の行:
                     # 話題の出典は、リンクの返信の頭に置く（入らなければ別の返信に）
                     まとめた = 出典の行 + "\n\n" + thread[0]
