@@ -28,7 +28,7 @@ SKIP = {
     "neta/ネタ帳.md", "neta/巡回先.json", "neta/設定.json",
     "neta/ふるさと納税_リンク.jsonl", "neta/ふるさと納税_切り口リンク.jsonl",
     # 福井の中身なので写さない（どれも無ければ仕組みが自分で作る。2026-10-15 ぎふあいち開発の気づき）
-    "neta/外した候補.md", "neta/楽天の成果.jsonl", "neta/載せないもの.jsonl",
+    "neta/外した候補.md", "neta/楽天の成果.jsonl", "neta/載せないもの.jsonl", "neta/閉店.jsonl",
     "docs/data.json", "docs/hotels.json", "docs/month", "docs/sitemap.xml", "docs/CNAME",
     # おでかけ.py が作る福井のページ・福井のリール・インスタ用の画像。写し先では自分で作る（使わない県は作らない）
     # （2026-10-23 写し直しで、ぎふあいちに福井の市町・宿のページと掲載申し込みのページが混ざった）

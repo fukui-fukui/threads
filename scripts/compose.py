@@ -2942,6 +2942,9 @@ def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出�
                     continue  # 期限切れは捨てる
             except ValueError:
                 continue
+        if (_閉 := 閉店の名("\n".join([x.get("text", ""), *(x.get("thread") or [])]))):
+            print(f"::warning::予備の文が閉店した店（{_閉}）の話なので捨てます：{x['text'].splitlines()[0][:40]}")
+            continue
         if 型より前の新店(x.get("text", "")):
             # 10/24 の新店の型・検索語の分け方より前に作った新店の文は使わない（10/25 の宿の投稿を運用部が手で直した）
             print(f"::warning::予備の新店の文が型より前のものなので捨てます：{x['text'].splitlines()[0][:40]}")
@@ -3023,6 +3026,33 @@ def PR枠の止める語(text: str, thread: list[str], 日) -> str | None:
         for w in [*(x.get("止める語") or []), x.get("名前") or ""]:
             if w and w in 全文:
                 return w
+    return None
+
+
+閉店の置き場 = Path("neta/閉店.jsonl")
+
+
+def 閉店した店たち() -> list[tuple[str, list[str]]]:
+    """閉店した店の名前と表記ゆれ（neta/閉店.jsonl。2026-11-15 代表「駅前　蟹江門は閉店しました」）。"""
+    if not 閉店の置き場.exists():
+        return []
+    出 = []
+    for 行 in 閉店の置き場.read_text(encoding="utf-8").splitlines():
+        try:
+            x = json.loads(行)
+        except ValueError:
+            continue
+        名 = str(x.get("名前") or "").strip()
+        if 名:
+            出.append((名, [名, *[str(y).strip() for y in x.get("表記ゆれ") or [] if str(y).strip()]]))
+    return 出
+
+
+def 閉店の名(text: str) -> str | None:
+    """文に閉店した店の名前（表記ゆれを含む）があれば、その店の名前。"""
+    for 名, 語たち in 閉店した店たち():
+        if any(w in (text or "") for w in 語たち):
+            return 名
     return None
 
 
@@ -3516,6 +3546,8 @@ def main() -> None:
 
             if (古 := 古い催し(text, target_date)) and not 季節の期間中(text, target_date):
                 落とす(f"{hour}:00 は{古}です。始まってから{古い催しの日数}日をこえた催しは出しません（2026-11-04 代表）。")
+            if (_閉 := 閉店の名("\n".join([text, *thread]))):
+                落とす(f"{hour}:00 は閉店した店（{_閉}）の話です。neta/閉店.jsonl の店は出しません（2026-11-15 代表）。")
 
             # 申込・未就学児・料金の言葉をネタ帳の行と照らす。逆なら予備で埋める（2026-11-11 統括）
             _材料, _一つ = 材料の行たち(名前たち({"text": text, "thread": thread}), neta, source_urls(text, thread))
