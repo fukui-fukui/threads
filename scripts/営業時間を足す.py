@@ -277,7 +277,10 @@ def main() -> None:
             名 = None
             for m in _名.finditer(本文):
                 近く = 本文[max(0, m.start() - 12): m.start()] + 本文[m.end(): m.end() + 12]   # 名前そのものは見ない（「にしんの寿司」の寿司）
-                if (_店らしい.search(近く) or _店らしい.search(m.group(1)) and re.search(r"^[がはでに、（(]|^を紹介|オープン|開店", 本文[m.end(): m.end() + 6])) \
+                # 「〜が、野町の「サロン・ド・テ・カワムラ」を紹介している。…を楽しめる店」のように、店らしい言葉が文の後ろにある紹介の行も拾う
+                # （2026-11-15 運用部・石川：カワムラ・ナナンテアの営業時間が出典にあるのに足されていなかった）
+                紹介の店 = re.search(r"^を紹介", 本文[m.end(): m.end() + 4]) and _店らしい.search(本文[m.end(): m.end() + 60])
+                if (_店らしい.search(近く) or 紹介の店 or _店らしい.search(m.group(1)) and re.search(r"^[がはでに、（(]|^を紹介|オープン|開店", 本文[m.end(): m.end() + 6])) \
                         and not _宿.search(本文) and not re.search(r"コーナー|リニューアル|メニュー|限定", m.group(1)):
                     名 = m.group(1)
                     break

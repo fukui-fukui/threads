@@ -2926,6 +2926,31 @@ def 店の事実がある(text: str) -> bool:
     return bool(re.search(r"\d{1,2}[:：]\d{2}|\d{1,2}時[〜～\-－から]|定休日?[はは：:\s]*[月火水木金土日不毎第年]|[町丁目]\d|\d+[-－]\d+", 文))
 
 
+_一覧ページ = re.compile(r"/(?:spotlist|spot-list|list|lists|category|categories|tag|tags|archives?|ranking|search|page/\d+)/?$", re.I)
+
+
+def 一覧ページか(url: str) -> bool:
+    """出典が、店や催しを何件も並べた一覧ページ（または サイトのトップ）か。"""
+    from urllib.parse import urlparse
+    u = urlparse(url)
+    return u.path in ("", "/") or bool(_一覧ページ.search(u.path))
+
+
+def 薄い予備(x: dict) -> str | None:
+    """予備の文が、中身1行だけ・出典が一覧ページだけで、使えないときのわけ（2026-11-15 運用部・石川：旬肴みかど
+    「金沢市木倉町に、居酒屋「旬肴みかど」があります。」の1行、出典 kanazawabiyori.com/spotlist）。"""
+    本文 = [l for l in str(x.get("text") or "").splitlines() if l.strip() and not 検索語あり(l)]
+    urls = source_urls(x.get("text", ""), x.get("thread") or [])
+    事実 = 店の事実がある("\n".join([x.get("text", ""), *(x.get("thread") or [])]))
+    # 一覧ページの出典でも、文に営業時間・住所などの事実があれば使う（福井のふーぽ新店速報は出典を一覧ページに固定している）
+    if urls and all(一覧ページか(u) for u in urls) and not 事実:
+        return "出典が一覧ページだけで、営業時間・住所などの事実も無い"
+    文の数 = sum(max(1, l.count("。")) for l in 本文)
+    if 文の数 <= 1 and not 事実:
+        return "中身が1行だけで、営業時間・住所などの事実も無い"
+    return None
+
+
 def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出典: set[str], existing_ids: set[str], 名記: dict | None = None) -> list[str]:
     """空いた枠を予備で埋める。15時（PR）は埋めない。使ったものは予備から消す。"""
     予備 = 予備を読む()
@@ -2947,6 +2972,9 @@ def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出�
                 continue
         if (_閉 := 閉店の名("\n".join([x.get("text", ""), *(x.get("thread") or [])]))):
             print(f"::warning::予備の文が閉店した店（{_閉}）の話なので捨てます：{x['text'].splitlines()[0][:40]}")
+            continue
+        if (_薄 := 薄い予備(x)):
+            print(f"::warning::予備の文は{_薄}なので捨てます：{x['text'].splitlines()[0][:40]}")
             continue
         if 型より前の新店(x.get("text", "")):
             # 10/24 の新店の型・検索語の分け方より前に作った新店の文は使わない（10/25 の宿の投稿を運用部が手で直した）
