@@ -1256,6 +1256,16 @@ def pr_live(x: dict, today: date) -> bool:
         return False
 
 
+def _祝日の日付(today: date) -> list[str]:
+    """今日の前後の祝日（YYYY-MM-DD）。祝日CSVが読めなければ手元の表（祝日.py）。読めなければ空。"""
+    try:
+        import 祝日
+        return sorted(d for d in 祝日.祝日たち() if (today - timedelta(days=7)).isoformat() <= d <= (today + timedelta(days=60)).isoformat())
+    except Exception as exc:
+        print(f"::warning::祝日を読めませんでした（{exc}）。今週末は土日だけにします")
+        return []
+
+
 def pr_cards(today: date) -> list[dict]:
     """一覧の先頭に固定する PR のカード（2026-11-09 代表「通常枠と同じ見せ方でPRを最上部に固定表示して」）。
     ふつうの items と同じ形にして、pr・until（掲載の最終日）・href（掲載記事）を足す。
@@ -1839,6 +1849,8 @@ def main(argv: list[str] | None = None) -> int:
 
     from datetime import datetime as _dt, timedelta as _td, timezone as _tz
     data["pr"] = pr_cards(_dt.now(_tz(_td(hours=9))).date())
+    # 週末につながる祝日（3連休の月曜など）。サイトの「今週末」に入れる（2026-11-15 代表：11/21〜23 の週は 11/23 も今週末）
+    data["holidays"] = _祝日の日付(_dt.now(_tz(_td(hours=9))).date())
     if not args.check:
         OUT.parent.mkdir(parents=True, exist_ok=True)
         OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

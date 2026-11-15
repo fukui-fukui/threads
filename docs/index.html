@@ -462,8 +462,14 @@ footer a { color: var(--main); font-weight: 700; }
   const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
   const fmt = (d) => `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`;
   const dow = today.getDay();
-  const sat = dow === 0 ? addDays(today, -1) : addDays(today, 6 - dow);
-  const sun = addDays(sat, 1);
+  // 今週末は土日。週末につながる祝日（金曜・月曜の祝日など）があれば、その日も入れる（data.json の holidays を読んでから広げる。2026-11-15 代表）
+  let sat = dow === 0 ? addDays(today, -1) : addDays(today, 6 - dow);
+  let sun = addDays(sat, 1);
+  const widenWeekend = (hs) => {
+    const set = new Set(hs || []);
+    while (set.has(iso(addDays(sun, 1)))) sun = addDays(sun, 1);
+    while (set.has(iso(addDays(sat, -1))) && addDays(sat, -1) >= today) sat = addDays(sat, -1);
+  };
 
   let items = [];
   let prItems = [];
@@ -881,8 +887,9 @@ footer a { color: var(--main); font-weight: 700; }
     const out = $("#out"); out.textContent = "";
     // PR 枠（有料の掲載）は、日付の絞り込み・並べ替えに関係なく先頭に固定する（2026-11-09 代表）。
     // 掲載の最終日（until）を過ぎたら出さない
-    const PR_TABS = ["weekend", "upcoming", "all", "food"];
-    const prs = PR_TABS.includes(state.tab) ? prItems.filter((it) => pd(it.from) <= today && pd(it.until) >= today) : [];
+    // PR を出すのは、その催しが当てはまるタブだけ。ふつうの掲載と同じ振り分け（inTab）にそろえる
+    // （2026-11-15 代表「今週末ではないprは出さない。グルメではないのでグルメに出さない」）。「ぜんぶ」は話題・おすすめの一番最初
+    const prs = prItems.filter((it) => pd(it.from) <= today && pd(it.until) >= today && (state.tab === "all" || inTab(it)));
     if (prs.length) {
       const pul = el("ul", "grid");
       if (state.tab !== "all") prs.forEach((it) => pul.append(card(it)));
@@ -976,6 +983,7 @@ footer a { color: var(--main); font-weight: 700; }
     .then((data) => {
       items = data.items || [];
       prItems = data.pr || [];
+      widenWeekend(data.holidays);
       items.forEach((it, i) => { it._i = i; });
       if (data.updated) {
         $("#updated").textContent = `（${data.updated.replace(/-/g, "/")} 更新）`;
