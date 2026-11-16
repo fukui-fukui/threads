@@ -2372,7 +2372,10 @@ def 名前たち(e: dict, 見出しも: bool = True) -> set[str]:
             n = m.group(1).strip()
             while _終わりのかっこ.search(n):
                 n = _終わりのかっこ.sub("", n)
-            if 2 <= len(n) <= 50 and n not in _地名 and not _名でないもの.search(n):
+            # 見出しの名前が施設そのもの（「名古屋｜名古屋港水族館」）なら、地名の一覧にあっても数える。見出しは投稿の主役なので、
+            # 会場として何度も出る、という地名の外し方は当てない（市町村区の名前だけは外す）
+            # （2026-11-16 運用・ぎふあいち：名古屋港水族館が地名の一覧にあり、11/5 のあと 11/16・11/17 にまた入った）
+            if 2 <= len(n) <= 50 and (n not in _地名 or not re.search(r"[都道府県市町村区郡]$", n)) and not _名でないもの.search(n):
                 found.add(n)
     for part in [e.get("text") or "", *(e.get("thread") or []), e.get("note") or ""]:
         found.update(n for n in _店のあとの名.findall(part) if n not in _地名)

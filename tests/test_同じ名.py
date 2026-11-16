@@ -12,6 +12,18 @@ spec.loader.exec_module(compose)
 
 
 class 同じ名のテスト(unittest.TestCase):
+
+    def test_見出しの施設は地名の一覧にあっても数える(self):
+        # 2026-11-16 運用・ぎふあいち：地名の一覧の「名古屋港水族館」が数えられず、11/5 のあと 11/16・11/17 にまた入った
+        元 = compose._地名
+        compose._地名 = 元 | {"名古屋港水族館", "名古屋市"}
+        try:
+            e = {"text": "名古屋港水族館（名古屋市港区）の入館料は…", "thread": ["名古屋市港区｜名古屋港水族館\n大人2,030円\n出典元：https://nagoyaaqua.jp/fee/"]}
+            self.assertIn("名古屋港水族館", compose.名前たち(e))
+            # 市町村区の名前だけの見出しは、今までどおり数えない
+            self.assertNotIn("名古屋市", compose.名前たち({"thread": ["愛知｜名古屋市\n…"]}))
+        finally:
+            compose._地名 = 元
     def test_長い英字の催し名も名として拾う(self):
         # 10/17 石川：32字の催し名が拾えず、4日あけで同じ催しを2回出した
         e = {"text": "小松市のアル・プラザ小松で「BON BON OYATSU MARKET in KOMATSU」が開かれるそうです。"}
