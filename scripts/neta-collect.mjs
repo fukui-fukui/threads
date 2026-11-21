@@ -50,6 +50,12 @@ const 設定 = JSON.parse(readFileSync(設定パス, 'utf8'));
 // 新店のお店の公式 Threads を探すか（2026-10-13 代表「1,2,3OK」。region.json の 使う.メンション で県ごとに入れる）
 const Threadsを探す = (existsSync('region.json') ? JSON.parse(readFileSync('region.json', 'utf8')) : {})?.使う?.メンション === true;
 const 今日 = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }); // yyyy-mm-dd
+// 予算に収めるため、期間を決めて軽くする（neta/設定.json の「軽くする」。県ごとの設定なので、写し先には入らない）
+// （2026-11-21 代表「B 軽くする」：福井の11月の AI 使用料を予算の中に収める。12/1 から元に戻る）
+if (設定.軽くする && 今日 <= (設定.軽くする.まで ?? '')) {
+  for (const k of ['件数', '検索回数']) if (設定.軽くする[k] != null) 設定[k] = 設定.軽くする[k];
+  console.log(`軽くする期間（${設定.軽くする.まで} まで）：件数 ${設定.件数}・検索回数 ${設定.検索回数}`);
+}
 
 const ネタ帳 = existsSync(ネタ帳パス) ? readFileSync(ネタ帳パス, 'utf8') : 初期ネタ帳();
 
