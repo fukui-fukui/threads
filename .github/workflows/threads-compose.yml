@@ -59,8 +59,28 @@ jobs:
         with:
           python-version: "3.12"
 
+      # neta/設定.json の「軽くする」の期間は、作成のモデル・考える量・出力の上限をそちらにする（県ごとの設定。無ければ今までどおり）
+      # （2026-11-21 代表「B 軽くする」：福井の11月の AI 使用料を予算の中に収める。まで を過ぎると元に戻る）
+      - name: 軽くする期間か
+        id: light
+        run: |
+          python3 - <<'PY'
+          import json, os, datetime
+          p = "neta/設定.json"
+          k = (json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}).get("軽くする") or {}
+          今日 = (datetime.datetime.utcnow() + datetime.timedelta(hours=9)).date().isoformat()
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              if k and 今日 <= k.get("まで", ""):
+                  print(f"軽くする期間（{k['まで']} まで）：{k.get('作成のモデル')}・{k.get('考える量')}・{k.get('出力の上限')}")
+                  f.write(f"model={k.get('作成のモデル', '')}\neffort={k.get('考える量', '')}\nmax={k.get('出力の上限', '')}\n")
+          PY
+
       - name: 翌日ぶんの 10 本を作る
         id: make
+        env:
+          ANTHROPIC_MODEL: ${{ steps.light.outputs.model || vars.ANTHROPIC_MODEL }}
+          ANTHROPIC_EFFORT: ${{ steps.light.outputs.effort || vars.ANTHROPIC_EFFORT }}
+          ANTHROPIC_MAX_TOKENS: ${{ steps.light.outputs.max || vars.ANTHROPIC_MAX_TOKENS }}
         run: python scripts/compose.py
 
       # 残高切れなどで作れなかったとき、空いた枠を予備で埋める（API は使わない。2026-09-29）

@@ -45,13 +45,18 @@ jobs:
       # 曜日は region.json の「情報集めの曜日」（1=月 … 7=日。無ければ月・水・金）。ぎふあいちは月・木（2026-10-29 代表「C」）
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: region.json
+          sparse-checkout: |
+            region.json
+            neta/設定.json
           sparse-checkout-cone-mode: false
       - name: 集める日か（region.json の情報集めの曜日）
         id: day
         run: |
           dow=$(TZ=Asia/Tokyo date +%u)   # 1=月 … 7=日
           days=$(python3 -c "import json,os; d=json.load(open('region.json')) if os.path.exists('region.json') else {}; print(' '.join(map(str, d.get('情報集めの曜日', [1, 3, 5]))))")
+          # neta/設定.json の「軽くする」の期間は、その曜日だけ（2026-11-21 代表「B 軽くする」。福井は11月末まで水曜だけ）
+          light=$(python3 -c "import json,os; d=json.load(open('neta/設定.json')) if os.path.exists('neta/設定.json') else {}; k=d.get('軽くする') or {}; print(' '.join(map(str, k.get('情報集めの曜日', []))) if k.get('情報集めの曜日') and '$(TZ=Asia/Tokyo date +%F)' <= k.get('まで', '') else '')")
+          if [ -n "$light" ]; then days="$light"; echo "軽くする期間なので、集めるのは曜日番号 ${days} だけ"; fi
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [[ " $days " == *" $dow "* ]]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
