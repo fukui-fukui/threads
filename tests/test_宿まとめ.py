@@ -35,7 +35,11 @@ class RoundupTest(unittest.TestCase):
         finally:
             宿.短縮を読む = 元
         self.assertIsNotNone(投稿)
-        self.assertIn("最安料金は 5,390円〜（10/26時点）", 投稿["text"])
+        self.assertIn("最安は5,390円〜（10/26時点）", 投稿["text"])
+        # 2026-11-21 代表 OK：1行目は読む人の困りごと、答えは「→」で、口コミにも時点
+        self.assertTrue(投稿["text"].startswith("福井市に泊まるなら、"))
+        self.assertIn("→「テストホテル」は、", 投稿["text"])
+        self.assertIn("（1,234件・10/26時点）", 投稿["text"])
         self.assertNotIn("1名", 投稿["text"])
         # 2026-11-03 代表：1商品（宿）の紹介は1投稿目にリンク、本文の最後に PR（冒頭には付けない）
         self.assertIn("https://example.com/1", 投稿["text"])
