@@ -86,7 +86,12 @@ def _抜き出す(文: str, 名: str) -> str | None:
                 候補.append((min(abs(x) for x in 近さ), m))
         if not 候補:
             continue
-        m = min(候補, key=lambda x: x[0])[1]
+        # 欄の見出し（「営業時間」だけの行）を、地の文の中の言葉（「カフェ営業時間外には…」）より先に使う
+        # （2026-11-21 運用部・石川：cafe evanSE note は地の文の「営業時間外」を拾い、欄の営業時間・定休日が足されなかった）
+        def 欄の行か(m) -> bool:
+            行 = 文[文.rfind("\n", 0, m.start()) + 1: (文.find("\n", m.start()) + 1 or len(文))]
+            return bool(re.fullmatch(rf"\s*{札}\s*[:：]?\s*", 行))
+        m = min(候補, key=lambda x: (not 欄の行か(x[1]), x[0]))[1]
         行たち = []
         時刻 = re.compile(r"\d{1,2}[:：]\d{2}|\d{1,2}時|L\.?O")
         飛ばした = 0
