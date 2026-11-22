@@ -52,5 +52,40 @@ class インスタの引用(unittest.TestCase):
             self.assertTrue(行[0]["approved_at"])
 
 
+class AI活用の案(unittest.TestCase):
+    def _yu(self, d: Path) -> None:
+        (d / "posts").mkdir()
+        (d / "scripts").mkdir()
+        (d / "posts" / "queue.jsonl").write_text("# yu\n", encoding="utf-8")
+        (d / "scripts" / "AI活用の投稿.py").write_text(
+            "def 検査(文):\n    return ['金額'] if '$' in 文 else []\n", encoding="utf-8")
+        行 = [{"id": "ai-A-1231-2030", "アカウント": "A", "scheduled_at": "2099-12-31T20:30:00+09:00", "text": "本文A", "材料": ["直した"]},
+              {"id": "ai-B-1231-1210", "アカウント": "B", "scheduled_at": "2099-12-31T12:10:00+09:00", "text": "本文B"},
+              {"id": "ai-A-0101-2030", "アカウント": "A", "scheduled_at": "2000-01-01T20:30:00+09:00", "text": "古い"}]
+        (d / "posts" / "AI活用の案.jsonl").write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in 行), encoding="utf-8")
+
+    def test_Aのまだ先の案だけ出す(self):
+        with tempfile.TemporaryDirectory() as t:
+            d = Path(t)
+            self._yu(d)
+            出 = 判断.AI活用の案を読む(d)
+            self.assertEqual([x["id"] for x in 出], ["ai-A-1231-2030"])
+            self.assertEqual(出[0]["返事"], "本文A")
+
+    def test_出すで直した本文をqueueに入れ検査で止める(self):
+        with tempfile.TemporaryDirectory() as t:
+            d = Path(t)
+            self._yu(d)
+            済み = 判断.AI活用を入れる([
+                {"id": "ai-A-1231-2030", "出どころ": "yu（AI活用）", "種類": "AI活用の案", "答え": "出す", "返事": "直した本文"},
+                {"id": "ai-A-1231-2031", "出どころ": "yu（AI活用）", "種類": "AI活用の案", "答え": "出す", "返事": "$5 かかった"},
+            ], d)
+            self.assertEqual(済み, ["ai-A-1231-2030"])
+            行 = [json.loads(l) for l in (d / "posts" / "queue.jsonl").read_text(encoding="utf-8").splitlines() if l.startswith("{")]
+            self.assertEqual(行[0]["id"], "p-ai-A-1231-2030")
+            self.assertEqual(行[0]["text"], "直した本文")
+            self.assertEqual(判断.AI活用の案を読む(d), [])
+
+
 if __name__ == "__main__":
     unittest.main()

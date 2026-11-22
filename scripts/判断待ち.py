@@ -13,6 +13,8 @@ Metaで収集と、おでかけ2つの収集で、判断に迷ったものを表
     返事の案（2026-10-13 代表「進めてOK」）：運用部がダッシュボードに置いた、読者の返信への返事の案
       出す → posts/queue.jsonl に reply_to つきで入れる（返事の文と宛先の ID だけ。読者の返信の本文・ユーザー名は書かない）
       出さない・保留 → 何もしない
+    AI活用の案（2026-11-23 代表「A：この案で始める」、--yu）：yu のリポジトリが毎晩作る posts/AI活用の案.jsonl
+      出す → 直した本文をもう一度機械で検査し、yu の posts/queue.jsonl に入れる（id は p-ai-A-…）
 
 使い方:
   python scripts/判断待ち.py 集める --fukui . --ishikawa ../odekake-ishikawa --gifuaichi ../gifu-aichi-odekake > items.json
@@ -30,7 +32,10 @@ from zoneinfo import ZoneInfo
 
 JST = ZoneInfo("Asia/Tokyo")
 見る日数 = 14
-出どころの名 = {"fukui": "ふくいおでかけ", "ishikawa": "いしかわおでかけ", "gifuaichi": "ぎふあいちおでかけ", "ekimae": "ふくいエキマエ"}
+出どころの名 = {"fukui": "ふくいおでかけ", "ishikawa": "いしかわおでかけ", "gifuaichi": "ぎふあいちおでかけ", "ekimae": "ふくいエキマエ",
+             "yu": "yu（AI活用）"}
+# AI活用の案（2026-11-23 代表「A：この案で始める」）。B（新アカウント）は、代表がアカウントを作って鍵を入れるまで出さない
+AI活用で出すアカウント = ("A",)
 
 
 def 印(*部分: str) -> str:
@@ -117,11 +122,106 @@ def インスタを読む(repo: Path, 出どころ: str, 境目: date) -> list[d
     return 出
 
 
+def _queueのid(repo: Path) -> set[str]:
+    q = repo / "posts" / "queue.jsonl"
+    出 = set()
+    if q.exists():
+        for l in q.read_text(encoding="utf-8").splitlines():
+            if l.strip() and not l.startswith("#"):
+                try:
+                    出.add(json.loads(l).get("id"))
+                except json.JSONDecodeError:
+                    pass
+    return 出
+
+
+def AI活用の案を読む(repo: Path, 今: datetime | None = None) -> list[dict]:
+    """yu の posts/AI活用の案.jsonl から、まだ出る時刻の前で queue に入っていない案を出す。
+    id は案の id（ai-A-1124-2030）をそのまま使う（反映でその id から queue の行を作る）。"""
+    p = repo / "posts" / "AI活用の案.jsonl"
+    if not p.exists():
+        return []
+    今 = 今 or datetime.now(JST)
+    入った = _queueのid(repo)
+    出 = []
+    for l in p.read_text(encoding="utf-8").splitlines():
+        if not l.strip() or l.startswith("#"):
+            continue
+        try:
+            x = json.loads(l)
+        except json.JSONDecodeError:
+            continue
+        if x.get("アカウント") not in AI活用で出すアカウント or f"p-{x.get('id')}" in 入った:
+            continue
+        try:
+            時 = datetime.fromisoformat(x["scheduled_at"])
+        except (KeyError, ValueError):
+            continue
+        if 時 <= 今:
+            continue
+        材料 = "／".join(x.get("材料") or [])
+        出.append({"id": x["id"], "出どころ": 出どころの名["yu"], "種類": "AI活用の案", "日": 時.date().isoformat(),
+                  "中身": f"{時:%-m/%-d %H:%M} に yu から出す案です。本文を直してから「出す」を押せます。",
+                  "理由": f"材料（公開リポジトリの変更）：{材料}" if 材料 else "",
+                  "返事": x.get("text", "")})
+    return 出
+
+
+def AI活用を入れる(mine: list[dict], repo: Path) -> list[str]:
+    """代表が「出す」を押した AI活用の案を、yu の queue に入れる。直した本文（返事）を使い、もう一度機械で検査する。"""
+    出す = [a for a in mine if a.get("種類") == "AI活用の案" and a.get("答え") == "出す"]
+    if not 出す:
+        return []
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("AI活用の投稿", repo / "scripts" / "AI活用の投稿.py")
+    検査 = None
+    if spec and spec.loader:
+        import sys
+        sys.path.insert(0, str(repo / "scripts"))
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        検査 = m.検査
+    q = repo / "posts" / "queue.jsonl"
+    すでに = _queueのid(repo)
+    今 = datetime.now(JST)
+    済み, 行たち = [], []
+    for a in 出す:
+        mm = re.fullmatch(r"ai-([AB])-(\d{2})(\d{2})-(\d{2})(\d{2})", str(a.get("id") or ""))
+        文 = str(a.get("返事") or "").strip()
+        if not mm or not 文:
+            print(f"::warning::AI活用の案 {a.get('id')} は id か本文が無いので入れません")
+            continue
+        ng = 検査(文) if 検査 else []
+        if ng:
+            print(f"::warning::AI活用の案 {a.get('id')} は検査で止めました（{'・'.join(ng)}）。直してもう一度「出す」を")
+            continue
+        月, 日, 時, 分 = (int(v) for v in mm.groups()[1:])
+        年 = 今.year + (1 if 月 < 今.month - 6 else 0)
+        出る = datetime(年, 月, 日, 時, 分, tzinfo=JST)
+        if 出る <= 今 + timedelta(minutes=10):
+            print(f"::warning::AI活用の案 {a['id']} は出る時刻を過ぎたので入れません")
+            済み.append(a["id"])
+            continue
+        pid = f"p-{a['id']}"
+        if pid not in すでに:
+            承認 = str(a.get("答えた時刻") or a.get("答えた日") or 今.isoformat(timespec="seconds"))
+            行たち.append(json.dumps({"id": pid, "text": 文, "scheduled_at": 出る.isoformat(), "approved_at": 承認,
+                                     "note": "AI活用の案（代表が判断待ちで「出す」）"}, ensure_ascii=False))
+        済み.append(a["id"])
+    if 行たち:
+        with q.open("a", encoding="utf-8") as f:
+            f.write("\n".join(行たち) + "\n")
+    return 済み
+
+
 def 集める(repos: dict[str, Path]) -> list[dict]:
     境目 = datetime.now(JST).date() - timedelta(days=見る日数)
     出 = []
     for 名, repo in repos.items():
         if not repo or not repo.exists() or 名 == "ekimae":
+            continue
+        if 名 == "yu":
+            出 += AI活用の案を読む(repo)
             continue
         出 += インスタを読む(repo, 出どころの名[名], 境目)
         出 += 外した候補を読む(repo, 出どころの名[名], 境目)
@@ -249,6 +349,9 @@ def 反映(answers: list[dict], repos: dict[str, Path]) -> list[str]:
     for 名, repo in repos.items():
         if not repo:
             continue
+        if 名 == "yu":
+            済み += AI活用を入れる([a for a in answers if a.get("出どころ") == 出どころの名["yu"]], repo)
+            continue
         済み += 返事を入れる([a for a in answers if 名で.get(a.get("出どころ")) == 名], repo)
         if 名 == "ekimae":
             continue  # エキマエは返事だけ（ネタ帳は無い）
@@ -294,8 +397,9 @@ def main() -> None:
     ap.add_argument("--ishikawa", type=Path)
     ap.add_argument("--gifuaichi", type=Path, help="ぎふあいちおでかけのリポジトリ（2026-10-15 代表「判断待ちを同じく表示させるように」）")
     ap.add_argument("--ekimae", type=Path, help="エキマエのリポジトリ（返事の案だけ）")
+    ap.add_argument("--yu", type=Path, help="yu のリポジトリ（AI活用の案。2026-11-23 代表「A」）")
     a = ap.parse_args()
-    repos = {"fukui": a.fukui, "ishikawa": a.ishikawa, "gifuaichi": a.gifuaichi, "ekimae": a.ekimae}
+    repos = {"fukui": a.fukui, "ishikawa": a.ishikawa, "gifuaichi": a.gifuaichi, "ekimae": a.ekimae, "yu": a.yu}
     if a.やること == "集める":
         print(json.dumps(集める(repos), ensure_ascii=False, indent=1))
     else:
