@@ -3120,6 +3120,110 @@ def 薄い予備(x: dict) -> str | None:
     return None
 
 
+# ---- 作成（AI）が止まった日の、AI を使わない 6:00「今日かぎり」と金曜の「今週末」まとめ ----
+# 2026-11-23 統括・代表「B：12/1 まで作成を止める」。サイトのデータ（docs/data.json）の会期・会場・出典だけで並べる。
+# 書くのはデータにある事実だけ（名前・市町・会期・出典）。会期の終わりが分からない行（「11/28から」）は、その日だけとみる。
+_機械の名 = re.compile(r"「([^「」\n]{2,40})」")
+_機械のURL = re.compile(r"https?://[^\s）)」』、。]+")
+_先が開く = re.compile(r"^[^。]{0,40}?(?:から|〜\s*(?![0-9０-９]))")
+
+
+def _機械の会期(it: dict) -> str:
+    a, b = date.fromisoformat(it["start"]), date.fromisoformat(it["end"])
+    return f"{a.month}/{a.day}" if a == b else f"{a.month}/{a.day}〜{b.month}/{b.day}"
+
+
+def _機械の候補(target_date) -> list[dict]:
+    """サイトのデータの催しで、名前（「」）・会期・出典がそろうもの。同じ名前・同じ出典は1つに。"""
+    p = Path("docs/data.json")
+    if not p.exists():
+        return []
+    try:
+        items = json.loads(p.read_text(encoding="utf-8")).get("items") or []
+    except ValueError:
+        return []
+    出, 見た = [], set()
+    for it in items:
+        if it.get("kind") != "催し" or not it.get("start") or not it.get("end"):
+            continue
+        文 = str(it.get("text") or "")
+        名 = (_機械の名.search(文) or [None, None])[1]
+        url = it.get("source") or (_機械のURL.search(文) or [None])[0]
+        if not 名 or not url or not it.get("area"):
+            continue
+        try:
+            a, b = date.fromisoformat(it["start"]), date.fromisoformat(it["end"])
+        except ValueError:
+            continue
+        # 終わりの日が分からない行（「11/28から」「11/18〜」）は、始まりの日だけ開いているとみる（今日で終わるとは言わない）
+        開く = a == b and bool(_先が開く.search(文))
+        鍵 = (名, url.split("?")[0].rstrip("/"))
+        if 鍵 in 見た or 名 in {x["名"] for x in 出}:
+            continue
+        見た.add(鍵)
+        出.append({**it, "名": 名, "url": url, "a": a, "b": b, "開く": 開く})
+    return 出
+
+
+def _機械の休み(x: dict, d) -> bool:
+    """その日が、データの文にある休館日・定休日に当たるか（「月曜休館」「休館日：月曜」なども見る）。"""
+    文 = str(x.get("text") or "")
+    曜 = _曜[d.weekday()]
+    return 定休日に当たる(文, d) or bool(re.search(rf"{曜}曜(?:日)?(?:は)?(?:休館|休み|休業|休園)|(?:休館|休園)日?[^。]{{0,8}}{曜}曜", 文))
+
+
+def _機械の地名(area: str) -> str:
+    return re.sub(r"市$", "", area) or area
+
+
+def 機械のまとめ(target_date, hour: int, 名記: dict | None, 今日の出典: set[str]) -> dict | None:
+    """6:00 の「今日かぎりの催し」か、金曜の「今週末の◯◯」を、AI を使わずにサイトのデータから作る。作れなければ None。"""
+    頭 = 地域.地域.get("見出しの頭", "【福井】")
+    候補 = [x for x in _機械の候補(target_date) if x["url"].split("?")[0].rstrip("/") not in {u.split("?")[0].rstrip("/") for u in 今日の出典}]
+    if hour == 6:
+        # 今日が終わりの日（会期の終わりが今日。1日だけのものは今日）で、終わりの日が分からない行はのぞく
+        選 = [x for x in 候補 if x["b"] == target_date and x["a"] <= target_date and not x["開く"] and not _機械の休み(x, target_date)]
+        選.sort(key=lambda x: (x["a"] != x["b"], x["a"]))
+        最少 = 1 if 今日かぎりを使う else 3
+        見出し = lambda n: f"{頭}今日かぎりの催し{n}つ" if n > 1 else f"{頭}今日かぎりの催し"
+        一言 = lambda x: "今日だけの開催だそうです。" if x["a"] == x["b"] else "会期は今日までだそうです。"
+    elif 今週末まとめの日(target_date) and hour == WEEKEND_HOUR:
+        土, 日 = target_date + timedelta(days=1), target_date + timedelta(days=2)
+        def 開いている(x, d):
+            return x["a"] <= d <= x["b"] and not (x["開く"] and d != x["a"]) and not _機械の休み(x, d)
+        選 = [x for x in 候補 if 開いている(x, 土) or 開いている(x, 日)]
+        # 始まりから30日をこえた長い催しは、今週末で終わるものだけ（2026-11-04 代表の古い催しの決まりにそろえる）
+        選 = [x for x in 選 if (土 - x["a"]).days <= 古い催しの日数 or x["b"] <= 日]
+        # この週末に始まる・終わるものを先に、次に会期の短いもの
+        選.sort(key=lambda x: (not (土 <= x["a"] <= 日 or 土 <= x["b"] <= 日), (x["b"] - x["a"]).days))
+        最少 = 3
+        見出し = lambda n: f"{頭}今週末の{地域.県名} {n}選"
+        def 一言(x):
+            土開, 日開 = 開いている(x, 土), 開いている(x, 日)
+            if 土開 and 日開:
+                return f"土曜（{土.month}/{土.day}）・日曜（{日.month}/{日.day}）とも開かれているそうです。"
+            d = 土 if 土開 else 日
+            return f"{'土曜' if 土開 else '日曜'}（{d.month}/{d.day}）に開かれるそうです。"
+    else:
+        return None
+    # 市町をばらけさせる。7日以内に出した名前は入れない
+    並べ, 町 = [], set()
+    for x in 選:
+        if x["area"] in 町 or (名記 and x["名"] in 名記):
+            continue
+        並べ.append(x)
+        町.add(x["area"])
+        if len(並べ) >= 4 if hour == 6 else len(並べ) >= 5:
+            break
+    if len(並べ) < 最少:
+        return None
+    番号 = "①②③④⑤"
+    本文 = "\n".join([見出し(len(並べ)), "", *[f"{番号[i]} {x['名']}（{x['area']}・{_機械の会期(x)}）" for i, x in enumerate(並べ)], "", 検索語])
+    返信 = [f"{_機械の地名(x['area'])}｜{x['名']}（{_機械の会期(x)}）\n{一言(x)}\n出典元：{x['url']}" for x in 並べ]
+    return {"text": 本文, "thread": 返信,
+            "note": f"機械で並べたまとめ（AI 無し・作成が止まった日の代わり。サイトのデータの会期・出典だけ）／{len(並べ)}件"}
+
+
 def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出典: set[str], existing_ids: set[str], 名記: dict | None = None) -> list[str]:
     """空いた枠を予備で埋める。15時（PR）は埋めない。使ったものは予備から消す。"""
     予備 = 予備を読む()
@@ -3360,7 +3464,24 @@ def main() -> None:
         今日の出典: set[str] = set()
         for e in filled.values():
             今日の出典 |= source_urls(e.get("text", ""), e.get("thread") or [])
-        行 = 予備で埋める(target_date, [h for h, *_ in needed], 記, 今日の出典, existing_ids, 名記)
+        # 6:00 と金曜の今週末まとめは、AI を使わずにサイトのデータから並べる（2026-11-23 統括）。作れなければ予備で埋める
+        機械の行 = []
+        空き = [h for h, *_ in needed]
+        for h in [x for x in (6, WEEKEND_HOUR) if x in 空き]:
+            e = 機械のまとめ(target_date, h, 名記, 今日の出典)
+            if not e:
+                continue
+            item = {"id": new_id(h, existing_ids), "text": e["text"],
+                    "scheduled_at": f"{target_date.isoformat()}T{h:02d}:00:00+09:00",
+                    "thread": e["thread"], "note": e["note"]}
+            if (サイト := サイトへの返信(h, target_date, item["id"])):
+                item["thread"] = [*item["thread"], サイト]
+            existing_ids.add(item["id"])
+            今日の出典 |= source_urls(item["text"], item["thread"])
+            機械の行.append(json.dumps(item, ensure_ascii=False))
+            空き.remove(h)
+            print(f"{h}:00 は機械でまとめを並べました（{e['note']}）")
+        行 = 機械の行 + 予備で埋める(target_date, 空き, 記, 今日の出典, existing_ids, 名記)
         if 行 and not dry_run:
             with QUEUE_PATH.open("a", encoding="utf-8") as handle:
                 for line in 行:
