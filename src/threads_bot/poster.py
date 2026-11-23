@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import logging
 import re
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -32,6 +34,20 @@ def add_utm(text: str | None, item: QueueItem) -> str | None:
     return _自分のサイト.sub(lambda m: _印を付けたURL(m.group(0), item), text)
 
 
+def トピック(item: QueueItem) -> str | None:
+    """本体の投稿に付ける Threads のトピック（2026-11-23 統括決定：1投稿に1つ、地域の決まった語）。
+    効き目を比べるため、出す日の通し番号が偶数の日だけ付ける（あり・なしを日ごとに交互。2週比べる）。
+    語は環境変数 THREADS_TOPIC、始める日は THREADS_TOPIC_FROM（YYYY-MM-DD）。返信には付けない。"""
+    語 = os.environ.get("THREADS_TOPIC", "").strip()
+    if not 語 or item.reply_to or not item.scheduled_at:
+        return None
+    日 = item.scheduled_at.date()
+    始め = os.environ.get("THREADS_TOPIC_FROM", "").strip()
+    if 始め and 日.isoformat() < 始め:
+        return None
+    return 語 if 日.toordinal() % 2 == 0 else None
+
+
 def publish_item(
     client: ThreadsClient,
     item: QueueItem,
@@ -50,7 +66,7 @@ def publish_item(
         )
         return None
 
-    creation_id = client.create_container(
+    中身 = dict(
         text=add_utm(item.text, item),
         media_type=item.media_type,
         image_url=item.image_url,
@@ -60,6 +76,17 @@ def publish_item(
         alt_text=item.alt_text,
         reply_to_id=item.reply_to,
     )
+    語 = トピック(item)
+    if 語:
+        try:
+            creation_id = client.create_container(**中身, topic_tag=語)
+            logger.info("トピック「%s」を付けました id=%s", 語, item.id)
+        except ThreadsAPIError as exc:
+            # トピックが受け付けられなくても、投稿そのものは出す
+            logger.warning("トピック「%s」を付けられませんでした（%s）。付けずに出します id=%s", 語, exc, item.id)
+            creation_id = client.create_container(**中身)
+    else:
+        creation_id = client.create_container(**中身)
     _wait_for_container(client, creation_id, item.media_type, config)
     post_id = client.publish(creation_id)
     logger.info("投稿しました id=%s post_id=%s", item.id, post_id)
