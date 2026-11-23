@@ -7,6 +7,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import importlib  # noqa: E402
 
 m = importlib.import_module("AI無しのまとめ")
+# ほかのテストが地域を入れ替えて おでかけ を読み直すので、読んだものを残さない
+for _名 in ("AI無しのまとめ", "おでかけ", "地域"):
+    sys.modules.pop(_名, None)
 
 
 def 催し(名, 市, 始, 終, url="https://example.jp/x"):
