@@ -108,6 +108,8 @@ jobs:
         continue-on-error: true
         env:
           ROUNDUP_HOUR: "15"
+          # 作成（AI）が失敗した日は、「催し × 宿」の日でも AI を使わない宿◯選を出す（2026-11-23：使用量の上限で作成が止まった）
+          ROUNDUP_FALLBACK: ${{ steps.make.outcome == 'failure' && '1' || '' }}
           # 宿1軒の最安料金を、作る日に楽天トラベルの API で取り直す（無料。鍵が無ければリストの料金のまま）
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
           RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}

@@ -347,7 +347,11 @@ def main() -> None:
     時 = int(os.environ.get("ROUNDUP_HOUR", "15"))
     日 = 対象日()
     型 = 宿.十五時の型(日)
-    if 型 == "催し":
+    if 型 == "催し" and os.environ.get("ROUNDUP_FALLBACK") == "1":
+        # 作成（AI）が使えない日（使用量の上限など）は、「催し × 宿」の代わりに AI を使わない宿◯選を出す（2026-11-23）
+        print(f"{日} は「催し × 宿」の日ですが、作成が使えないので宿◯選を出します。")
+        型 = "まとめ"
+    elif 型 == "催し":
         print(f"{日} は「催し × 宿」の日です。宿◯選・宿1軒は足しません。")
         return
     すでに = [json.loads(l) for l in QUEUE.read_text(encoding="utf-8").splitlines() if l.strip()] if QUEUE.exists() else []
