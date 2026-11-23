@@ -3294,7 +3294,9 @@ def 予備で埋める(target_date, 空き: list[int], 記: dict, 今日の出�
             print(f"::warning::{h}:00 を予備で埋めました：{x['text'].splitlines()[0][:40]}")
         else:
             残す.append(x)
-    予備を書く(残す)
+    # 試し（DRY_RUN）では予備を減らさない（2026-11-23：試しで回したら予備が消えていた）
+    if os.environ.get("DRY_RUN", "").lower() not in ("true", "1"):
+        予備を書く(残す)
     if 空き:
         print(f"::warning::予備が足りず、空いたままの枠: " + "、".join(f"{h}:00" for h in 空き))
     return 行
