@@ -3460,9 +3460,12 @@ def main() -> None:
 
     # 毎週土曜12時は、運用部が手で入れる「まとめ」の専用の枠（region.json の 使う.土曜12時は手入れのまとめ。
     # 2026-10-24 代表・運用部・石川）。作成は作らず、予備でも埋めない。空いたままなら health.json で気づく
-    if 地域.地域.get("使う", {}).get("土曜12時は手入れのまとめ", False) and target_date.weekday() == 5:
+    # 水曜12時も「今週オープンした店」を運用部が手で入れる（2026-11-23 運用部・石川、11/25 から）。曜日は 使う.手入れの12時の曜日
+    _使う = 地域.地域.get("使う", {})
+    _手入れの曜日 = _使う.get("手入れの12時の曜日") or ([5] if _使う.get("土曜12時は手入れのまとめ", False) else [])
+    if target_date.weekday() in _手入れの曜日:
         if any(h == 12 for h, *_ in needed):
-            print(f"{target_date} は土曜なので、12:00 は運用部が手で入れるまとめの枠です（作らない）。")
+            print(f"{target_date} は{'月火水木金土日'[target_date.weekday()]}曜なので、12:00 は運用部が手で入れる枠です（作らない）。")
         needed = [slot for slot in needed if slot[0] != 12]
         if not needed:
             print("作れる枠がありません。何もしません。")
