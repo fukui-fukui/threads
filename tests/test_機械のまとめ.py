@@ -63,6 +63,13 @@ class 機械のまとめ(unittest.TestCase):
         e = compose.機械のまとめ(date(2026, 11, 30), 6, {"C市": ("2026-11-27", 12)}, set())
         self.assertNotIn("C市", e["text"])
 
+    def test_一覧サイトだけの出典は入れない(self):
+        items = json.loads(Path("docs/data.json").read_text(encoding="utf-8"))["items"]
+        items[0]["source"] = "https://www.walkerplus.com/event/x"
+        Path("docs/data.json").write_text(json.dumps({"items": items}, ensure_ascii=False), encoding="utf-8")
+        e = compose.機械のまとめ(date(2026, 11, 30), 6, None, set())
+        self.assertNotIn("Aまつり", e["text"])
+
     def test_同じ日に使った出典は入れない(self):
         e = compose.機械のまとめ(date(2026, 11, 30), 6, None, {"https://a.example/1"})
         self.assertNotIn("Aまつり", e["text"])

@@ -3123,6 +3123,7 @@ def 薄い予備(x: dict) -> str | None:
 # ---- 作成（AI）が止まった日の、AI を使わない 6:00「今日かぎり」と金曜の「今週末」まとめ ----
 # 2026-11-23 統括・代表「B：12/1 まで作成を止める」。サイトのデータ（docs/data.json）の会期・会場・出典だけで並べる。
 # 書くのはデータにある事実だけ（名前・市町・会期・出典）。会期の終わりが分からない行（「11/28から」）は、その日だけとみる。
+_一覧サイト = ("walkerplus.com", "jorudan.co.jp", "iko-yo.net", "enjoytokyo", "jalan.net", "tripadvisor", "asoview.com")
 _機械の名 = re.compile(r"「([^「」\n]{2,40})」")
 _機械のURL = re.compile(r"https?://[^\s）)」』、。]+")
 _先が開く = re.compile(r"^[^。]{0,40}?(?:から|〜\s*(?![0-9０-９]))")
@@ -3151,6 +3152,12 @@ def _機械の候補(target_date) -> list[dict]:
         url = it.get("source") or (_機械のURL.search(文) or [None])[0]
         if not 名 or not url or not it.get("area"):
             continue
+        # 出典が催しの一覧サイト（walkerplus など）だけのものは使わない（公式を出典にする。2026-11-23 運用部・福井）
+        urls = [u for u in ([it.get("source")] if it.get("source") else []) + _機械のURL.findall(文)
+                if not any(d in u for d in _一覧サイト)]
+        if not urls:
+            continue
+        url = urls[0]
         try:
             a, b = date.fromisoformat(it["start"]), date.fromisoformat(it["end"])
         except ValueError:
