@@ -83,13 +83,6 @@ jobs:
           ANTHROPIC_MAX_TOKENS: ${{ steps.light.outputs.max || env.ANTHROPIC_MAX_TOKENS }}
         run: python scripts/compose.py
 
-      # 作成（AI）が失敗した日は、06時の「今日で終わる催し」と金曜の今週末まとめを AI を使わずに組む
-      # （サイトのデータの会期・市町・出典だけ。2026-11-23 統括：使用量の上限で 12/1 まで作成が止まる）
-      - name: AI 無しのまとめを足す
-        if: ${{ !cancelled() && steps.make.outcome == 'failure' }}
-        continue-on-error: true
-        run: python "scripts/AI無しのまとめ.py"
-
       # 残高切れなどで作れなかったとき、空いた枠を予備で埋める（API は使わない。2026-09-29）
       - name: 失敗したら予備で埋める
         if: ${{ failure() && steps.make.outcome == 'failure' }}
