@@ -1,6 +1,6 @@
 {
   "リポジトリ": "fukui-fukui/threads",
-  "作成時刻": "2026-11-23 03:36 JST",
+  "作成時刻": "2026-11-23 20:01 JST",
   "今日": "2026-11-23",
   "状態": "要確認",
   "明日のキュー": {
@@ -19,13 +19,13 @@
       "ファイル": "access.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-22 11:36 JST",
+        "時刻": "2026-11-23 12:02 JST",
         "結果": "success",
         "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/44976901869"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45103564514"
       },
-      "最後の成功": "2026-11-22 11:36 JST",
-      "今日走ったか": false,
+      "最後の成功": "2026-11-23 12:02 JST",
+      "今日走ったか": true,
       "24時間の実行": 2,
       "24時間の失敗": 0,
       "最後の失敗": {
@@ -55,14 +55,14 @@
       "ファイル": "audience.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-16 13:41 JST",
+        "時刻": "2026-11-23 14:41 JST",
         "結果": "success",
         "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/43805592808"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45119352245"
       },
-      "最後の成功": "2026-11-16 13:41 JST",
-      "今日走ったか": false,
-      "24時間の実行": 0,
+      "最後の成功": "2026-11-23 14:41 JST",
+      "今日走ったか": true,
+      "24時間の実行": 1,
       "24時間の失敗": 0,
       "判定": "成功"
     },
@@ -91,13 +91,13 @@
       "ファイル": "budget-check.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-22 04:37 JST",
+        "時刻": "2026-11-23 04:53 JST",
         "結果": "success",
         "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/44941931327"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45063340103"
       },
-      "最後の成功": "2026-11-22 04:37 JST",
-      "今日走ったか": false,
+      "最後の成功": "2026-11-23 04:53 JST",
+      "今日走ったか": true,
       "24時間の実行": 1,
       "24時間の失敗": 0,
       "判定": "成功"
@@ -132,14 +132,14 @@
       "ファイル": "health-snapshot.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-23 03:36 JST",
+        "時刻": "2026-11-23 20:01 JST",
         "結果": "in_progress",
-        "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45056024147"
+        "きっかけ": "workflow_run",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45161349720"
       },
-      "最後の成功": "2026-11-22 20:01 JST",
+      "最後の成功": "2026-11-23 03:36 JST",
       "今日走ったか": true,
-      "24時間の実行": 2,
+      "24時間の実行": 3,
       "24時間の失敗": 0,
       "最後の失敗": {
         "時刻": "2026-10-06 04:40 JST",
@@ -184,13 +184,13 @@
       "ファイル": "neta-collect.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-22 07:00 JST",
+        "時刻": "2026-11-23 07:00 JST",
         "結果": "success",
         "きっかけ": "repository_dispatch",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/44954463383"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45075247741"
       },
-      "最後の成功": "2026-11-22 07:00 JST",
-      "今日走ったか": false,
+      "最後の成功": "2026-11-23 07:00 JST",
+      "今日走ったか": true,
       "24時間の実行": 1,
       "24時間の失敗": 0,
       "最後の失敗": {
@@ -204,14 +204,14 @@
       "ファイル": "odekake.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-22 05:52 JST",
+        "時刻": "2026-11-23 09:15 JST",
         "結果": "success",
-        "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/44948540788"
+        "きっかけ": "push",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45087707547"
       },
-      "最後の成功": "2026-11-22 05:52 JST",
-      "今日走ったか": false,
-      "24時間の実行": 1,
+      "最後の成功": "2026-11-23 09:15 JST",
+      "今日走ったか": true,
+      "24時間の実行": 2,
       "24時間の失敗": 0,
       "判定": "成功"
     },
@@ -243,7 +243,7 @@
       },
       "最後の成功": "2026-11-22 09:48 JST",
       "今日走ったか": false,
-      "24時間の実行": 2,
+      "24時間の実行": 0,
       "24時間の失敗": 0,
       "判定": "成功"
     },
@@ -292,13 +292,13 @@
       "ファイル": "status-numbers.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-22 11:40 JST",
+        "時刻": "2026-11-23 12:09 JST",
         "結果": "success",
         "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/44977141145"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45104268147"
       },
-      "最後の成功": "2026-11-22 11:40 JST",
-      "今日走ったか": false,
+      "最後の成功": "2026-11-23 12:09 JST",
+      "今日走ったか": true,
       "24時間の実行": 2,
       "24時間の失敗": 0,
       "最後の失敗": {
@@ -312,14 +312,14 @@
       "ファイル": "test.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-21 20:51 JST",
+        "時刻": "2026-11-23 09:15 JST",
         "結果": "success",
         "きっかけ": "push",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/44901052299"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45087707545"
       },
-      "最後の成功": "2026-11-21 20:51 JST",
-      "今日走ったか": false,
-      "24時間の実行": 0,
+      "最後の成功": "2026-11-23 09:15 JST",
+      "今日走ったか": true,
+      "24時間の実行": 16,
       "24時間の失敗": 0,
       "判定": "成功"
     },
@@ -344,32 +344,37 @@
       "ファイル": "threads-compose.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-22 20:00 JST",
-        "結果": "success",
+        "時刻": "2026-11-23 20:00 JST",
+        "結果": "failure",
         "きっかけ": "repository_dispatch",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45015175071"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45161231599"
       },
       "最後の成功": "2026-11-22 20:00 JST",
-      "今日走ったか": false,
+      "今日走ったか": true,
       "24時間の実行": 1,
-      "24時間の失敗": 0,
+      "24時間の失敗": 1,
       "最後の失敗": {
-        "時刻": "2026-10-17 18:29 JST",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/39021306561"
+        "時刻": "2026-11-23 20:00 JST",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45161231599",
+        "理由": [
+          "compose: Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog",
+          "compose: 予備が足りず、空いたままの枠: 6:00、8:00、10:00、12:00、17:00、19:00、21:00、23:00",
+          "compose: 14:00（問いかけの枠）が空いています。予備では埋めません。運用で問いを入れてください。"
+        ]
       },
-      "判定": "成功"
+      "判定": "失敗"
     },
     {
       "名前": "Threads 予約投稿",
       "ファイル": "threads-post.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-23 03:30 JST",
+        "時刻": "2026-11-23 20:00 JST",
         "結果": "success",
         "きっかけ": "repository_dispatch",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45055473863"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45161231380"
       },
-      "最後の成功": "2026-11-23 03:30 JST",
+      "最後の成功": "2026-11-23 20:00 JST",
       "今日走ったか": true,
       "24時間の実行": 100,
       "24時間の失敗": 0,
@@ -396,12 +401,12 @@
       "ファイル": "threads-review.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-23 02:51 JST",
+        "時刻": "2026-11-23 19:15 JST",
         "結果": "success",
-        "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45051776251"
+        "きっかけ": "repository_dispatch",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45154409355"
       },
-      "最後の成功": "2026-11-23 02:51 JST",
+      "最後の成功": "2026-11-23 19:15 JST",
       "今日走ったか": true,
       "24時間の実行": 2,
       "24時間の失敗": 0,
@@ -416,20 +421,19 @@
       "ファイル": "pages-build-deployment",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-22 23:01 JST",
+        "時刻": "2026-11-23 19:16 JST",
         "結果": "success",
         "きっかけ": "dynamic",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45030518445"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45154535825"
       },
-      "最後の成功": "2026-11-22 23:01 JST",
-      "今日走ったか": false,
-      "24時間の実行": 19,
+      "最後の成功": "2026-11-23 19:16 JST",
+      "今日走ったか": true,
+      "24時間の実行": 32,
       "24時間の失敗": 0,
       "判定": "成功"
     }
   ],
   "警告": [
-    "朝の情報集め（neta-collect.yml）が今日まだ走っていません。cron-job.org の起動を確かめてください",
-    "翌日ぶんの作成（threads-compose.yml）が今日まだ走っていません。cron-job.org の起動を確かめてください"
+    "翌日ぶんの作成（threads-compose.yml）が今日失敗しています。理由：[\"compose: Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://"
   ]
 }
