@@ -132,8 +132,9 @@ class ThreadsClient:
         reply_control: str | None = None,
         link_attachment: str | None = None,
         alt_text: str | None = None,
+        topic_tag: str | None = None,
     ) -> str:
-        """メディアコンテナを作成し、creation_id を返す。"""
+        """メディアコンテナを作成し、creation_id を返す。topic_tag は Threads のトピック（1投稿に1つ）。"""
         if text is not None and len(text) > MAX_TEXT_LENGTH:
             raise ThreadsAPIError(
                 f"本文が {MAX_TEXT_LENGTH} 文字を超えています ({len(text)} 文字)"
@@ -146,6 +147,7 @@ class ThreadsClient:
             "reply_to_id": reply_to_id,
             "reply_control": reply_control,
             "alt_text": alt_text,
+            "topic_tag": topic_tag,
         }
         # link_attachment はテキスト投稿でのみ有効
         if media_type == "TEXT":
