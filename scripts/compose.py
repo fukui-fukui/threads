@@ -2557,6 +2557,33 @@ def 名前たち(e: dict, 見出しも: bool = True) -> set[str]:
     return found
 
 
+def _見出しの名たち(e: dict) -> list[str]:
+    出 = []
+    for part in e.get("thread") or []:
+        m = _見出しの名.match(str(part).strip())
+        if not m:
+            continue
+        n = m.group(1).strip()
+        while _終わりのかっこ.search(n):
+            n = _終わりのかっこ.sub("", n)
+        出.append(n)
+    return 出
+
+
+def _施設の名(n: str) -> bool:
+    return n in _地名 and len(n) >= 3 and not re.search(r"[都道府県市町村区郡]$", n)
+
+
+def 施設の部分(e: dict) -> set[str]:
+    """見出しが「施設名 催し名」（「東山動植物園 もみじ狩り」）のときの施設名（地名の一覧にある施設だけ）。"""
+    return {n.split()[0] for n in _見出しの名たち(e) if " " in n and _施設の名(n.split()[0])}
+
+
+def 施設そのもの(e: dict) -> set[str]:
+    """見出しが施設そのもの（「名古屋｜東山動植物園」）のときの施設名。"""
+    return {n for n in _見出しの名たち(e) if _施設の名(n)}
+
+
 def 催しの投稿(e: dict) -> bool:
     """催し（会期のあるもの）の投稿か。お店・施設・宿の投稿とで、あける日数を分ける（2026-10-28 代表「14日にして」）。
     お店・おでかけの検索語か、オープン・開店などの言葉があればお店・施設、どちらも無ければ催し。"""
@@ -2654,6 +2681,7 @@ def 名の記録(投稿たち: list[dict], target_date) -> dict[str, tuple[str, 
     記.文 = {}
     記.店名 = set()
     記.季節 = {}   # 名前 → 直近に季節ものとして出した (日付, 時, 本文と返信)。対象日より前の31日
+    記.施設 = {}   # 施設名 → 直近にその施設の催し・紹介を出した (日付, 時)。前後14日
     for e in 投稿たち:
         at = str(e.get("scheduled_at", ""))
         d = at[:10]
@@ -2687,6 +2715,12 @@ def 名の記録(投稿たち: list[dict], target_date) -> dict[str, tuple[str, 
         if 差 > 店を空ける日数:
             continue   # 15〜31日前は新店の回数を数えるだけ
         催し = 催しの投稿(e)
+        # 「施設名 催し名」の見出しの施設名は、施設そのものの紹介を14日止めるために別に残す（2026-11-24 運用部・ぎふあいち：
+        # 11/19「東山動植物園 ミナミコアリクイの赤ちゃん」・11/22「東山動植物園 もみじ狩り」のあと、11/25 に予備の「東山動植物園」が入った）
+        if not まとめ:
+            for n in 施設の部分(e) | 施設そのもの(e):
+                if n not in 記.施設 or abs(_日差(d, target_date)) < abs(_日差(記.施設[n][0], target_date)):
+                    記.施設[n] = (d, 時)
         for n in 名前たち(e, 見出しも=not まとめ):
             # 前の日と先の日の両方にあるときは、対象日に近いほうを残す
             if n not in 記 or abs(_日差(d, target_date)) < abs(_日差(記[n][0], target_date)):
@@ -2823,6 +2857,13 @@ def 名で止める理由(e: dict, 名記: dict) -> str | None:
                 continue
             d, 時 = 名記[n]
             return f"「{n}」を {d} {時}:00 にも入れている（同じお店・施設は前後{店を空ける日数}日、催しは{同じ名を空ける日数}日あける）"
+    # 施設そのものの紹介は、その施設の催し（「東山動植物園 もみじ狩り」）から14日あける（2026-11-24 運用部・ぎふあいち）。催しどうしは止めない
+    施設記 = getattr(名記, "施設", None) or {}
+    対象日 = getattr(名記, "対象日", None)
+    for n in sorted(施設そのもの(e)):
+        if n in 施設記 and 対象日 is not None and abs(_日差(施設記[n][0], 対象日)) <= 店を空ける日数:
+            d, 時 = 施設記[n]
+            return f"施設「{n}」の話を {d} {時}:00 にも入れている（施設の紹介は、その施設の催しから{店を空ける日数}日あける）"
     return None
 
 
