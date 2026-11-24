@@ -1,17 +1,129 @@
 {
   "リポジトリ": "fukui-fukui/threads",
-  "作成時刻": "2026-11-24 07:47 JST",
+  "作成時刻": "2026-11-24 20:02 JST",
   "今日": "2026-11-24",
-  "状態": "要確認",
+  "状態": "ok",
   "明日のキュー": {
     "対象日": "2026-11-25",
-    "本数": 0,
+    "本数": 10,
     "予定本数": 10,
-    "足りない": 10,
-    "時刻": [],
+    "足りない": 0,
+    "時刻": [
+      "06:00",
+      "08:00",
+      "10:00",
+      "12:00",
+      "14:00",
+      "15:00",
+      "17:00",
+      "19:00",
+      "22:00",
+      "23:00"
+    ],
     "同じ時刻が2本以上": [],
     "読めない行": [],
-    "投稿": []
+    "投稿": [
+      {
+        "id": "p-2026112406-wf6a",
+        "時刻": "06:00",
+        "1行目": "11月21日（土）から29日（日）まで、敦賀市田結のかにファクトリー甲羅組で「つ",
+        "文字数": 143,
+        "本文にリンク": false,
+        "続きにリンク": true,
+        "出典元あり": true,
+        "PRあり": false
+      },
+      {
+        "id": "p-2026112408-7bkd",
+        "時刻": "08:00",
+        "1行目": "越前町の越前陶芸村を、観光ボランティアガイドと歩く「語り部とまち歩き」が、11月",
+        "文字数": 121,
+        "本文にリンク": false,
+        "続きにリンク": true,
+        "出典元あり": true,
+        "PRあり": false
+      },
+      {
+        "id": "p-2026112410-3ztt",
+        "時刻": "10:00",
+        "1行目": "福井市のh+LAB.で、「曇天礼讃―北陸の暮らしに寄り添う『あかり』展」が12月",
+        "文字数": 125,
+        "本文にリンク": false,
+        "続きにリンク": true,
+        "出典元あり": true,
+        "PRあり": false
+      },
+      {
+        "id": "p-2026112412-htc1",
+        "時刻": "12:00",
+        "1行目": "2027年1月6日（水）から26日（火）まで、福井市月見の「おさごえ民家園」で「",
+        "文字数": 93,
+        "本文にリンク": false,
+        "続きにリンク": true,
+        "出典元あり": true,
+        "PRあり": false
+      },
+      {
+        "id": "p-2026112414-krq1",
+        "時刻": "14:00",
+        "1行目": "寒さが本格的になる11月の終わり。福井の家で、冬になると必ず出てくる「家の中の定",
+        "文字数": 154,
+        "本文にリンク": false,
+        "続きにリンク": false,
+        "出典元あり": false,
+        "PRあり": false
+      },
+      {
+        "id": "p-2026112515-4y9t",
+        "時刻": "15:00",
+        "1行目": "【福井】朝食がバイキングの宿4選",
+        "文字数": 118,
+        "本文にリンク": false,
+        "続きにリンク": true,
+        "出典元あり": false,
+        "PRあり": true
+      },
+      {
+        "id": "p-2026112417-wprh",
+        "時刻": "17:00",
+        "1行目": "越前市芝原のカフェ「Rose Cafe 風のガーデン」。",
+        "文字数": 50,
+        "本文にリンク": false,
+        "続きにリンク": true,
+        "出典元あり": true,
+        "PRあり": false
+      },
+      {
+        "id": "p-2026112419-5wzw",
+        "時刻": "19:00",
+        "1行目": "12月19日（土）10時30分から、敦賀市立図書館で「クリスマスのつどい」が開か",
+        "文字数": 76,
+        "本文にリンク": false,
+        "続きにリンク": true,
+        "出典元あり": true,
+        "PRあり": false
+      },
+      {
+        "id": "p-2026112422-zgf9",
+        "時刻": "22:00",
+        "1行目": "冬の食卓に、里の恵みを並べたい。でも、福井のものをどう選べばいいのか分からない。",
+        "文字数": 194,
+        "本文にリンク": false,
+        "続きにリンク": true,
+        "出典元あり": false,
+        "PRあり": true
+      },
+      {
+        "id": "p-2026112423-23jc",
+        "時刻": "23:00",
+        "1行目": "大野市が、「屋根雪下ろし講習会」の参加者を募集しています。雪の季節を前に、屋根の",
+        "文字数": 102,
+        "本文にリンク": false,
+        "続きにリンク": true,
+        "出典元あり": true,
+        "PRあり": false
+      }
+    ]
   },
   "ワークフロー": [
     {
@@ -19,12 +131,12 @@
       "ファイル": "access.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-24 07:40 JST",
+        "時刻": "2026-11-24 15:20 JST",
         "結果": "success",
-        "きっかけ": "repository_dispatch",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45281902591"
+        "きっかけ": "schedule",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45339697619"
       },
-      "最後の成功": "2026-11-24 07:40 JST",
+      "最後の成功": "2026-11-24 15:20 JST",
       "今日走ったか": true,
       "24時間の実行": 2,
       "24時間の失敗": 0,
@@ -62,7 +174,7 @@
       },
       "最後の成功": "2026-11-23 14:41 JST",
       "今日走ったか": false,
-      "24時間の実行": 1,
+      "24時間の実行": 0,
       "24時間の失敗": 0,
       "判定": "成功"
     },
@@ -96,14 +208,14 @@
       "ファイル": "budget-check.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-23 04:53 JST",
+        "時刻": "2026-11-24 09:10 JST",
         "結果": "success",
         "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45063340103"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45295022909"
       },
-      "最後の成功": "2026-11-23 04:53 JST",
-      "今日走ったか": false,
-      "24時間の実行": 0,
+      "最後の成功": "2026-11-24 09:10 JST",
+      "今日走ったか": true,
+      "24時間の実行": 1,
       "24時間の失敗": 0,
       "判定": "成功"
     },
@@ -137,19 +249,15 @@
       "ファイル": "health-snapshot.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-24 07:47 JST",
+        "時刻": "2026-11-24 20:01 JST",
         "結果": "in_progress",
-        "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45283015053"
+        "きっかけ": "workflow_run",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45380359326"
       },
-      "最後の成功": "2026-11-23 20:01 JST",
+      "最後の成功": "2026-11-24 07:47 JST",
       "今日走ったか": true,
       "24時間の実行": 2,
       "24時間の失敗": 0,
-      "最後の失敗": {
-        "時刻": "2026-10-06 04:40 JST",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/37364955916"
-      },
       "判定": "実行中"
     },
     {
@@ -209,13 +317,13 @@
       "ファイル": "odekake.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-23 09:15 JST",
+        "時刻": "2026-11-24 11:07 JST",
         "結果": "success",
-        "きっかけ": "push",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45087707547"
+        "きっかけ": "schedule",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45310114616"
       },
-      "最後の成功": "2026-11-23 09:15 JST",
-      "今日走ったか": false,
+      "最後の成功": "2026-11-24 11:07 JST",
+      "今日走ったか": true,
       "24時間の実行": 1,
       "24時間の失敗": 0,
       "判定": "成功"
@@ -297,13 +405,13 @@
       "ファイル": "status-numbers.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-23 12:09 JST",
+        "時刻": "2026-11-24 15:26 JST",
         "結果": "success",
         "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45104268147"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45340479812"
       },
-      "最後の成功": "2026-11-23 12:09 JST",
-      "今日走ったか": false,
+      "最後の成功": "2026-11-24 15:26 JST",
+      "今日走ったか": true,
       "24時間の実行": 2,
       "24時間の失敗": 0,
       "最後の失敗": {
@@ -317,14 +425,14 @@
       "ファイル": "test.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-23 21:33 JST",
+        "時刻": "2026-11-24 18:15 JST",
         "結果": "success",
         "きっかけ": "push",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45175510984"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45363453206"
       },
-      "最後の成功": "2026-11-23 21:33 JST",
-      "今日走ったか": false,
-      "24時間の実行": 38,
+      "最後の成功": "2026-11-24 18:15 JST",
+      "今日走ったか": true,
+      "24時間の実行": 43,
       "24時間の失敗": 0,
       "判定": "成功"
     },
@@ -349,37 +457,32 @@
       "ファイル": "threads-compose.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-23 20:00 JST",
-        "結果": "failure",
+        "時刻": "2026-11-24 20:00 JST",
+        "結果": "success",
         "きっかけ": "repository_dispatch",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45161231599"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45380155720"
       },
-      "最後の成功": "2026-11-22 20:00 JST",
-      "今日走ったか": false,
+      "最後の成功": "2026-11-24 20:00 JST",
+      "今日走ったか": true,
       "24時間の実行": 1,
-      "24時間の失敗": 1,
+      "24時間の失敗": 0,
       "最後の失敗": {
         "時刻": "2026-11-23 20:00 JST",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45161231599",
-        "理由": [
-          "compose: Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog",
-          "compose: 予備が足りず、空いたままの枠: 6:00、8:00、10:00、12:00、17:00、19:00、21:00、23:00",
-          "compose: 14:00（問いかけの枠）が空いています。予備では埋めません。運用で問いを入れてください。"
-        ]
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45161231599"
       },
-      "判定": "失敗"
+      "判定": "成功"
     },
     {
       "名前": "Threads 予約投稿",
       "ファイル": "threads-post.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-24 07:40 JST",
+        "時刻": "2026-11-24 20:00 JST",
         "結果": "success",
         "きっかけ": "repository_dispatch",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45281913231"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45380156236"
       },
-      "最後の成功": "2026-11-24 07:40 JST",
+      "最後の成功": "2026-11-24 20:00 JST",
       "今日走ったか": true,
       "24時間の実行": 100,
       "24時間の失敗": 0,
@@ -406,12 +509,12 @@
       "ファイル": "threads-review.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-24 07:03 JST",
+        "時刻": "2026-11-24 19:15 JST",
         "結果": "success",
-        "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45275951622"
+        "きっかけ": "repository_dispatch",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45373020401"
       },
-      "最後の成功": "2026-11-24 07:03 JST",
+      "最後の成功": "2026-11-24 19:15 JST",
       "今日走ったか": true,
       "24時間の実行": 2,
       "24時間の失敗": 0,
@@ -426,19 +529,16 @@
       "ファイル": "pages-build-deployment",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-24 06:01 JST",
+        "時刻": "2026-11-24 20:01 JST",
         "結果": "success",
         "きっかけ": "dynamic",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45265339367"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45380326831"
       },
-      "最後の成功": "2026-11-24 06:01 JST",
+      "最後の成功": "2026-11-24 20:01 JST",
       "今日走ったか": true,
-      "24時間の実行": 30,
+      "24時間の実行": 37,
       "24時間の失敗": 0,
       "判定": "成功"
     }
-  ],
-  "警告": [
-    "翌日ぶんの作成（threads-compose.yml）が今日まだ走っていません。cron-job.org の起動を確かめてください"
   ]
 }
