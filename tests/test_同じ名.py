@@ -13,6 +13,22 @@ spec.loader.exec_module(compose)
 
 class 同じ名のテスト(unittest.TestCase):
 
+    def test_施設の催しのあとの施設の紹介は14日止める(self):
+        # 2026-11-24 運用部・ぎふあいち：11/22「東山動植物園 もみじ狩り」のあと、11/25 に予備の「東山動植物園」が入った
+        元 = compose._地名
+        compose._地名 = 元 | {"東山動植物園", "名古屋市"}
+        try:
+            前 = {"text": "【紅葉】…", "scheduled_at": "2026-11-22T08:00:00+09:00",
+                  "thread": ["名古屋｜東山動植物園 もみじ狩り（11/14〜12/6）\n…\n出典元：https://a.example/"]}
+            記 = compose.名の記録([前], date(2026, 11, 25))
+            紹介 = {"text": "名古屋の「東山動植物園」は…", "thread": ["名古屋｜東山動植物園\n…\n出典元：https://b.example/"]}
+            self.assertIn("東山動植物園", compose.名で止める理由(紹介, 記) or "")
+            # 同じ施設の別の催しは、施設の決まりでは止めない
+            催し = {"text": "11月28日、東山動植物園で…", "thread": ["名古屋｜東山動植物園 夜の動物園（11/28）\n…\n出典元：https://c.example/"]}
+            self.assertIsNone(compose.名で止める理由(催し, 記))
+        finally:
+            compose._地名 = 元
+
     def test_見出しの施設は地名の一覧にあっても数える(self):
         # 2026-11-16 運用・ぎふあいち：地名の一覧の「名古屋港水族館」が数えられず、11/5 のあと 11/16・11/17 にまた入った
         元 = compose._地名
