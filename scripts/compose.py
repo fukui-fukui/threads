@@ -3420,6 +3420,21 @@ def 閉店の名(text: str) -> str | None:
     return None
 
 
+_催しの日時 = re.compile(
+    r"\d{1,2}月\d{1,2}日(?!付)|(?<![\d/])\d{1,2}/\d{1,2}(?![\d/])|[（(][月火水木金土日][）)]|\d{1,2}[:：]\d{2}|\d{1,2}時|毎[週月日年]|通年|常設|期間中|開催中"
+)
+_催しの案内 = re.compile(r"案内されています|募集しています|が開かれ|で開かれ|開催され")
+
+
+def 日時の無い催しか(text: str, thread: list[str]) -> bool:
+    """催しを「案内されています」「募集しています」などで紹介しているのに、会期・日付・時刻が本文にも返信にも無いか。
+    出典の行（URL）と「〜付」のお知らせの日付は数えない（2026-11-25 運用部・福井）。"""
+    if not _催しの案内.search(text or ""):
+        return False
+    文 = "\n".join(l for l in "\n".join([text or "", *thread]).splitlines() if "http" not in l)
+    return not _催しの日時.search(文)
+
+
 def 落とす(わけ: str):
     raise 枠を落とす(わけ)
 
@@ -3927,6 +3942,10 @@ def main() -> None:
             _urls = source_urls(text, thread)
             if _urls and all("instagram.com" in u for u in _urls) and not 店の事実がある("\n".join([text, *thread])):
                 落とす(f"{hour}:00 は出典が Instagram だけで、営業時間・住所などの事実がありません（2026-11-06 運用部・石川）。")
+
+            # 「案内されています」「募集しています」だけで、会期・日時が文にも返信にも無い催しの紹介は入れない（予備で埋める。2026-11-25 運用部・福井：星空写真展・旧木下家住宅）
+            if hour not in 問いの時たち and 日時の無い催しか(text, thread):
+                落とす(f"{hour}:00 は催しの案内だけで、会期・日時がありません（2026-11-25 運用部・福井：薄い紹介は予備や別の題材に）。")
 
             if (古 := 古い催し(text, target_date)) and not 季節の期間中(text, target_date):
                 落とす(f"{hour}:00 は{古}です。始まってから{古い催しの日数}日をこえた催しは出しません（2026-11-04 代表）。")
