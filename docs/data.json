@@ -2,23 +2,32 @@
  "updated": "2026-11-25",
  "items": [
   {
+   "text": "福井市順化2丁目25-17に、一人しゃぶしゃぶ専門店「KOUMI 福井」が2026年11月26日(木)グランドオープン。赤牛や全国選りすぐりのブランド豚を使用した一人しゃぶしゃぶ専門店",
+   "note": "",
+   "kind": "スポット",
+   "area": "福井市",
+   "start": "2026-11-26",
+   "end": "2026-11-26",
+   "source": null,
+   "instagram": "https://www.instagram.com/koumi.fukui/",
+   "written": "2026-11-25",
+   "pick": false,
+   "region": "嶺北",
+   "og": null
+  },
+  {
    "text": "福井市大和田の「フェアモール福井 アピタ福井大和田店」1階に、雑貨店「フェアモール福井ロフト」が2026年12月4日(金)にオープン。福井県内2店舗目で、フェアモール福井のリニューアルの一環。営業時間は午前10時〜午後9時（ロフトのプレスリリース、11/24）",
    "note": "アピタの1階に、県内2店舗目のロフトができる",
    "kind": "スポット",
    "area": "福井市",
    "start": "2026-11-24",
    "end": "2026-11-24",
-   "source": "https://prtimes.jp/main/html/rd/p/000001867.000018324.html",
+   "source": null,
    "instagram": null,
    "written": "2026-11-25",
    "pick": false,
    "region": "嶺北",
-   "og": {
-    "image": "https://prcdn.freetls.fastly.net/release_image/18324/1867/18324-1867-c069745054d10fd60206239ca5d8d330-700x700.jpg?format=jpeg&auto=webp&fit=bounds&width=2400&height=1260",
-    "title": "【ロフト】12月4日(金)にオープン！「フェアモール福井ロフト」",
-    "description": "株式会社ロフトのプレスリリース（2026年11月24日 12時00分）【ロフト】12月4日(金)にオープン！「フェアモール福井ロフト」",
-    "site": "プレスリリース・ニュースリリース配信シェアNo.1｜PR TIMES"
-   }
+   "og": null
   },
   {
    "text": "福井市光陽3-1-16（福井工業大学の近く）に、いなりずし専門店「ふくいなり」が2026年7月24日にオープン。運営はヒツヨウトサレル（本社：福井市）。サーモンや甘えびを載せた軍艦巻きのいなりずしなどを出す（福井新聞ONLINE）",
@@ -27,7 +36,7 @@
    "area": "福井市",
    "start": "2026-07-24",
    "end": "2026-07-24",
-   "source": "https://news.yahoo.co.jp/articles/57cd0176e2d250dcaf7c3e2753ec455fab80e9b0",
+   "source": null,
    "instagram": null,
    "written": "2026-11-25",
    "pick": false,
@@ -41,17 +50,12 @@
    "area": "鯖江市",
    "start": "2026-12-11",
    "end": "2026-12-13",
-   "source": "https://www.city.sabae.fukui.jp/kosodate_kyoiku/manabenoyakata/sozokukan/1211kiruto-takimi.html",
+   "source": null,
    "instagram": null,
    "written": "2026-11-25",
    "pick": false,
    "region": "嶺北",
-   "og": {
-    "image": null,
-    "title": "第11回パッチワークキルト作品展 キルトサークルTA・KI・MI（12月11日から13日） – めがねのまちさばえ 鯖江市",
-    "description": "「めがねのまちさばえ」福井県鯖江市の公式ホームページです。鯖江市は、国内シェア96%の日本随一の眼鏡フレームの聖地です。",
-    "site": null
-   }
+   "og": null
   },
   {
    "text": "10/1(木)〜11/30(月)、三方五湖周辺の観光地・観光施設を巡ってデジタルスタンプを集める「海湖フェス2026」デジタルスタンプラリーキャンペーン。集めると抽選で美浜町・若狭町の宿泊券や特産品が当たる（ふくいドットコムのイベント情報）",
@@ -60,17 +64,12 @@
    "area": "美浜町",
    "start": "2026-10-01",
    "end": "2026-11-30",
-   "source": "https://www.fuku-e.com/event/detail_8423.html",
+   "source": null,
    "instagram": null,
    "written": "2026-11-25",
    "pick": false,
    "region": "嶺南",
-   "og": {
-    "image": "https://www.fuku-e.com/lsc/upfile/spot/0000/8423/8423_1_l.jpg",
-    "title": "海湖フェス2026デジタルスタンプラリーキャンペーン｜イベント｜【公式】福井県 観光/旅行サイト ｜ ふくいドットコム",
-    "description": "令和8年10月1日（木）から令和7年11月30日(月)まで「海湖フェス2026」デジタルスタンプラリーキャンペーンを開催しています。三方五湖周辺の観光地・観光施設を巡ってデジタルスタンプを集めれば抽…",
-    "site": "福井県観光情報ホームページ ふくいドットコム"
-   }
+   "og": null
   },
   {
    "text": "若狭美浜観光協会が、大雲道人だるま絵のル・サロン創設360周年記念「アートカレンダー2027」の販売開始を案内（若狭美浜観光協会、11/20）",
@@ -79,17 +78,12 @@
    "area": null,
    "start": "2026-11-20",
    "end": "2026-11-20",
-   "source": "https://wakasa-mihama.jp/artcalender2027/",
+   "source": null,
    "instagram": null,
    "written": "2026-11-25",
    "pick": false,
    "region": null,
-   "og": {
-    "image": null,
-    "title": "【大雲道人だるま絵】ル・サロン創設360周年記念「アートカレンダー2027」販売開始のお知らせ - 若狭美浜観光協会",
-    "description": "1667年に始まった世界最古の公募美術展「ル・サロン」の創設360周年を記念したアートカレンダー2027を、2",
-    "site": "若狭美浜観光協会"
-   }
+   "og": null
   },
   {
    "text": "坂井市のエンゼルランドふくいで、2026年11月25日(水)付けの案内に【受付不要】「ふくい星空写真展2026」（エンゼルランドふくいのおしらせ）",
@@ -98,7 +92,7 @@
    "area": "坂井市",
    "start": "2026-11-25",
    "end": "2026-11-25",
-   "source": "https://angelland.or.jp/modules/event/index.php?action=PageView&amp;page_id=1507",
+   "source": null,
    "instagram": null,
    "written": "2026-11-25",
    "pick": false,
@@ -112,7 +106,7 @@
    "area": "坂井市",
    "start": "2026-11-25",
    "end": "2026-11-25",
-   "source": "https://angelland.or.jp/modules/event/index.php?action=PageView&amp;page_id=1506",
+   "source": null,
    "instagram": null,
    "written": "2026-11-25",
    "pick": false,
@@ -126,17 +120,12 @@
    "area": "勝山市",
    "start": "2026-11-24",
    "end": "2026-11-24",
-   "source": "http://www.city.katsuyama.fukui.jp/soshiki/32/39808.html",
+   "source": null,
    "instagram": null,
    "written": "2026-11-25",
    "pick": false,
    "region": "嶺北",
-   "og": {
-    "image": null,
-    "title": "重要文化財旧木下家住宅特別企画「われこそはおやじ達全員集合」 - 恐竜のまち 勝山市公式ホームページ",
-    "description": "旧木下家住宅,おやじ食堂",
-    "site": null
-   }
+   "og": null
   },
   {
    "text": "高浜町の和田・内浦公民館が、合同講座「うちうらレモン収穫＆レモネード試飲」を案内（高浜町、11/24）（→ 高浜の内浦で、レモンの収穫とレモネードの試飲を体験する講座がある） ［会場: 五色山公園内レモン農場 ※集合は内浦公民館（http://www.town.takahama.fukui.jp/page/kyouiku/p009129.html）］",
@@ -145,17 +134,12 @@
    "area": "高浜町",
    "start": "2026-11-24",
    "end": "2026-11-24",
-   "source": "http://www.town.takahama.fukui.jp/page/kyouiku/p009129.html",
+   "source": null,
    "instagram": null,
    "written": "2026-11-25",
    "pick": false,
    "region": "嶺南",
-   "og": {
-    "image": null,
-    "title": "和田・内浦公民館合同講座「うちうらレモン収穫＆レモネード試飲」",
-    "description": null,
-    "site": null
-   }
+   "og": null
   },
   {
    "text": "11/18(水)〜 坂井市の福井県総合グリーンセンター 花の展示温室（通称：タマネギハウス）が「クリスマスガーデン」にリニューアル。テーマは『みんなの願いをつなぐ クリスマスガーデン』～花と緑がつなぐ やさしい未来～。赤と白を基調としたポインセチアなどの花、フラワーフレーム・サンタ大集合・恋人ガーデン（幸せを呼ぶ鐘）・暖炉・シクラメンコレクション花壇などの展示（福井県総合グリーンセンターの公式 https://www.pref.fukui.lg.jp/doc/green-c/index.html）。終わりの日・料金は公式に記載なし（→ 温室が、クリスマスの花と飾りの空間になっている） ［会場: 緑と花の相談所／料金: 無料（https://www.pref.fukui.lg.jp/doc/green-c/index.html）］",
