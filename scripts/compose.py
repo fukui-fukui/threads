@@ -1704,12 +1704,15 @@ def 材料に無い言葉の例を外す(text: str, neta: str) -> tuple[str, lis
     if not _言葉の問い.search(text or ""):
         return text, []
     出, 外した = [], []
-    for 行 in text.split("\n"):
-        if re.search(r"[？?]\s*$|教えて", 行):
+    最初の行 = next((i for i, l in enumerate(text.split("\n")) if l.strip()), -1)
+    for i, 行 in enumerate(text.split("\n")):
+        # 問いの本体（最初の行）は外さない（2026-11-26 運用部・福井：「おや？」を含む1行目が消え、問いの無い投稿になった）
+        if i == 最初の行 or re.search(r"[？?]\s*$|教えて", 行):
             出.append(行)
             continue
         語たち = [w.strip() for w in re.split(r"[・／/、]", 行.lstrip("・ 　")) if w.strip()] if re.match(r"^\s*[・]", 行) or "　・" in 行 else []
-        語たち += re.findall(r"「([^「」]{1,12})」", 行)
+        # 「おや？」「えっ！」のような、言葉の例ではない声は数えない
+        語たち += [w for w in re.findall(r"「([^「」]{1,12})」", 行) if not re.search(r"[？?！!]$", w)]
         無い = [w for w in 語たち if w and w not in (neta or "")]
         if 無い:
             外した += 無い

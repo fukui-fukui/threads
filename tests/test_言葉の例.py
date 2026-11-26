@@ -29,3 +29,19 @@ class 言葉の例(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class 問いの本体を残す(unittest.TestCase):
+    """2026-11-26 運用部・福井：「おや？」を含む1行目（問いの本体）が外れ、問いの無い投稿になった。"""
+
+    def test_最初の行は残す(self):
+        import compose
+        t = "県外の人と話していて、「おや？」という顔をされた福井の話し方。\n言葉そのものでも構いません。\n\n福井の人の「県外で面白がられた話し方」を教えてください。"
+        出, _ = compose.材料に無い言葉の例を外す(t, "")
+        self.assertTrue(出.startswith("県外の人と話していて"))
+
+    def test_声は言葉の例に数えない(self):
+        import compose
+        t = "県外で通じなかった福井の言葉は？\n\n「えっ！」と言われたものを。\n\n教えてください。"
+        出, 外した = compose.材料に無い言葉の例を外す(t, "")
+        self.assertEqual(外した, [])
