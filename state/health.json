@@ -1,140 +1,17 @@
 {
   "リポジトリ": "fukui-fukui/threads",
-  "作成時刻": "2026-11-26 20:02 JST",
-  "今日": "2026-11-26",
-  "状態": "ok",
+  "作成時刻": "2026-11-27 05:21 JST",
+  "今日": "2026-11-27",
+  "状態": "要確認",
   "明日のキュー": {
-    "対象日": "2026-11-27",
-    "本数": 11,
+    "対象日": "2026-11-28",
+    "本数": 0,
     "予定本数": 10,
-    "足りない": 0,
-    "時刻": [
-      "06:00",
-      "08:00",
-      "10:00",
-      "12:00",
-      "14:00",
-      "15:00",
-      "17:00",
-      "19:00",
-      "21:00",
-      "22:00",
-      "23:00"
-    ],
+    "足りない": 10,
+    "時刻": [],
     "同じ時刻が2本以上": [],
     "読めない行": [],
-    "投稿": [
-      {
-        "id": "p-2026112606-jbv6",
-        "時刻": "06:00",
-        "1行目": "美浜町・若狭町の三方五湖周辺を巡る「海湖フェス2026」デジタルスタンプラリーが",
-        "文字数": 112,
-        "本文にリンク": false,
-        "続きにリンク": true,
-        "出典元あり": true,
-        "PRあり": false
-      },
-      {
-        "id": "p-2026112608-eadk",
-        "時刻": "08:00",
-        "1行目": "福井市文京の「中国菜まる」。あわら温泉屋台村にあった「中華飯店まる」が、福井市に",
-        "文字数": 129,
-        "本文にリンク": false,
-        "続きにリンク": true,
-        "出典元あり": true,
-        "PRあり": false
-      },
-      {
-        "id": "p-2026112610-cwbr",
-        "時刻": "10:00",
-        "1行目": "勝山市荒土町の「かつやま青果市場」に併設のカフェ「CAFE MOOI Veggi",
-        "文字数": 139,
-        "本文にリンク": false,
-        "続きにリンク": true,
-        "出典元あり": true,
-        "PRあり": false
-      },
-      {
-        "id": "p-2026112612-wooq",
-        "時刻": "12:00",
-        "1行目": "勝山市旭町のスパイスカレーの店「奥越スパイス研究所 勝山ラボ」。",
-        "文字数": 117,
-        "本文にリンク": false,
-        "続きにリンク": true,
-        "出典元あり": true,
-        "PRあり": false
-      },
-      {
-        "id": "p-2026112614-rt22",
-        "時刻": "14:00",
-        "1行目": "雪の日の、子どものころ。福井で、外でよくやった遊びを1つだけ挙げるなら？",
-        "文字数": 141,
-        "本文にリンク": false,
-        "続きにリンク": false,
-        "出典元あり": false,
-        "PRあり": false
-      },
-      {
-        "id": "p-2026112615-nnrv",
-        "時刻": "15:00",
-        "1行目": "12月、福井駅前で冬のおでかけ先を探している。",
-        "文字数": 157,
-        "本文にリンク": false,
-        "続きにリンク": true,
-        "出典元あり": true,
-        "PRあり": true
-      },
-      {
-        "id": "p-2026112617-oto8",
-        "時刻": "17:00",
-        "1行目": "福井駅近くの新栄商店街の入口に、ソムリエ経験者が営むワインショップ「mon So",
-        "文字数": 87,
-        "本文にリンク": false,
-        "続きにリンク": true,
-        "出典元あり": true,
-        "PRあり": false
-      },
-      {
-        "id": "p-2026112619-x2nz",
-        "時刻": "19:00",
-        "1行目": "福井駅から徒歩5分、福井市の「越前地魚とおでん酒場 鮨とおでん」。",
-        "文字数": 101,
-        "本文にリンク": false,
-        "続きにリンク": true,
-        "出典元あり": true,
-        "PRあり": false
-      },
-      {
-        "id": "p-2026112621-cg0u",
-        "時刻": "21:00",
-        "1行目": "言葉そのものでも、言い回しでも、話すときの調子でも構いません。",
-        "文字数": 68,
-        "本文にリンク": false,
-        "続きにリンク": false,
-        "出典元あり": false,
-        "PRあり": false
-      },
-      {
-        "id": "p-2026112622-qw5f",
-        "時刻": "22:00",
-        "1行目": "新しい年に向けて、毎日使う道具を一つ新調したい。でも、何を選べばいいのか分からな",
-        "文字数": 216,
-        "本文にリンク": false,
-        "続きにリンク": true,
-        "出典元あり": false,
-        "PRあり": true
-      },
-      {
-        "id": "p-2026112623-jrzo",
-        "時刻": "23:00",
-        "1行目": "あす11月28日（土）、福井市のフェニックスプラザで「福井市立図書館開館50周年",
-        "文字数": 88,
-        "本文にリンク": false,
-        "続きにリンク": true,
-        "出典元あり": true,
-        "PRあり": false
-      }
-    ]
+    "投稿": []
   },
   "ワークフロー": [
     {
@@ -148,7 +25,7 @@
         "URL": "https://github.com/fukui-fukui/threads/actions/runs/45754479163"
       },
       "最後の成功": "2026-11-26 13:19 JST",
-      "今日走ったか": true,
+      "今日走ったか": false,
       "24時間の実行": 2,
       "24時間の失敗": 0,
       "最後の失敗": {
@@ -162,12 +39,12 @@
       "ファイル": "affiliate-check.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-26 05:04 JST",
+        "時刻": "2026-11-27 04:45 JST",
         "結果": "success",
         "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45691356696"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45886064896"
       },
-      "最後の成功": "2026-11-26 05:04 JST",
+      "最後の成功": "2026-11-27 04:45 JST",
       "今日走ったか": true,
       "24時間の実行": 1,
       "24時間の失敗": 0,
@@ -194,20 +71,25 @@
       "ファイル": "balance-check.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-26 05:05 JST",
-        "結果": "success",
+        "時刻": "2026-11-27 04:45 JST",
+        "結果": "failure",
         "きっかけ": "schedule",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45691506468"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45886050574"
       },
       "最後の成功": "2026-11-26 05:05 JST",
       "今日走ったか": true,
       "24時間の実行": 1,
-      "24時間の失敗": 0,
+      "24時間の失敗": 1,
       "最後の失敗": {
-        "時刻": "2026-11-24 07:11 JST",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45277172552"
+        "時刻": "2026-11-27 04:45 JST",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45886050574",
+        "理由": [
+          "check: Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/c",
+          "check: Process completed with exit code 1.",
+          "check: 🔴 fukui-fukui/threads: 残高切れです。入金するまで、生成・収集・レビューが全部止まります"
+        ]
       },
-      "判定": "成功"
+      "判定": "失敗"
     },
     {
       "名前": "予算の見張り",
@@ -220,7 +102,7 @@
         "URL": "https://github.com/fukui-fukui/threads/actions/runs/45708546315"
       },
       "最後の成功": "2026-11-26 06:54 JST",
-      "今日走ったか": true,
+      "今日走ったか": false,
       "24時間の実行": 1,
       "24時間の失敗": 0,
       "判定": "成功"
@@ -255,14 +137,14 @@
       "ファイル": "health-snapshot.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-26 20:02 JST",
+        "時刻": "2026-11-27 05:20 JST",
         "結果": "in_progress",
-        "きっかけ": "workflow_run",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45806905271"
+        "きっかけ": "schedule",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45890381473"
       },
-      "最後の成功": "2026-11-26 05:33 JST",
+      "最後の成功": "2026-11-26 20:02 JST",
       "今日走ったか": true,
-      "24時間の実行": 2,
+      "24時間の実行": 3,
       "24時間の失敗": 0,
       "判定": "実行中"
     },
@@ -309,7 +191,7 @@
         "URL": "https://github.com/fukui-fukui/threads/actions/runs/45709475705"
       },
       "最後の成功": "2026-11-26 07:00 JST",
-      "今日走ったか": true,
+      "今日走ったか": false,
       "24時間の実行": 1,
       "24時間の失敗": 0,
       "最後の失敗": {
@@ -329,8 +211,8 @@
         "URL": "https://github.com/fukui-fukui/threads/actions/runs/45751335282"
       },
       "最後の成功": "2026-11-26 12:49 JST",
-      "今日走ったか": true,
-      "24時間の実行": 4,
+      "今日走ったか": false,
+      "24時間の実行": 3,
       "24時間の失敗": 0,
       "判定": "成功"
     },
@@ -417,7 +299,7 @@
         "URL": "https://github.com/fukui-fukui/threads/actions/runs/45755141419"
       },
       "最後の成功": "2026-11-26 13:25 JST",
-      "今日走ったか": true,
+      "今日走ったか": false,
       "24時間の実行": 2,
       "24時間の失敗": 0,
       "最後の失敗": {
@@ -431,15 +313,15 @@
       "ファイル": "test.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-26 12:49 JST",
+        "時刻": "2026-11-26 20:47 JST",
         "結果": "success",
         "きっかけ": "push",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45751336167"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45813704123"
       },
-      "最後の成功": "2026-11-26 12:49 JST",
-      "今日走ったか": true,
-      "24時間の実行": 23,
-      "24時間の失敗": 8,
+      "最後の成功": "2026-11-26 20:47 JST",
+      "今日走ったか": false,
+      "24時間の実行": 10,
+      "24時間の失敗": 0,
       "最後の失敗": {
         "時刻": "2026-11-25 20:50 JST",
         "URL": "https://github.com/fukui-fukui/threads/actions/runs/45608094750"
@@ -473,7 +355,7 @@
         "URL": "https://github.com/fukui-fukui/threads/actions/runs/45806598398"
       },
       "最後の成功": "2026-11-26 20:00 JST",
-      "今日走ったか": true,
+      "今日走ったか": false,
       "24時間の実行": 1,
       "24時間の失敗": 0,
       "最後の失敗": {
@@ -487,12 +369,12 @@
       "ファイル": "threads-post.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-26 20:00 JST",
+        "時刻": "2026-11-27 05:20 JST",
         "結果": "success",
         "きっかけ": "repository_dispatch",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45806599682"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45890312841"
       },
-      "最後の成功": "2026-11-26 20:00 JST",
+      "最後の成功": "2026-11-27 05:20 JST",
       "今日走ったか": true,
       "24時間の実行": 100,
       "24時間の失敗": 0,
@@ -519,12 +401,12 @@
       "ファイル": "threads-review.yml",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-26 19:15 JST",
+        "時刻": "2026-11-27 04:39 JST",
         "結果": "success",
-        "きっかけ": "repository_dispatch",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45799607201"
+        "きっかけ": "schedule",
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45885294589"
       },
-      "最後の成功": "2026-11-26 19:15 JST",
+      "最後の成功": "2026-11-27 04:39 JST",
       "今日走ったか": true,
       "24時間の実行": 2,
       "24時間の失敗": 0,
@@ -539,16 +421,20 @@
       "ファイル": "pages-build-deployment",
       "有効": true,
       "最後の実行": {
-        "時刻": "2026-11-26 20:02 JST",
+        "時刻": "2026-11-26 23:01 JST",
         "結果": "success",
         "きっかけ": "dynamic",
-        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45806851921"
+        "URL": "https://github.com/fukui-fukui/threads/actions/runs/45834813551"
       },
-      "最後の成功": "2026-11-26 20:02 JST",
-      "今日走ったか": true,
-      "24時間の実行": 46,
+      "最後の成功": "2026-11-26 23:01 JST",
+      "今日走ったか": false,
+      "24時間の実行": 36,
       "24時間の失敗": 0,
       "判定": "成功"
     }
+  ],
+  "警告": [
+    "朝の情報集め（neta-collect.yml）が今日まだ走っていません。cron-job.org の起動を確かめてください",
+    "翌日ぶんの作成（threads-compose.yml）が今日まだ走っていません。cron-job.org の起動を確かめてください"
   ]
 }
